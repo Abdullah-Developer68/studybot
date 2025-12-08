@@ -1,5 +1,6 @@
 import React from "react";
 import Input from "@/components/chat/Input";
+
 const Chat = () => {
   return (
     <>
