@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 const Auth = () => {
   return (
     <>
-      <div className="w-full h-screen flex justify-center items-center bg-black">
+      <div className="w-full h-screen flex justify-center items-center">
         <Card className="w-full max-w-sm">
           <CardHeader>
             <CardTitle>Login to your account</CardTitle>
