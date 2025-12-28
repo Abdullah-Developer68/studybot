@@ -24,11 +24,9 @@ import {
 
 const Input = () => {
   return (
-    <div className="grid w-full max-w-sm h-fit gap-6">
-      <InputGroup>
-        <InputGroupTextarea
-          placeholder="Ask, Search or Chat..."
-        />
+    <>
+      <InputGroup className="w-3xl">
+        <InputGroupTextarea placeholder="Ask, Search or Chat..." />
         <InputGroupAddon align="block-end">
           <InputGroupButton
             variant="outline"
@@ -64,7 +62,7 @@ const Input = () => {
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
-    </div>
+    </>
   );
 };
 
