@@ -12,10 +12,13 @@ const ChatLayout = async () => {
   return (
     <>
       <SidebarProvider defaultOpen={defaultOpen}>
-        <AppSidebar />
+        <span className="absolute z-40">
+          <AppSidebar />
+        </span>
+
         <main className="w-full flex justify-between">
           {/* This is the button to open or close the sidebar */}
-          <SidebarTrigger />
+          <SidebarTrigger className="z-50" />
           <Chat />
         </main>
       </SidebarProvider>

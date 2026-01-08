@@ -5,11 +5,11 @@ import ChatBox from "@/components/chat/ChatBox";
 const Chat = () => {
   return (
     <>
-      <div className="relative h-screen w-full flex flex-col items-center justify-center">
+      <div className="relative w-full flex flex-col items-center justify-around">
         <span className="">
           <ChatBox />
         </span>
-        <span className="relative top-70 w-full flex justify-center items-center">
+        <span className="relative top-20 w-3/4 flex justify-center items-center">
           <Input />
         </span>
       </div>
