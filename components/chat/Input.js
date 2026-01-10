@@ -12,21 +12,29 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
-  InputGroupInput,
   InputGroupText,
   InputGroupTextarea,
 } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
-
 import { useState } from "react";
-import { sendUserPrompt } from "@lib/api-client.js";
+import { sendUserPrompt } from "@lib/api-client";
+
 const Input = () => {
   const [prompt, setPrompt] = useState();
   const handleUserInput = (e) => {
     setPrompt(e.target.value);
   };
   const submitPrompt = async () => {
-    const res = await sendUserPrompt();
+    if (!prompt.trim()) return; // Gaurd against empty prompts
+    try {
+      const res = await sendUserPrompt(prompt.trim());
+      console.log(res);
+      setPrompt("");
+      console.log("Response from API:", res.data);
+    } catch (err) {
+      // Show toast on here
+      console.error(err);
+    }
   };
   return (
     <>
@@ -63,9 +71,10 @@ const Input = () => {
           <Separator orientation="vertical" className="h-4" />
           <InputGroupButton
             variant="default"
-            className="rounded-full"
+            className="rounded-full cursor-pointer"
             size="icon-xs"
-            disabled
+            disabled={!prompt?.trim()}
+            onClick={submitPrompt}
           >
             <ArrowUpIcon />
             <span className="sr-only">Send</span>
