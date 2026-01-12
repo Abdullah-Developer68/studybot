@@ -1,7 +1,8 @@
 "use client";
+import { useState } from "react";
 import { IconPlus } from "@tabler/icons-react";
 import { ArrowUpIcon } from "lucide-react";
-
+import useChatContext from "@/hooks/useChatContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,37 +17,38 @@ import {
   InputGroupTextarea,
 } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
-import { sendUserPrompt } from "@lib/api-client";
 
 const Input = () => {
-  const [prompt, setPrompt] = useState();
-  const handleUserInput = (e) => {
-    setPrompt(e.target.value);
+  const [prompt, setPrompt] = useState("");
+  const { sendMessage, status } = useChatContext();
+
+  // isLoading is derived from status which is a state variable managed by useChat
+  const isLoading = status === "submitted" || status === "streaming";
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!prompt.trim() || isLoading) return; // Guard against empty prompts
+
+    // AI SDK 5.0+ expects a message object with parts, not a plain string
+    sendMessage({
+      role: "user",
+      content: prompt.trim(),
+    });
+    setPrompt("");
   };
-  const submitPrompt = async () => {
-    if (!prompt.trim()) return; // Gaurd against empty prompts
-    try {
-      const res = await sendUserPrompt(prompt.trim());
-      console.log(res);
-      setPrompt("");
-      console.log("Response from API:", res.data);
-    } catch (err) {
-      // Show toast on here
-      console.error(err);
-    }
-  };
+
   return (
-    <>
-      <InputGroup className="w-3xl">
+    <form onSubmit={handleSubmit} className="w-3xl">
+      <InputGroup className="w-full">
         <InputGroupTextarea
           placeholder="Ask, Search or Chat..."
-          onChange={(e) => {
-            handleUserInput(e);
-          }}
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          disabled={isLoading}
         />
         <InputGroupAddon align="block-end">
           <InputGroupButton
+            type="button"
             variant="outline"
             className="rounded-full"
             size="icon-xs"
@@ -55,7 +57,9 @@ const Input = () => {
           </InputGroupButton>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <InputGroupButton variant="ghost">Auto</InputGroupButton>
+              <InputGroupButton type="button" variant="ghost">
+                Auto
+              </InputGroupButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               side="top"
@@ -70,18 +74,18 @@ const Input = () => {
           <InputGroupText className="ml-auto">52% used</InputGroupText>
           <Separator orientation="vertical" className="h-4" />
           <InputGroupButton
+            type="submit"
             variant="default"
             className="rounded-full cursor-pointer"
             size="icon-xs"
-            disabled={!prompt?.trim()}
-            onClick={submitPrompt}
+            disabled={!prompt.trim() || isLoading}
           >
             <ArrowUpIcon />
             <span className="sr-only">Send</span>
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
-    </>
+    </form>
   );
 };
 

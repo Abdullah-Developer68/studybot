@@ -1,13 +1,6 @@
 import { streamText } from "ai";
-import { NextRequest, NextResponse } from "next/server";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { NextResponse } from "next/server";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-
-// const google = createGoogleGenerativeAI({
-//   apiKey: process.env.GEMINI_KEY,
-// });
-
-// const model = google("gemini-2.0-flash");
 
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY,
@@ -15,25 +8,48 @@ const openrouter = createOpenRouter({
 
 export async function POST(req) {
   try {
-    // In here the req have to be parsed as express.json does not exist in here.
     const body = await req.json();
-    const { prompt } = body;
+
+    // useChat sends { messages: [...] }, not { prompt: "..." }
+    const { messages } = body;
+
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return new NextResponse("Messages are required", { status: 400 });
+    }
+
+    // Transform messages to ensure all have content field
+    // Assistant messages from useChat have 'parts' instead of 'content'
+    // This is because while communicating the previous chats are sent as context as well.
+    const transformedMessages = messages.map((message) => {
+      if (message.role === "assistant" && message.parts) {
+        // Extract text content from parts array
+        const textContent = message.parts
+          .filter((part) => part.type === "text")
+          .map((part) => part.text)
+          .join("");
+        return {
+          role: message.role,
+          content: textContent,
+        };
+      }
+      // User messages already have content as string
+      return {
+        role: message.role,
+        content: message.content,
+      };
+    });
 
     const result = streamText({
       model: openrouter("xiaomi/mimo-v2-flash:free"),
-      prompt,
+      messages: transformedMessages,
     });
-    let fullresponse = "";
 
-    for await (const textPart of result.textStream) {
-      fullresponse += textPart;
-      console.log(textPart);
-    }
-
-    // return result.toDataStreamResponse();
-    return NextResponse.json({ response: fullresponse });
+    return result.toUIMessageStreamResponse();
   } catch (err) {
     console.error("Error in POST /api/chat:", err);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    return new NextResponse(
+      JSON.stringify({ error: err.message || "Internal Server Error" }),
+      { status: 500, headers: { "Content-Type": "application/json" } },
+    );
   }
 }
