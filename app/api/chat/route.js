@@ -1,12 +1,17 @@
 import { streamText } from "ai";
 import { NextRequest, NextResponse } from "next/server";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GEMINI_KEY,
+// const google = createGoogleGenerativeAI({
+//   apiKey: process.env.GEMINI_KEY,
+// });
+
+// const model = google("gemini-2.0-flash");
+
+const openrouter = createOpenRouter({
+  apiKey: process.env.OPENROUTER_API_KEY,
 });
-
-const model = google("gemini-2.0-flash");
 
 export async function POST(req) {
   try {
@@ -15,7 +20,7 @@ export async function POST(req) {
     const { prompt } = body;
 
     const result = streamText({
-      model,
+      model: openrouter("xiaomi/mimo-v2-flash:free"),
       prompt,
     });
     let fullresponse = "";
