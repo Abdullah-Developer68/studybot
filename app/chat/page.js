@@ -8,11 +8,9 @@ const Chat = () => {
   return (
     <>
       <ChatProvider>
-        <div className="relative w-full flex flex-col items-center justify-around">
-          <span className="">
-            <ChatBox />
-          </span>
-          <span className="relative top-20 w-3/4 flex justify-center items-center">
+        <div className="relative w-full h-screen flex items-start justify-center overflow-hidden">
+          <ChatBox />
+          <span className="fixed bottom-5 w-3/4 flex justify-center items-center">
             <Input />
           </span>
         </div>

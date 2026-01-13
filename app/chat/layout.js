@@ -15,7 +15,7 @@ const ChatLayout = async ({ children }) => {
           <AppSidebar />
         </span>
 
-        <main className="w-full flex justify-between">
+        <main className="w-full flex">
           {/* This is the button to open or close the sidebar */}
           <SidebarTrigger className="z-50" />
           {children}
