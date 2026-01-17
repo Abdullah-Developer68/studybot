@@ -43,6 +43,7 @@ const ChatBox = () => {
                     remarkPlugins={[remarkGfm]}
                     rehypePlugins={[rehypeHighlight]}
                     components={{
+                      // `node` is an object representing a markdown element in the parsed tree.
                       pre: ({ node, ...props }) => (
                         <div className="overflow-auto my-2 rounded-lg bg-zinc-900 p-4">
                           <pre {...props} />
@@ -62,6 +63,7 @@ const ChatBox = () => {
                       ),
                     }}
                   >
+                    {/* This contains the message and reactMarkdown formats it*/}
                     {content}
                   </ReactMarkdown>
                 </div>
@@ -79,10 +81,12 @@ const ChatBox = () => {
               </div>
               <div className="bg-gray-800 text-gray-100 rounded-2xl rounded-tl-sm p-3 max-w-[80%]">
                 <div className="prose prose-sm prose-invert max-w-none wrap-break-words">
+                  {/* Markdown Handling */}
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     rehypePlugins={[rehypeHighlight]}
                     components={{
+                      // In here we are saying if you encounter these tags then apply the following styles to them
                       pre: ({ node, ...props }) => (
                         <div className="overflow-auto my-2 rounded-lg bg-zinc-900 p-4">
                           <pre {...props} />
