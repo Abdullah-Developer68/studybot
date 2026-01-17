@@ -8,22 +8,22 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { Home, MessageSquare, Settings, LayoutTemplate } from "lucide-react";
+import { Home, MessageSquare, Settings, FileChartPie } from "lucide-react";
 
 const AppSidebar = () => {
   const menuItems = [
     { label: "Home", icon: Home, href: "/" },
     { label: "Chat", icon: MessageSquare, href: "/chat" },
     { label: "Settings", icon: Settings, href: "/settings" },
-    { label: "Templates", icon: LayoutTemplate, href: "/templates" },
+    { label: "Templates", icon: FileChartPie, href: "/templates" },
   ];
 
   return (
     <Sidebar>
       <SidebarHeader>
-        <h2 className="text-lg font-bold">My App</h2>
+        {/* <h2 className="text-lg font-bold">My App</h2>*/}
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="mt-30">
         <SidebarGroup>
           <SidebarMenu>
             {menuItems.map((item) => (
