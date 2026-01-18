@@ -1,7 +1,16 @@
 "use client";
 import { useState, useRef } from "react";
 import { IconPlus } from "@tabler/icons-react";
-import { ArrowUpIcon, X, FileText, Loader2, Square } from "lucide-react";
+import {
+  ArrowUpIcon,
+  X,
+  FileText,
+  Loader2,
+  Square,
+  Bolt,
+  BadgeQuestionMark,
+  WalletCards,
+} from "lucide-react";
 import useChatContext from "@/hooks/useChatContext";
 import { uploadDocument } from "@/lib/api-client";
 import {
@@ -270,7 +279,7 @@ const Input = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <InputGroupButton type="button" variant="ghost">
-                Tools
+                <Bolt size={28} />
               </InputGroupButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -278,12 +287,33 @@ const Input = () => {
               align="start"
               className="[--radius:0.95rem]"
             >
-              <DropdownMenuItem>Auto</DropdownMenuItem>
-              <DropdownMenuItem>Agent</DropdownMenuItem>
-              <DropdownMenuItem>Manual</DropdownMenuItem>
+              <DropdownMenuItem>
+                <span className="flex items-center gap-2 justify-between w-full">
+                  <p>Quiz</p>
+                  <BadgeQuestionMark size={20} />
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <span className="flex items-center gap-2 justify-between w-full">
+                  <p>Flash Cards</p>
+                  <WalletCards size={20} />
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <span className="flex items-center gap-2 justify-between w-full">
+                  <p>Manual</p>
+                </span>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <InputGroupText className="ml-auto">52% used</InputGroupText>
+          <InputGroupText className="ml-auto group relative">
+            {/* Context Window */}
+            <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-600 cursor-help"></div>
+            {/* Tooltip */}
+            <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+              52% context used
+            </div>
+          </InputGroupText>
           <Separator orientation="vertical" className="h-4" />
 
           {/* Send or Stop button */}

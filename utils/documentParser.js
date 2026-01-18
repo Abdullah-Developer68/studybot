@@ -1,5 +1,5 @@
 /**
- * Extract text from PDF file using unpdf (server-side compatible)
+ * Extract text from PDF file using unpdf (server-side compatible) This is being used in the upload route
  */
 export async function parsePDF(buffer) {
   try {

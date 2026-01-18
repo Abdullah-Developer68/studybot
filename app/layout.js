@@ -1,6 +1,9 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import ReduxProvider from "@/app/providers/ReduxProvider";
 import { ThemeProvider } from "@/app/providers/ThemeProvider";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import AppSidebar from "@/components/global/AppSidebar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,6 +22,11 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }) {
+  // This is a feature of next.js that allows to access cookies on the server side during SSR.
+  const cookieStore = await cookies();
+  // It gets the data from the request headers
+  const defaultOpen = cookieStore.get("sidebar-state")?.value === "true";
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -31,7 +39,17 @@ export default async function RootLayout({ children }) {
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <SidebarProvider defaultOpen={defaultOpen}>
+              <span className="absolute z-40">
+                <AppSidebar />
+              </span>
+
+              <main className="w-full flex">
+                {/* This is the button to open or close the sidebar */}
+                <SidebarTrigger className="z-50" />
+                {children}
+              </main>
+            </SidebarProvider>
           </ThemeProvider>
         </ReduxProvider>
       </body>
