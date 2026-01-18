@@ -1,6 +1,8 @@
-import TemplateManager from "@/components/templates/TemplateManager";
-const Templates = () => {
+import React from "react";
+import TemplateManager from "@/components/templates/templateManager";
+
+const Template = () => {
   return <TemplateManager />;
 };
 
-export default Templates;
+export default Template;
