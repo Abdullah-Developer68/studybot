@@ -3,7 +3,9 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 
 // This tells Next.js: "Only load this on the client's computer"
-const Editor = dynamic(() => import("@/components/Editor"), { ssr: false });
+const Editor = dynamic(() => import("@/components/mdEditor/mdEditor"), {
+  ssr: false,
+});
 
 const NewTemplate = () => {
   const [content, setContent] = useState(

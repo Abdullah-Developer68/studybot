@@ -158,7 +158,7 @@ const TemplateManager = () => {
           </Button>
 
           {/* Create New Template */}
-          <Link href="/">
+          <Link href="/templates/newTemplate">
             <Button onClick={handleCreateTemplate} size="sm">
               <Plus size={18} className="mr-2" />
               New Template
