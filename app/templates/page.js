@@ -1,5 +1,5 @@
 import React from "react";
-import TemplateManager from "@/components/templates/TemplateManager";
+import TemplateManager from "@/app/templates/templateManager/page";
 
 const Template = () => {
   return <TemplateManager />;
