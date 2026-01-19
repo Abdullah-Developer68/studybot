@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import useChatContext from "@/hooks/useChatContext";
 import { uploadDocument } from "@/lib/api-client";
-import { getSupportedExtensions } from "@/lib/documentParser";
+import { getSupportedExtensions, MAX_FILE_SIZE_MB } from "@/lib/fileUtils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,7 +30,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 const SUPPORTED_FILE_TYPES = getSupportedExtensions();
-const MAX_FILE_SIZE_MB = 10;
 
 // Validate file before upload
 const validateFile = (file) => {

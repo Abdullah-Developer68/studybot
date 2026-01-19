@@ -1,20 +1,12 @@
 import { NextResponse } from "next/server";
 import { parseDocument } from "@/lib/documentParser";
+import {
+  getSupportedExtensions,
+  MAX_FILE_SIZE_MB,
+  MAX_TEXT_LENGTH,
+} from "@/lib/fileUtils";
 
-const MAX_FILE_SIZE_MB = 10; // 10MB limit
-const MAX_TEXT_LENGTH = 50000; // ~12,500 tokens - adjust based on your model's context limit
-
-const SUPPORTED_EXTENSIONS = [
-  ".pdf",
-  ".docx",
-  ".doc",
-  ".xlsx",
-  ".xls",
-  ".pptx",
-  ".ppt",
-  ".md",
-  ".txt",
-];
+const SUPPORTED_EXTENSIONS = getSupportedExtensions();
 
 export async function POST(req) {
   try {
