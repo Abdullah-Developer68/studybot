@@ -28,3 +28,4 @@ const Tiptap = () => {
 };
 
 export default Tiptap;
+

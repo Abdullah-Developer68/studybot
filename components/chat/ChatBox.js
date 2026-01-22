@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import useChatContext from "@/hooks/useChatContext";
+import useChatContext from "@/hooks/chat/useChatContext";
 import { Bot, Loader2, User, FileText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";

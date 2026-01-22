@@ -1,10 +1,10 @@
 "use client";
-import Tiptap from "@/components/tiptab/Tiptab";
+import Editor from "@/components/editor/Editor";
 
 const newTemplate = () => {
   return (
     <>
-      <Tiptap />
+      <Editor />
     </>
   );
 };
