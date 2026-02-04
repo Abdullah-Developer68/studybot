@@ -17,25 +17,33 @@ export async function POST(req) {
 
     const formData = await req.formData();
     const file = formData.get("file");
+    const userId = formData.get("userId"); // User UUID
     const templateId = formData.get("templateId"); // Optional: Link to template
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
+    if (!userId) {
+      return NextResponse.json(
+        { error: "User ID is required" },
+        { status: 400 },
+      );
+    }
+
     // Generate unique file name
     const fileExt = file.name.split(".").pop();
     const fileName = `${Date.now()}-${crypto.randomUUID()}.${fileExt}`;
     const filePath = templateId
-      ? `templates/${templateId}/${fileName}`
-      : `uploads/${fileName}`;
+      ? `${userId}/${templateId}/${fileName}`
+      : `${userId}/${fileName}`;
 
     // Convert file to buffer
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // Upload file to Supabase Storage (Bucket: image)
+    // Upload file to Supabase Storage (Bucket: images)
     const { data, error } = await supabase.storage
-      .from("image")
+      .from("images")
       .upload(filePath, buffer, {
         contentType: file.type,
         upsert: false, // does not overwrite if the files with the same name exists instead the upload will fail
@@ -51,7 +59,7 @@ export async function POST(req) {
 
     // Get public URL
     const { data: urlData } = supabase.storage
-      .from("image")
+      .from("images")
       .getPublicUrl(filePath);
 
     return NextResponse.json({
