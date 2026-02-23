@@ -1,24 +1,24 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# dependencies (ignore in all folders)
+**/node_modules/
+**/.pnp
+**/.pnp.*
+**/.yarn/*
+!**/.yarn/patches
+!**/.yarn/plugins
+!**/.yarn/releases
+!**/.yarn/versions
 
-# testing
-/coverage
+# testing (all folders)
+**/coverage/
 
-# next.js
-/.next/
-/out/
+# next.js (all folders)
+**/.next/
+**/out/
 
-# production
-/build
+# production (all folders)
+**/build/
 
 # misc
 .DS_Store
@@ -33,8 +33,8 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
-# vercel
-.vercel
+# vercel (all folders)
+**/.vercel/
 
 # typescript
 *.tsbuildinfo
