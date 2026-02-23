@@ -1,0 +1,1 @@
+# The mobile app has to be made using expo.
