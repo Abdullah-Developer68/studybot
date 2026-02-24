@@ -5,9 +5,11 @@ import {
   onAuthStateChange,
   getUserSession,
   getCurrentUser,
-} from "@packages/supabase/index.supabase";
-import supabaseClient from "@/utils/supabase/client";
+} from "@studybot/supabase";
+import { createClient } from "@/utils/supabase/client";
 import { useCallback } from "react";
+
+const supabaseClient = createClient();
 
 const AuthContext = createContext(null);
 

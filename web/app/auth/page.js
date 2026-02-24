@@ -19,8 +19,10 @@ import {
   signUpUser,
   signInUser,
   signInWithOAuthUser,
-} from "@packages/supabase/index.supabase";
-import supabaseClient from "@/lib/supabaseClient";
+} from "@studybot/supabase";
+import { createClient } from "@/utils/supabase/client";
+
+const supabaseClient = createClient();
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);

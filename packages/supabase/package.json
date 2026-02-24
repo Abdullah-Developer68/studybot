@@ -1,0 +1,13 @@
+{
+  "name": "@studybot/supabase",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./supabase.methods.js",
+  "exports": {
+    ".": "./supabase.methods.js",
+    "./auth": "./auth/index.js",
+    "./chat": "./chat/index.js",
+    "./storage": "./storage/index.js"
+  }
+}

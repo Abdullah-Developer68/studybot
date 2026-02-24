@@ -26,6 +26,7 @@
     "@reduxjs/toolkit": "^2.11.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.97.0",
+    "@studybot/supabase": "file:../packages/supabase/studybot-supabase-0.1.0.tgz",
     "@tabler/icons-react": "^3.35.0",
     "@tiptap/core": "^3.16.0",
     "@tiptap/extension-highlight": "^3.16.0",
