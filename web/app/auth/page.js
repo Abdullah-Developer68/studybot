@@ -42,30 +42,14 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { data, error } = await signInUser(
-          supabaseClient,
-          email,
-          password,
-        );
-        if (error) {
-          setError(error);
-        } else {
-          router.push("/");
-        }
+        await signInUser(supabaseClient, email, password);
+        router.push("/");
       } else {
-        const { data, error } = await signUpUser(
-          supabaseClient,
-          email,
-          password,
-        );
-        if (error) {
-          setError(error);
-        } else {
-          setMessage("Check your email to confirm your account");
-        }
+        await signUpUser(supabaseClient, email, password);
+        setMessage("Check your email to confirm your account");
       }
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError(err?.message || "An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -79,7 +63,7 @@ const Auth = () => {
       await signInWithOAuthUser(supabaseClient, "google");
       // OAuth will redirect automatically
     } catch (err) {
-      setError("Failed to sign in with Google");
+      setError(err?.message || "Failed to sign in with Google");
       setLoading(false);
     }
   };
