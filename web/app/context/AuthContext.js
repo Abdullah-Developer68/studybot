@@ -1,7 +1,13 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { getUser, onAuthStateChange } from "@/lib/supabase";
+import {
+  onAuthStateChange,
+  getUserSession,
+  getCurrentUser,
+} from "@packages/supabase/index.supabase";
+import supabaseClient from "@/utils/supabase/client";
+import { useCallback } from "react";
 
 const AuthContext = createContext(null);
 
@@ -9,30 +15,36 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      try {
-        const { user, error } = await getUser();
+  const getUserFromSession = useCallback(async () => {
+    try {
+      // First check if there's an active session on mount
+      const sessionData = await getUserSession(supabaseClient);
 
-        if (error) {
-          console.error("Error getting user:", error);
-          setUser(null);
-        } else {
-          setUser(user);
-        }
-      } catch (error) {
-        console.error("Error getting session:", error);
+      const session = sessionData?.session;
+
+      if (!session) {
+        // normal signed-out state
         setUser(null);
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
 
-    getInitialSession();
+      const userData = await getCurrentUser(supabaseClient);
+      setUser(userData?.user ?? null);
+    } catch (error) {
+      // optional: log once
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
+  useEffect(() => {
+    getUserFromSession();
+  }, [getUserFromSession]);
+
+  useEffect(() => {
     // Listen for auth state changes
-    const subscription = onAuthStateChange((event, session) => {
+    const subscription = onAuthStateChange(supabaseClient, (event, session) => {
       if (event === "SIGNED_IN") {
         setUser(session?.user ?? null);
       } else if (event === "SIGNED_OUT") {

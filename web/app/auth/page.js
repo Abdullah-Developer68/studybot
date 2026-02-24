@@ -15,7 +15,11 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signUpUser, signInUser } from "@/packages/supabase/auth/auth";
+import {
+  signUpUser,
+  signInUser,
+  signInWithOAuthUser,
+} from "@packages/supabase/index.supabase";
 import supabaseClient from "@/lib/supabaseClient";
 
 const Auth = () => {
@@ -70,10 +74,7 @@ const Auth = () => {
     setError("");
 
     try {
-      const { data, error } = await signInWithOAuth("google");
-      if (error) {
-        setError(error);
-      }
+      await signInWithOAuthUser(supabaseClient, "google");
       // OAuth will redirect automatically
     } catch (err) {
       setError("Failed to sign in with Google");
