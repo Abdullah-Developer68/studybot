@@ -175,7 +175,7 @@ const Input = () => {
             {attachedFiles.map((file, index) => (
               <div
                 key={index}
-                className="flex items-center gap-1.5 bg-blue-900/30 border border-blue-700 rounded-lg px-2 py-1.5 text-xs shrink-0 max-w-[140px]"
+                className="flex items-center gap-1.5 bg-blue-900/30 border border-blue-700 rounded-lg px-2 py-1.5 text-xs shrink-0 max-w-35"
               >
                 <FileText size={14} className="text-blue-400 shrink-0" />
                 <span className="text-blue-200 truncate" title={file.name}>
