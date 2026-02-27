@@ -1,3 +1,7 @@
+// Capitalize variables tells that they are constants and should not be changed.
+const MAX_FILE_SIZE_MB = 10;
+const MAX_TEXT_LENGTH = 50000;
+
 const getSupportedExtensions = () => {
   return [
     ".pdf",
@@ -11,8 +15,5 @@ const getSupportedExtensions = () => {
     ".txt",
   ];
 };
-
-const MAX_FILE_SIZE_MB = 10;
-const MAX_TEXT_LENGTH = 50000;
 
 export { MAX_FILE_SIZE_MB, MAX_TEXT_LENGTH, getSupportedExtensions };

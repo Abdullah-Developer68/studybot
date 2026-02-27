@@ -1,7 +1,18 @@
 /**
- * Extract text from PDF file using unpdf (server-side compatible) This is being used in the upload route
+ * Server-only document parsing utilities.
+ *
+ * Why this split is required:
+ * - Next.js builds client bundles by following import/export graphs.
+ * - If server parsing code is re-exported from a client-consumed barrel, browser builds
+ *   may try to resolve Node-only dependencies (for example modules that require "fs").
+ * - Keeping parser code in a dedicated server path prevents server-only dependencies
+ *   from leaking into client component bundles.
  */
-export async function parsePDF(buffer) {
+
+/**
+ * Extract text from PDF file using unpdf (server-side compatible). This is used in the upload route.
+ */
+const parsePDF = async (buffer) => {
   try {
     const { extractText } = await import("unpdf");
 
@@ -16,12 +27,12 @@ export async function parsePDF(buffer) {
   } catch (error) {
     throw new Error(`Failed to parse PDF: ${error.message}`);
   }
-}
+};
 
 /**
  * Extract text from Word documents (.docx, .doc)
  */
-export async function parseWord(buffer) {
+const parseWord = async (buffer) => {
   try {
     const mammoth = await import("mammoth");
     const result = await mammoth.extractRawText({ buffer });
@@ -29,12 +40,12 @@ export async function parseWord(buffer) {
   } catch (error) {
     throw new Error(`Failed to parse Word document: ${error.message}`);
   }
-}
+};
 
 /**
  * Extract text from Excel spreadsheets (.xlsx, .xls)
  */
-export async function parseExcel(buffer) {
+const parseExcel = async (buffer) => {
   try {
     const ExcelJS = await import("exceljs");
     const workbook = new ExcelJS.Workbook();
@@ -62,12 +73,12 @@ export async function parseExcel(buffer) {
   } catch (error) {
     throw new Error(`Failed to parse Excel file: ${error.message}`);
   }
-}
+};
 
 /**
  * Extract text from PowerPoint presentations (.pptx)
  */
-export async function parsePowerPoint(buffer) {
+const parsePowerPoint = async (buffer) => {
   try {
     const { parseOfficeAsync } = await import("officeparser");
     const data = await parseOfficeAsync(buffer);
@@ -75,34 +86,34 @@ export async function parsePowerPoint(buffer) {
   } catch (error) {
     throw new Error(`Failed to parse PowerPoint: ${error.message}`);
   }
-}
+};
 
 /**
  * Extract text from Markdown files (.md)
  */
-export function parseMarkdown(buffer) {
+const parseMarkdown = (buffer) => {
   try {
     return buffer.toString("utf-8");
   } catch (error) {
     throw new Error(`Failed to parse Markdown: ${error.message}`);
   }
-}
+};
 
 /**
  * Extract text from plain text files (.txt)
  */
-export function parseText(buffer) {
+const parseText = (buffer) => {
   try {
     return buffer.toString("utf-8");
   } catch (error) {
     throw new Error(`Failed to parse text file: ${error.message}`);
   }
-}
+};
 
 /**
  * Main document parser - routes to appropriate parser based on file type
  */
-export async function parseDocument(buffer, fileName, mimeType) {
+const parseDocument = async (buffer, fileName, mimeType) => {
   const extension = fileName.toLowerCase().split(".").pop();
 
   switch (extension) {
@@ -132,12 +143,12 @@ export async function parseDocument(buffer, fileName, mimeType) {
         `Unsupported file type: .${extension}. Supported types: PDF, Word (.docx), Excel (.xlsx), PowerPoint (.pptx), Markdown (.md), Text (.txt)`,
       );
   }
-}
+};
 
 /**
  * Validate file size (in bytes)
  */
-export function validateFileSize(fileSize, maxSizeInMB = 10) {
+const validateFileSize = (fileSize, maxSizeInMB = 10) => {
   const maxBytes = maxSizeInMB * 1024 * 1024;
   if (fileSize > maxBytes) {
     throw new Error(
@@ -145,4 +156,15 @@ export function validateFileSize(fileSize, maxSizeInMB = 10) {
     );
   }
   return true;
-}
+};
+
+export {
+  parsePDF,
+  parseWord,
+  parseExcel,
+  parsePowerPoint,
+  parseMarkdown,
+  parseText,
+  parseDocument,
+  validateFileSize,
+};

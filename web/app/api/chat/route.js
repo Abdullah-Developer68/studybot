@@ -40,7 +40,7 @@ export async function POST(req) {
     });
 
     const result = streamText({
-      model: openrouter("xiaomi/mimo-v2-flash:free"),
+      model: openrouter("arcee-ai/trinity-large-preview:free"),
       messages: transformedMessages,
       experimental_transform: smoothStream({
         delayInMs: 10,

@@ -3,10 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "./utils.methods.js",
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "mammoth": "^1.11.0",
+    "officeparser": "^6.0.4",
+    "unpdf": "^1.4.0"
+  },
   "exports": {
-    ".": "./utils.methods.js",
-    "./file-utils": "./file-utils.js",
-    "./document-parser": "./document-parser.js"
+    "./global": "./utils.global.js",
+    "./client": "./utils.client.js",
+    "./server": "./utils.server.js",
+    "./global/file-utils": "./global/file-utils.js",
+    "./server/document-parser": "./server/document-parser.js"
   }
 }
