@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { parseDocument } from "@/lib/documentParser";
+import { parseDocument } from "@studybot/utils";
 import {
   getSupportedExtensions,
   MAX_FILE_SIZE_MB,
   MAX_TEXT_LENGTH,
-} from "@/lib/fileUtils";
+} from "@studybot/utils";
 
 const SUPPORTED_EXTENSIONS = getSupportedExtensions();
 

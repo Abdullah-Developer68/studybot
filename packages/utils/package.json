@@ -1,0 +1,12 @@
+{
+  "name": "@studybot/utils",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./utils.methods.js",
+  "exports": {
+    ".": "./utils.methods.js",
+    "./file-utils": "./file-utils.js",
+    "./document-parser": "./document-parser.js"
+  }
+}

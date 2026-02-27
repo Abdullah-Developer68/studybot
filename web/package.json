@@ -25,6 +25,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@reduxjs/toolkit": "^2.11.0",
     "@studybot/supabase": "file:../packages/supabase/studybot-supabase-0.1.0.tgz",
+    "@studybot/utils": "file:../packages/utils/studybot-utils-0.1.0.tgz",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.97.0",
     "@tabler/icons-react": "^3.35.0",

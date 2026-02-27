@@ -1,5 +1,3 @@
-"use server";
-
 /**
  * Extract text from PDF file using unpdf (server-side compatible) This is being used in the upload route
  */
@@ -7,13 +5,9 @@ export async function parsePDF(buffer) {
   try {
     const { extractText } = await import("unpdf");
 
-    // Convert Buffer to Uint8Array
     const uint8Array = new Uint8Array(buffer);
-
-    // Extract text from PDF - returns { totalPages, text } where text is an array
     const result = await extractText(uint8Array);
 
-    // text can be an array of strings (one per page) or a single string
     const text = Array.isArray(result.text)
       ? result.text.join("\n\n")
       : String(result.text || "");

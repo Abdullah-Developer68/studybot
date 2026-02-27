@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import useChatContext from "@/hooks/chat/useChatContext";
 import { uploadDocument } from "@/lib/api-client";
-import { getSupportedExtensions, MAX_FILE_SIZE_MB } from "@/lib/fileUtils";
+import { getSupportedExtensions, MAX_FILE_SIZE_MB } from "@studybot/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
