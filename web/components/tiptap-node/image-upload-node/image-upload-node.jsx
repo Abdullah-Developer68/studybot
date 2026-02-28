@@ -5,24 +5,11 @@ import { Button } from "@/components/tiptap-ui-primitive/button";
 import { CloseIcon } from "@/components/tiptap-icons/close-icon";
 import "@/components/tiptap-node/image-upload-node/image-upload-node.scss";
 import { focusNextNode, isValidPosition } from "@/lib/tiptap-utils";
-import { getPublicUrl } from "@studybot/supabase/storage";
+import { resolveImageUrl } from "@studybot/supabase/storage";
 import { createClient } from "@/utils/supabase/client";
 
 // This sends the browser client over to packages directory
 const supabaseClient = createClient();
-
-const resolveUploadedImageUrl = (uploadResult) => {
-  if (typeof uploadResult !== "string" || uploadResult.length === 0) {
-    return null;
-  }
-
-  if (/^https?:\/\//i.test(uploadResult)) {
-    return uploadResult;
-  }
-
-  const { url } = getPublicUrl(supabaseClient, "images", uploadResult);
-  return url || null;
-};
 
 /**
  * Custom hook for managing multiple file uploads with progress tracking and cancellation
@@ -69,7 +56,18 @@ function useFileUpload(options) {
         abortController.signal,
       );
 
-      const url = resolveUploadedImageUrl(uploadResult);
+      const { url, error } = await resolveImageUrl(
+        supabaseClient,
+        uploadResult,
+        {
+          bucket: "images",
+          expiresIn: 60 * 60 * 24,
+        },
+      );
+
+      if (error) {
+        throw new Error(error);
+      }
 
       if (!url) throw new Error("Upload failed: No URL returned");
 

@@ -99,6 +99,32 @@ const getSignedUrl = async (supabaseClient, bucket, path, expiresIn = 3600) => {
   return { url: data.signedUrl, error: null };
 };
 
+// Resolves an uploaded image value into a usable URL (passthrough for absolute URLs, signed URL for storage paths).
+const resolveImageUrl = async (supabaseClient, pathOrUrl, options = {}) => {
+  ensureClient(supabaseClient);
+
+  if (typeof pathOrUrl !== "string" || pathOrUrl.length === 0) {
+    return { url: null, error: "Invalid image path/url" };
+  }
+
+  // If it's already an absolute URL, return it as-is. For public buckets, this allows direct URLs to work without signing.
+  if (pathOrUrl.startsWith("http://") || pathOrUrl.startsWith("https://")) {
+    return { url: pathOrUrl, error: null };
+  }
+  // For private buckets generate a signed URL. This assumes the pathOrUrl is in the format "bucket/path/to/file.jpg".
+  const bucket = options.bucket ?? "images";
+  const expiresIn = options.expiresIn ?? 3600;
+
+  // error handling has already been handled in getSignedUrl
+  const result = await getSignedUrl(
+    supabaseClient,
+    bucket,
+    pathOrUrl,
+    expiresIn,
+  );
+  return result;
+};
+
 // Deletes one or multiple files from a storage bucket.
 const deleteFile = async (supabaseClient, bucket, paths) => {
   ensureClient(supabaseClient);
@@ -184,6 +210,7 @@ export {
   uploadImage,
   getPublicUrl,
   getSignedUrl,
+  resolveImageUrl,
   deleteFile,
   listFiles,
   moveFile,

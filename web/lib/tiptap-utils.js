@@ -359,11 +359,11 @@ export const handleImageUpload = async (file, onProgress, abortSignal) => {
       throw new Error(result.error);
     }
 
-    if (!result.url) {
-      throw new Error("Upload failed: No URL returned");
+    if (!result.path) {
+      throw new Error("Upload failed: No storage path returned");
     }
-
-    return result.url;
+    // return storage path instead of .url (public) for private bucket flow
+    return result.path;
   } catch (error) {
     if (error.message === "Upload cancelled") {
       throw error;
