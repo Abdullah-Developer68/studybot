@@ -222,14 +222,6 @@
       ]
     },
     {
-      "type": "image",
-      "attrs": {
-        "src": "/images/tiptap-ui-placeholder-image.jpg",
-        "alt": "placeholder-image",
-        "title": "placeholder-image"
-      }
-    },
-    {
       "type": "bulletList",
       "content": [
         {

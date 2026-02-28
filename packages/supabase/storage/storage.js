@@ -1,9 +1,11 @@
+// Validates that a usable Supabase client with storage access is provided.
 const ensureClient = (supabaseClient) => {
   if (!supabaseClient?.storage) {
     throw new Error("Supabase client is required");
   }
 };
 
+// Uploads a generic file to a specified bucket/path with optional content type and upsert.
 const uploadFile = async (supabaseClient, bucket, path, file, options = {}) => {
   ensureClient(supabaseClient);
 
@@ -21,6 +23,7 @@ const uploadFile = async (supabaseClient, bucket, path, file, options = {}) => {
   return { data, error: null };
 };
 
+// Uploads an image to the images bucket, generates a public URL, and returns upload metadata.
 const uploadImage = async (
   supabaseClient,
   file,
@@ -73,6 +76,7 @@ const uploadImage = async (
   };
 };
 
+// Returns a public URL for a file stored in a given bucket/path.
 const getPublicUrl = (supabaseClient, bucket, path) => {
   ensureClient(supabaseClient);
 
@@ -80,6 +84,7 @@ const getPublicUrl = (supabaseClient, bucket, path) => {
   return { url: data.publicUrl };
 };
 
+// Creates a time-limited signed URL for secure file access.
 const getSignedUrl = async (supabaseClient, bucket, path, expiresIn = 3600) => {
   ensureClient(supabaseClient);
 
@@ -94,6 +99,7 @@ const getSignedUrl = async (supabaseClient, bucket, path, expiresIn = 3600) => {
   return { url: data.signedUrl, error: null };
 };
 
+// Deletes one or multiple files from a storage bucket.
 const deleteFile = async (supabaseClient, bucket, paths) => {
   ensureClient(supabaseClient);
 
@@ -109,6 +115,7 @@ const deleteFile = async (supabaseClient, bucket, paths) => {
   return { data, error: null };
 };
 
+// Lists files in a bucket folder with pagination and sorting options.
 const listFiles = async (supabaseClient, bucket, folder = "", options = {}) => {
   ensureClient(supabaseClient);
 
@@ -127,6 +134,7 @@ const listFiles = async (supabaseClient, bucket, folder = "", options = {}) => {
   return { files: data, error: null };
 };
 
+// Moves a file within the same bucket from one path to another.
 const moveFile = async (supabaseClient, bucket, fromPath, toPath) => {
   ensureClient(supabaseClient);
 
@@ -141,6 +149,7 @@ const moveFile = async (supabaseClient, bucket, fromPath, toPath) => {
   return { data, error: null };
 };
 
+// Copies a file within the same bucket from one path to another.
 const copyFile = async (supabaseClient, bucket, fromPath, toPath) => {
   ensureClient(supabaseClient);
 
@@ -155,6 +164,7 @@ const copyFile = async (supabaseClient, bucket, fromPath, toPath) => {
   return { data, error: null };
 };
 
+// Downloads a file from a bucket/path and returns the file payload.
 const downloadFile = async (supabaseClient, bucket, path) => {
   ensureClient(supabaseClient);
 
