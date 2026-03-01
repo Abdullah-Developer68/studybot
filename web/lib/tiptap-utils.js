@@ -6,7 +6,7 @@ import {
 } from "@tiptap/pm/state";
 import { cellAround, CellSelection } from "@tiptap/pm/tables";
 import { findParentNodeClosestToPos } from "@tiptap/react";
-import { uploadImage, getUser } from "@studybot/supabase";
+import { uploadImage } from "@studybot/supabase";
 import { createClient } from "@/utils/supabase/client";
 
 const supabaseClient = createClient();
@@ -328,29 +328,30 @@ export function selectionWithinConvertibleTypes(editor, types = []) {
 /**
  * Handles image upload with progress tracking and abort capability
  * @param file The file to upload
+ * @param userId Authenticated user ID provided by auth context
  * @param onProgress Optional callback for tracking upload progress
  * @param abortSignal Optional AbortSignal for cancelling the upload
- * @returns Promise resolving to the URL of the uploaded image
+ * @returns Promise resolving to the storage path of the uploaded image
  */
-export const handleImageUpload = async (file, onProgress, abortSignal) => {
+export const handleImageUpload = async (
+  file,
+  userId,
+  onProgress,
+  abortSignal,
+) => {
   if (!file) {
     throw new Error("No file provided for upload!");
   }
 
+  if (!userId) {
+    throw new Error("User not authenticated. Please log in to upload images.");
+  }
+
   try {
-    // Get current user ID from Supabase
-    const { user } = await getUser(supabaseClient);
-
-    if (!user) {
-      throw new Error(
-        "User not authenticated. Please log in to upload images.",
-      );
-    }
-
     const result = await uploadImage(
       supabaseClient,
       file,
-      user.id,
+      userId,
       null,
       onProgress,
     );

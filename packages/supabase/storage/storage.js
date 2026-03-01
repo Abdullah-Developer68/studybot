@@ -205,6 +205,56 @@ const downloadFile = async (supabaseClient, bucket, path) => {
   return { data, error: null };
 };
 
+// Creates a signed image URL only if the requested path belongs to the requester
+const signOwnedImagePath = async (supabaseClient, params = {}) => {
+  ensureClient(supabaseClient);
+
+  const {
+    requesterId,
+    pathOrUrl,
+    bucket = "images",
+    expiresIn = 60 * 60 * 24,
+  } = params;
+
+  if (!requesterId) {
+    return { url: null, error: "Missing requester id" };
+  }
+
+  if (typeof pathOrUrl !== "string" || !pathOrUrl.trim()) {
+    return { url: null, error: "Invalid path" };
+  }
+
+  const value = pathOrUrl.trim();
+
+  if (value.startsWith("http://") || value.startsWith("https://")) {
+    return { url: value, error: null, path: value, bucket };
+  }
+
+  // Accept "images/userId/file.png" or "userId/file.png"
+  const normalizedPath = value.startsWith(`${bucket}/`)
+    ? value.slice(bucket.length + 1)
+    : value;
+
+  // Enforce owner folder convention
+  const ownerFolder = normalizedPath.split("/")[0];
+  if (ownerFolder !== requesterId) {
+    return { url: null, error: "Forbidden path access" };
+  }
+
+  const signed = await getSignedUrl(
+    supabaseClient,
+    bucket,
+    normalizedPath,
+    expiresIn,
+  );
+
+  if (signed.error || !signed.url) {
+    return { url: null, error: signed.error || "Failed to sign url" };
+  }
+
+  return { url: signed.url, error: null, path: normalizedPath, bucket };
+};
+
 export {
   uploadFile,
   uploadImage,
@@ -216,4 +266,5 @@ export {
   moveFile,
   copyFile,
   downloadFile,
+  signOwnedImagePath,
 };
