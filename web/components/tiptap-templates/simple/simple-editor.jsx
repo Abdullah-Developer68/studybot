@@ -179,8 +179,12 @@ export function SimpleEditor() {
       StarterKit.configure({
         horizontalRule: false,
         link: {
-          openOnClick: false,
-          enableClickSelection: true,
+          openOnClick: true, // Open link when user clicks linked text.
+          enableClickSelection: false, // Prevent click from only selecting link mark.
+          HTMLAttributes: {
+            target: "_blank", // Open links in a new browser tab.
+            rel: "noopener noreferrer", // Block opener access and hide referrer.
+          },
         },
       }),
       HorizontalRule,
