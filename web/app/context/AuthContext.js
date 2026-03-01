@@ -1,9 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChange, getSession, getUser } from "@studybot/supabase";
+import { onAuthStateChange, getUserFromSession } from "@studybot/supabase";
 import { createClient } from "@/utils/supabase/client";
-import { useCallback } from "react";
 
 const supabaseClient = createClient();
 
@@ -13,32 +12,36 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const getUserFromSession = useCallback(async () => {
-    try {
-      // First check if there's an active session on mount
-      const sessionData = await getSession(supabaseClient);
-
-      const session = sessionData?.session;
-
-      if (!session) {
-        // normal signed-out state
-        setUser(null);
-        return;
-      }
-
-      const userData = await getUser(supabaseClient);
-      setUser(userData?.user ?? null);
-    } catch (error) {
-      // optional: log once
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    getUserFromSession();
-  }, [getUserFromSession]);
+    let isMounted = true;
+
+    const hydrateUser = async () => {
+      try {
+        const result = await getUserFromSession(supabaseClient);
+
+        if (!isMounted) return;
+
+        if (result?.error) {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        setUser(result?.user ?? null);
+        setLoading(false);
+      } catch {
+        if (!isMounted) return;
+        setUser(null);
+        setLoading(false);
+      }
+    };
+
+    hydrateUser();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     // Listen for auth state changes

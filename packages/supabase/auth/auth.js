@@ -76,6 +76,37 @@ const getUser = async (supabaseClient) => {
   return data;
 };
 
+const getUserFromSession = async (supabaseClient) => {
+  try {
+    ensureClient(supabaseClient);
+
+    const sessionResult = await getSession(supabaseClient);
+    const session = sessionResult?.session ?? null;
+
+    if (!session) {
+      return {
+        user: null,
+        session: null,
+        error: null,
+      };
+    }
+
+    const userResult = await getUser(supabaseClient);
+
+    return {
+      user: userResult?.user ?? null,
+      session,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      user: null,
+      session: null,
+      error: error?.message || "Failed to resolve user from session",
+    };
+  }
+};
+
 const onAuthStateChange = (supabaseClient, callback) => {
   ensureClient(supabaseClient);
   const {
@@ -94,5 +125,6 @@ export {
   signInWithOAuth,
   getSession,
   getUser,
+  getUserFromSession,
   onAuthStateChange,
 };
