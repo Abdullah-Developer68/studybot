@@ -13,6 +13,8 @@ import { Highlight } from "@tiptap/extension-highlight";
 import { Subscript } from "@tiptap/extension-subscript";
 import { Superscript } from "@tiptap/extension-superscript";
 import { Selection } from "@tiptap/extensions";
+import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
+import { common, createLowlight } from "lowlight";
 
 // --- UI Primitives ---
 import { Button } from "@/components/tiptap-ui-primitive/button";
@@ -76,6 +78,8 @@ import "@/components/tiptap-templates/simple/simple-editor.scss";
 import content from "@/components/tiptap-templates/simple/data/content.json";
 
 import useAuth from "@/hooks/auth/useAuth";
+
+const lowlight = createLowlight(common);
 
 const MainToolbarContent = ({ onHighlighterClick, onLinkClick, isMobile }) => {
   return (
@@ -178,6 +182,7 @@ export function SimpleEditor() {
     extensions: [
       StarterKit.configure({
         horizontalRule: false,
+        codeBlock: false,
         link: {
           openOnClick: true, // Open link when user clicks linked text.
           enableClickSelection: false, // Prevent click from only selecting link mark.
@@ -186,6 +191,11 @@ export function SimpleEditor() {
             rel: "noopener noreferrer", // Block opener access and hide referrer.
           },
         },
+      }),
+      CodeBlockLowlight.configure({
+        lowlight,
+        defaultLanguage: "javascript",
+        languageClassPrefix: "language-",
       }),
       HorizontalRule,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
