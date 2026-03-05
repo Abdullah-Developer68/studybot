@@ -1,0 +1,17 @@
+{
+  "name": "@studybot/network",
+  "version": "0.1.0",
+  "description": "Shared network/api client utilities for StudyBot apps",
+  "main": "client/index.js",
+  "exports": {
+    ".": "./client/index.js",
+    "./api-client": "./client/api-client.js"
+  },
+  "files": [
+    "client/index.js",
+    "client/api-client.js"
+  ],
+  "dependencies": {
+    "axios": "^1.13.2"
+  }
+}

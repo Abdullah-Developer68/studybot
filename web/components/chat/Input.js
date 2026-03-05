@@ -12,7 +12,8 @@ import {
   WalletCards,
 } from "lucide-react";
 import useChatContext from "@/hooks/chat/useChatContext";
-import { uploadDocument } from "@/lib/api-client";
+import { uploadDocument } from "@studybot/network";
+
 import {
   getSupportedExtensions,
   MAX_FILE_SIZE_MB,
