@@ -1,4 +1,4 @@
--- Templates RLS
+-- Templates RLS policies
 ALTER TABLE public.templates ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "templates_select_own" ON public.templates;

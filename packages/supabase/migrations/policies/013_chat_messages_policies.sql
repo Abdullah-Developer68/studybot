@@ -1,0 +1,1 @@
+-- Chat Messages RLS Policies
