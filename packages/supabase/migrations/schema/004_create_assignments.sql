@@ -2,7 +2,7 @@
 -- 4. ASSIGNMENTS (main work items)
 -- ============================================
 
-CREATE TABLE public.assignments (
+CREATE TABLE IF NOT EXISTS public.assignments (
   assignment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   profile_id UUID NOT NULL REFERENCES public.profiles(profile_id) ON DELETE CASCADE,
   template_id UUID REFERENCES public.templates(template_id) ON DELETE SET NULL,

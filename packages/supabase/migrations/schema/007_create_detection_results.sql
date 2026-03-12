@@ -2,7 +2,7 @@
 -- 7. DETECTION RESULTS (AI detection analysis)
 -- ============================================
 
-CREATE TABLE public.detection_results (
+CREATE TABLE IF NOT EXISTS public.detection_results (
   detection_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   assignment_id UUID NOT NULL REFERENCES public.assignments(assignment_id) ON DELETE CASCADE,
   overall_score DECIMAL(5,2) NOT NULL, -- 0.00 to 100.00

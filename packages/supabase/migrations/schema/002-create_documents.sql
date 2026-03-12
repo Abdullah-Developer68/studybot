@@ -2,7 +2,7 @@
 -- 2. DOCUMENTS (uploaded files)
 -- ============================================
 
-CREATE TABLE public.documents (
+CREATE TABLE IF NOT EXISTS public.documents (
   document_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   profile_id UUID NOT NULL REFERENCES public.profiles(profile_id) ON DELETE CASCADE,
   name TEXT NOT NULL,

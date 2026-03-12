@@ -2,7 +2,7 @@
 -- 5. CHAT SESSIONS
 -- ============================================
 
-CREATE TABLE public.chat_sessions (
+CREATE TABLE IF NOT EXISTS public.chat_sessions (
   session_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   profile_id UUID NOT NULL REFERENCES public.profiles(profile_id) ON DELETE CASCADE,
   title TEXT NOT NULL DEFAULT 'New Chat',

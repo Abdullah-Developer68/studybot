@@ -2,7 +2,7 @@
 -- 3. TEMPLATES
 -- ============================================
 
-CREATE TABLE public.templates (
+CREATE TABLE IF NOT EXISTS public.templates (
   template_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   profile_id UUID NOT NULL REFERENCES public.profiles(profile_id) ON DELETE CASCADE,
   name TEXT NOT NULL,

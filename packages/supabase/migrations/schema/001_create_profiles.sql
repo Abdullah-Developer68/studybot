@@ -2,7 +2,7 @@
 -- 1. PROFILES (extends Supabase Auth)
 -- ============================================
 
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   profile_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT,
   email TEXT,
