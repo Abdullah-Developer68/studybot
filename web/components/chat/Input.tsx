@@ -1,4 +1,8 @@
 "use client";
+// Type-only imports first to keep runtime imports grouped separately.
+import type { ChangeEvent, FormEvent } from "react";
+import type { AttachedFile } from "@studybot/types/upload";
+
 import { useState, useRef } from "react";
 import { IconPlus } from "@tabler/icons-react";
 import {
@@ -12,11 +16,13 @@ import {
   WalletCards,
 } from "lucide-react";
 import useChatContext from "@/hooks/chat/useChatContext";
-import { uploadDocument } from "@studybot/network";
+import { uploadDocument } from "@studybot/api-client";
 
 import {
   getSupportedExtensions,
   MAX_FILE_SIZE_MB,
+  uploadFilesWithProgress,
+  validateUploadableFile,
 } from "@studybot/utils/global";
 import {
   DropdownMenu,
@@ -36,39 +42,22 @@ import { Separator } from "@/components/ui/separator";
 const SUPPORTED_FILE_TYPES = getSupportedExtensions();
 
 // Validate file before upload
-const validateFile = (file) => {
-  // Check file size
-  const fileSizeInMB = file.size / (1024 * 1024);
-  if (fileSizeInMB > MAX_FILE_SIZE_MB) {
-    return {
-      valid: false,
-      error: `File size exceeds ${MAX_FILE_SIZE_MB}MB limit. Current size: ${fileSizeInMB.toFixed(2)}MB`,
-    };
-  }
-
-  // Check file extension
-  const fileName = file.name.toLowerCase();
-  const hasValidExtension = SUPPORTED_FILE_TYPES.some((ext) =>
-    fileName.endsWith(ext),
-  );
-
-  if (!hasValidExtension) {
-    return {
-      valid: false,
-      error: `Unsupported file type. Supported formats: ${SUPPORTED_FILE_TYPES.join(", ")}`,
-    };
-  }
-
-  return { valid: true, error: null };
-};
+const validateFile = (file: File) =>
+  validateUploadableFile(file, {
+    maxFileSizeMb: MAX_FILE_SIZE_MB,
+    supportedExtensions: SUPPORTED_FILE_TYPES,
+  });
 
 const Input = () => {
-  const [prompt, setPrompt] = useState("");
-  const [attachedFiles, setAttachedFiles] = useState([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadError, setUploadError] = useState(null);
-  const fileInputRef = useRef(null);
+  // Context
   const { sendMessage, status, stop } = useChatContext();
+  // State variables
+  const [prompt, setPrompt] = useState("");
+  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // isLoading is derived from status which is a state variable managed by useChat
   const isLoading = status === "submitted" || status === "streaming";
@@ -79,7 +68,7 @@ const Input = () => {
   };
 
   // Handle file selection (multiple files)
-  const handleFileChange = async (e) => {
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
@@ -95,30 +84,30 @@ const Input = () => {
       }
     }
 
+    // prepare for upload
     setIsUploading(true);
+    setUploadProgress(0);
 
     try {
       // Upload all files in parallel
-      const uploadPromises = files.map(async (file) => {
-        const data = await uploadDocument(file);
-        return {
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          extractedText: data.extractedText,
-          wasTruncated: data.wasTruncated,
-        };
+      const uploadedFiles = await uploadFilesWithProgress({
+        files,
+        uploadDocument,
+        onOverallProgress: (overallProgress: number) => {
+          setUploadProgress(overallProgress);
+        },
       });
-
-      const uploadedFiles = await Promise.all(uploadPromises);
 
       // Add to existing attached files
       setAttachedFiles((prev) => [...prev, ...uploadedFiles]);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("File upload error:", error);
-      setUploadError(error.message);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to upload files";
+      setUploadError(errorMessage);
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
       // Reset file input so same files can be selected again
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -127,7 +116,7 @@ const Input = () => {
   };
 
   // Remove a specific attached file
-  const handleRemoveFile = (index) => {
+  const handleRemoveFile = (index: number) => {
     setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
     setUploadError(null);
   };
@@ -138,7 +127,7 @@ const Input = () => {
     setUploadError(null);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (
       (!prompt.trim() && attachedFiles.length === 0) ||
@@ -154,7 +143,10 @@ const Input = () => {
     let messageForAI = userPrompt;
     if (attachedFiles.length > 0) {
       const documentsContent = attachedFiles
-        .map((file) => `[Document: ${file.name}]\n\n${file.extractedText}`)
+        .map(
+          (file: AttachedFile) =>
+            `[Document: ${file.name}]\n\n${file.extractedText}`,
+        )
         .join("\n\n---\n\n");
       messageForAI = `${documentsContent}\n\n[User Request]: ${userPrompt}`;
     }
@@ -227,6 +219,21 @@ const Input = () => {
           >
             <X size={14} />
           </button>
+        </div>
+      )}
+
+      {isUploading && (
+        <div className="mb-2 rounded-lg border border-blue-700 bg-blue-900/30 px-3 py-2 text-xs text-blue-200">
+          <div className="mb-1 flex items-center justify-between">
+            <span>Uploading files...</span>
+            <span>{uploadProgress}%</span>
+          </div>
+          <div className="h-1.5 w-full rounded bg-blue-950">
+            <div
+              className="h-1.5 rounded bg-blue-500 transition-all"
+              style={{ width: `${uploadProgress}%` }}
+            />
+          </div>
         </div>
       )}
 

@@ -11,6 +11,7 @@
     "./api-client.js"
   ],
   "dependencies": {
+    "@studybot/types": "file:../types",
     "axios": "^1.13.2"
   }
 }

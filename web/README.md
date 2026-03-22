@@ -65,7 +65,7 @@ A unified platform for content creation, AI analysis, and multi-model AI interac
 
 ### Packages
 - `@studybot/supabase` - Reusable SDK for auth, chat, storage, templates
-- `@studybot/network` - API client for server communication
+- `@studybot/api-client` - API client for server communication
 - `@studybot/utils` - Shared utilities
 
 ## Project Structure
@@ -79,7 +79,7 @@ StudyBot/
 │   │   ├── sdk/                  # Source of truth for DB code
 │   │   ├── migrations/           # Version-controlled schemas
 │   │   └── policies/             # RLS policy references
-│   ├── api-client/               # Network request utilities
+│   ├── api-client/               # api-client request utilities
 │   └── utils/                    # Shared helper functions
 ```
 
