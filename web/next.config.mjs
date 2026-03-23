@@ -1,20 +1,19 @@
-import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-// gets the paths where the next.config.mjs file is located, which is the root of the project
-const currentDir = path.dirname(fileURLToPath(import.meta.url));
-
-/** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
   reactCompiler: true,
-  // Transpile local workspace package consumed from node_modules
-  transpilePackages: ["@studybot/supabase", "@studybot/utils"],
+  transpilePackages: [
+    "@studybot/supabase",
+    "@studybot/api-client",
+    "@studybot/types",
+    "@studybot/utils",
+  ],
   turbopack: {
-    root: currentDir,
+    // Resolves to: C:\Users\Thunder Flash\Desktop\Projects\StudyBot\
+    // Required so Turbopack can resolve and transpile workspace packages outside the web folder.
+    root: fileURLToPath(new URL("..", import.meta.url)),
   },
   experimental: {
-    // This allows importing from outside the 'web' directory
     externalDir: true,
   },
 };

@@ -1,4 +1,16 @@
 {
+  "name": "studybot",
+  "private": true,
+  "workspaces": [
+    "web",
+    "mobile",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run -ws build",
+    "dev:web": "npm run -w web dev",
+    "dev:mobile": "npm run -w mobile start"
+  },
   "devDependencies": {
     "supabase": "^2.78.1"
   }

@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "description": "Shared api client utilities for StudyBot apps",
   "type": "module",
-  "main": "./api-client.js",
+  "main": "./api-client.ts",
   "exports": {
-    ".": "./api-client.js"
+    ".": "./api-client.ts"
   },
   "files": [
-    "./api-client.js"
+    "./api-client.ts"
   ],
   "dependencies": {
     "@studybot/types": "file:../types",
