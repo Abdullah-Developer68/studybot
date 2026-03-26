@@ -1,17 +1,17 @@
 {
   "name": "studybot",
   "private": true,
+  "packageManager": "npm@11.6.2",
   "workspaces": [
-    "web",
-    "mobile",
+    "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run -ws build",
-    "dev:web": "npm run -w web dev",
-    "dev:mobile": "npm run -w mobile start"
+    "build": "turbo run build",
+    "dev:web": "turbo run dev --filter=web",
+    "typecheck": "turbo run check-types"
   },
   "devDependencies": {
-    "supabase": "^2.78.1"
+    "turbo": "^2.8.20"
   }
 }

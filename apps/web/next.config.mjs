@@ -11,7 +11,7 @@ const nextConfig = {
   turbopack: {
     // Resolves to: C:\Users\Thunder Flash\Desktop\Projects\StudyBot\
     // Required so Turbopack can resolve and transpile workspace packages outside the web folder.
-    root: fileURLToPath(new URL("..", import.meta.url)),
+    root: fileURLToPath(new URL("../..", import.meta.url)),
   },
   experimental: {
     externalDir: true,

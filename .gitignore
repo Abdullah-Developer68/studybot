@@ -11,6 +11,8 @@
 !**/.yarn/versions
 **/.vscode/
 
+.turbo/
+
 # testing (all folders)
 **/coverage/
 

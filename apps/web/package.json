@@ -1,12 +1,13 @@
 {
-  "name": "chatbot",
+  "name": "web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.6",
@@ -24,10 +25,10 @@
     "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@reduxjs/toolkit": "^2.11.0",
-    "@studybot/api-client": "file:../packages/api-client",
-    "@studybot/supabase": "file:../packages/supabase",
-    "@studybot/types": "file:../packages/types",
-    "@studybot/utils": "file:../packages/utils",
+    "@studybot/api-client": "workspace:*",
+    "@studybot/supabase": "workspace:*",
+    "@studybot/types": "workspace:*",
+    "@studybot/utils": "workspace:*",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.97.0",
     "@tabler/icons-react": "^3.35.0",

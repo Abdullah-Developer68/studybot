@@ -107,7 +107,7 @@ function InputGroupButton({
   );
 }
 
-function InputGroupText({ className, ...props }) {
+function InputGroupText({ className = "", ...props }) {
   return (
     <span
       className={cn(
@@ -119,7 +119,7 @@ function InputGroupText({ className, ...props }) {
   );
 }
 
-function InputGroupInput({ className, ...props }) {
+function InputGroupInput({ className = "", ...props }) {
   return (
     <Input
       data-slot="input-group-control"
@@ -132,7 +132,7 @@ function InputGroupInput({ className, ...props }) {
   );
 }
 
-function InputGroupTextarea({ className, ...props }) {
+function InputGroupTextarea({ className = "", ...props }) {
   return (
     <Textarea
       data-slot="input-group-control"
