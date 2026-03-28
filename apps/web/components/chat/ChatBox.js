@@ -63,7 +63,7 @@ const ChatBox = () => {
   // Show welcome screen when no messages
   if (messages.length === 0 && !isLoading) {
     return (
-      <div className="flex flex-col p-4 gap-4 w-[90%] overflow-auto max-h-[80%] h-full">
+      <div className="flex flex-col p-4 gap-4 w-[90%] overflow-auto max-h-[80%] h-full mt-16">
         <WelcomeScreen />
       </div>
     );
@@ -71,7 +71,7 @@ const ChatBox = () => {
 
   return (
     <>
-      <div className="flex flex-col p-4 gap-4 w-[90%] overflow-auto max-h-[80%]">
+      <div className="flex flex-col p-4 gap-4 w-[90%] overflow-auto max-h-[80%] h-full mt-16">
         {messages.map((message, index) => {
           const content = getMessageContent(message);
 

@@ -13,6 +13,33 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ---------- Custom Fonts ---------- */
+/* Place your font files in apps/web/public/fonts/, e.g.:
+   - apps/web/public/fonts/ProximaVara.woff2
+   - apps/web/public/fonts/ProximaVara.woff
+   - apps/web/public/fonts/ProximaVara.ttf
+*/
+
+@font-face {
+  font-family: "ProximaVara";
+  src: url("/fonts/ProximaVara.woff2") format("woff2"),
+       url("/fonts/ProximaVara.woff") format("woff"),
+       url("/fonts/ProximaVara.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Tailwind-compatible utility to apply the ProximaVara font stack */
+@layer utilities {
+  .font-proxima {
+    font-family: "ProximaVara", ui-sans-serif, system-ui, -apple-system,
+      "Segoe UI", "Noto Sans", "Helvetica Neue", Arial,
+      "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+  }
+}
+
+/* ---------- Theme / Tokens ---------- */
 @theme inline {
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
