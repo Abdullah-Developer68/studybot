@@ -10,5 +10,8 @@
     "./chat": "./sdk/chat/index.js",
     "./storage": "./sdk/storage/index.js",
     "./templates": "./sdk/templates/index.js"
+  },
+  "dependencies": {
+    "supabase": "^2.84.4"
   }
 }
