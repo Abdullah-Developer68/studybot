@@ -162,17 +162,6 @@ const parseDocument = async (
   }
 };
 
-// Validate file size (bytes)
-const validateFileSize = (fileSize: number, maxSizeInMB = 10): boolean => {
-  const maxBytes = maxSizeInMB * 1024 * 1024;
-  if (fileSize > maxBytes) {
-    throw new Error(
-      `File size exceeds maximum allowed size of ${maxSizeInMB}MB`,
-    );
-  }
-  return true;
-};
-
 export {
   toUint8Array,
   decodeUtf8,
@@ -183,5 +172,4 @@ export {
   parseMarkdown,
   parseText,
   parseDocument,
-  validateFileSize,
 };
