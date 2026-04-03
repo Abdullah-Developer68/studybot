@@ -1,4 +1,5 @@
 {
+  "nodeModulesDir": "auto",
   "compilerOptions": {
     "lib": ["deno.window"]
   },
@@ -6,6 +7,10 @@
     "@studybot/types": "../types/index.d.ts",
     "@studybot/types/": "../types/",
     "@studybot/utils/server/": "../utils/server/",
-    "@studybot/utils/global/": "../utils/global/"
+    "@studybot/utils/global/": "../utils/global/",
+    "unpdf": "npm:unpdf@1.4.0",
+    "mammoth": "npm:mammoth@1.11.0",
+    "xlsx": "npm:xlsx@0.18.5",
+    "officeparser": "npm:officeparser@6.0.4"
   }
 }

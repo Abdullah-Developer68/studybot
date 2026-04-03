@@ -7,7 +7,17 @@
   "scripts": {
     "functions:serve": "supabase functions serve parse-doc",
     "functions:deploy": "supabase functions deploy parse-doc",
-    "functions:deploy:prod": "supabase functions deploy parse-doc --project-ref kmhsyvcjoctqyyaarjmu"
+    "functions:deploy:prod": "supabase functions deploy parse-doc --project-ref kmhsyvcjoctqyyaarjmu",
+    "functions:serve:pdf": "supabase functions serve parse-pdf",
+    "functions:serve:word": "supabase functions serve parse-word",
+    "functions:serve:excel": "supabase functions serve parse-excel",
+    "functions:serve:powerpoint": "supabase functions serve parse-powerpoint",
+    "functions:serve:text": "supabase functions serve parse-text",
+    "functions:deploy:pdf": "supabase functions deploy parse-pdf --project-ref kmhsyvcjoctqyyaarjmu",
+    "functions:deploy:word": "supabase functions deploy parse-word --project-ref kmhsyvcjoctqyyaarjmu",
+    "functions:deploy:excel": "supabase functions deploy parse-excel --project-ref kmhsyvcjoctqyyaarjmu",
+    "functions:deploy:powerpoint": "supabase functions deploy parse-powerpoint --project-ref kmhsyvcjoctqyyaarjmu",
+    "functions:deploy:text": "supabase functions deploy parse-text --project-ref kmhsyvcjoctqyyaarjmu"
   },
   "exports": {
     ".": "./sdk/supabase.methods.js",

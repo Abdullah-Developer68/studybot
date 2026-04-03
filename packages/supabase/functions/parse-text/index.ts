@@ -1,19 +1,27 @@
-const extensionToFunction: Record<string, string> = {
-  pdf: "parse-pdf",
-  doc: "parse-word",
-  docx: "parse-word",
-  xls: "parse-excel",
-  xlsx: "parse-excel",
-  ppt: "parse-powerpoint",
-  pptx: "parse-powerpoint",
-  txt: "parse-text",
-  md: "parse-text",
-};
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
+};
+
+const MAX_FILE_SIZE_MB = 10;
+const SUPPORTED_EXTENSIONS = ["txt", "md"];
+
+const validateFileSize = (
+  fileSize: number,
+  maxSizeInMB = MAX_FILE_SIZE_MB,
+): void => {
+  const maxBytes = maxSizeInMB * 1024 * 1024;
+  if (fileSize > maxBytes) {
+    throw new Error(
+      `File size exceeds maximum allowed size of ${maxSizeInMB}MB`,
+    );
+  }
+};
+
+const getExtension = (fileName: string): string => {
+  const ext = fileName.toLowerCase().split(".").pop();
+  return ext ?? "";
 };
 
 Deno.serve(async (req) => {
@@ -22,13 +30,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    if (req.method !== "POST") {
-      return new Response(JSON.stringify({ error: "Method not allowed" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 405,
-      });
-    }
-
     const formData = await req.formData();
     const file = formData.get("file");
 
@@ -39,14 +40,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const extension = file.name.toLowerCase().split(".").pop() || "";
-    const targetFunction = extensionToFunction[extension];
-
-    if (!targetFunction) {
+    const extension = getExtension(file.name);
+    if (!SUPPORTED_EXTENSIONS.includes(extension)) {
       return new Response(
         JSON.stringify({
-          error: "Unsupported file type",
-          supported: Object.keys(extensionToFunction),
+          error: "Unsupported file type. Expected: .txt or .md",
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -55,17 +53,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    return new Response(
-      JSON.stringify({
-        error:
-          "parse-doc is deprecated. Call the file-specific function directly.",
-        targetFunction,
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      },
-    );
+    const arrayBuffer = await file.arrayBuffer();
+    validateFileSize(arrayBuffer.byteLength);
+
+    const text = new TextDecoder("utf-8")
+      .decode(new Uint8Array(arrayBuffer))
+      .trim();
+
+    return new Response(JSON.stringify({ text }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return new Response(JSON.stringify({ error: message }), {
