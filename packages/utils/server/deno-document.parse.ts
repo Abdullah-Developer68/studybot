@@ -36,7 +36,7 @@ const parsePDF = async (data: DocumentData): Promise<string> => {
     const result = await extractText(uint8);
 
     // If result.text is an array, join pages with blank lines; otherwise make it a string; then trim whitespace.
-    // If result.text is not an array, it’s treated as a single text value (string/number/undefined)
+    // If result.text is not an array, it's treated as a single text value (string/number/undefined)
     if (Array.isArray(result.text)) {
       return result.text.join("\n\n").trim();
     }

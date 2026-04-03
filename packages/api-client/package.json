@@ -3,15 +3,19 @@
   "version": "0.1.0",
   "description": "Shared api client utilities for StudyBot apps",
   "type": "module",
-  "main": "./api-client.ts",
+  "main": "./axios-api-client.ts",
   "exports": {
-    ".": "./api-client.ts"
+    ".": "./axios-api-client.ts",
+    "./axios": "./axios-api-client.ts",
+    "./supabase": "./supabase-api-client.ts"
   },
   "files": [
-    "./api-client.ts"
+    "./axios-api-client.ts",
+    "./supabase-api-client.ts"
   ],
   "dependencies": {
     "@studybot/types": "*",
+    "@supabase/supabase-js": "^2.49.4",
     "axios": "^1.13.2"
   }
 }

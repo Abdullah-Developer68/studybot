@@ -1,19 +1,28 @@
 // This is in Deno runtime
-import { serve } from "https://deno.land/std@0.205.0/http/server.ts";
 import { parseDocument } from "@studybot/utils/server/deno-document.parse.ts";
 import {
   validateFileSize,
   validateFileExtension,
 } from "@studybot/utils/global/file-utils.ts";
 
-serve(async (req) => {
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   try {
     const formData = await req.formData();
     const file = formData.get("file");
 
     if (!file || !(file instanceof File)) {
       return new Response(JSON.stringify({ error: "File is required" }), {
-        headers: { "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
       });
     }
@@ -30,12 +39,12 @@ serve(async (req) => {
     const text = await parseDocument(arrayBuffer, file.name, file.type);
 
     return new Response(JSON.stringify({ text }), {
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return new Response(JSON.stringify({ error: message }), {
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,
     });
   }

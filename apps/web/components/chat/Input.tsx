@@ -16,7 +16,7 @@ import {
   WalletCards,
 } from "lucide-react";
 import useChatContext from "@/hooks/chat/useChatContext";
-import { uploadDocument } from "@studybot/api-client";
+import { uploadDocument } from "@studybot/api-client/supabase";
 
 import {
   getSupportedExtensions,

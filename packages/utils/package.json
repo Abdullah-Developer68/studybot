@@ -11,10 +11,10 @@
     "@studybot/types": "*"
   },
   "exports": {
-    "./global": "./utils.global.js",
+    "./global": "./global/index.ts",
     "./client": "./utils.client.js",
     "./server": "./utils.server.js",
-    "./global/file-utils": "./global/file-utils.js",
+    "./global/file-utils": "./global/file-utils.ts",
     "./server/document-parser": "./server/document-parser.js"
   }
 }

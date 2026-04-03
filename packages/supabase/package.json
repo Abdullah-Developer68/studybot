@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "main": "./sdk/supabase.methods.js",
+  "scripts": {
+    "functions:serve": "supabase functions serve parse-doc",
+    "functions:deploy": "supabase functions deploy parse-doc",
+    "functions:deploy:prod": "supabase functions deploy parse-doc --project-ref kmhsyvcjoctqyyaarjmu"
+  },
   "exports": {
     ".": "./sdk/supabase.methods.js",
     "./auth": "./sdk/auth/index.js",
