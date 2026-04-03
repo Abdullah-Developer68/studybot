@@ -1,23 +1,10 @@
 import { extractText } from "unpdf";
+import { validateFileSize } from "@studybot/utils/global/file-utils.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
-};
-
-const MAX_FILE_SIZE_MB = 10;
-
-const validateFileSize = (
-  fileSize: number,
-  maxSizeInMB = MAX_FILE_SIZE_MB,
-): void => {
-  const maxBytes = maxSizeInMB * 1024 * 1024;
-  if (fileSize > maxBytes) {
-    throw new Error(
-      `File size exceeds maximum allowed size of ${maxSizeInMB}MB`,
-    );
-  }
 };
 
 const getExtension = (fileName: string): string => {

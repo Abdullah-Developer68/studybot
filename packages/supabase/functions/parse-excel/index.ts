@@ -1,4 +1,5 @@
 import * as XLSX from "xlsx";
+import { validateFileSize } from "@studybot/utils/global/file-utils.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,20 +7,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const MAX_FILE_SIZE_MB = 10;
 const SUPPORTED_EXTENSIONS = ["xls", "xlsx"];
-
-const validateFileSize = (
-  fileSize: number,
-  maxSizeInMB = MAX_FILE_SIZE_MB,
-): void => {
-  const maxBytes = maxSizeInMB * 1024 * 1024;
-  if (fileSize > maxBytes) {
-    throw new Error(
-      `File size exceeds maximum allowed size of ${maxSizeInMB}MB`,
-    );
-  }
-};
 
 const getExtension = (fileName: string): string => {
   const ext = fileName.toLowerCase().split(".").pop();
