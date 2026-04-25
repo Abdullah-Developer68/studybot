@@ -40,7 +40,7 @@ export async function POST(req) {
     });
 
     const result = streamText({
-      model: openrouter("arcee-ai/trinity-large-preview:free"),
+      model: openrouter("nvidia/nemotron-3-super-120b-a12b:free"),
       messages: transformedMessages,
       experimental_transform: smoothStream({
         delayInMs: 10,
