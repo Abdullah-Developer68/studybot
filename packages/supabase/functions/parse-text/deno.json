@@ -1,0 +1,13 @@
+{
+  "nodeModulesDir": "auto",
+  "compilerOptions": {
+    "lib": ["deno.window"]
+  },
+  "imports": {
+    "@studybot/types": "../../../types/index.d.ts",
+    "@studybot/types/": "../../../types/",
+    "@studybot/utils/server/": "../../../utils/server/",
+    "@studybot/utils/global/": "../../../utils/global/",
+    "@studybot/utils/": "../../../utils/"
+  }
+}

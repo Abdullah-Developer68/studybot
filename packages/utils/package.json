@@ -12,6 +12,7 @@
   },
   "exports": {
     "./global": "./global/index.ts",
+    "./global/upload.utils": "./global/upload.utils.ts",
     "./client": "./utils.client.js",
     "./server": "./utils.server.js",
     "./global/file-utils": "./global/file-utils.ts",

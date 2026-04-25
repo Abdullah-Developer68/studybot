@@ -5,9 +5,6 @@
   "type": "module",
   "main": "./sdk/supabase.methods.js",
   "scripts": {
-    "functions:serve": "supabase functions serve parse-doc",
-    "functions:deploy": "supabase functions deploy parse-doc",
-    "functions:deploy:prod": "supabase functions deploy parse-doc --project-ref kmhsyvcjoctqyyaarjmu",
     "functions:serve:pdf": "supabase functions serve parse-pdf",
     "functions:serve:word": "supabase functions serve parse-word",
     "functions:serve:excel": "supabase functions serve parse-excel",

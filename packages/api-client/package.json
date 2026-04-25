@@ -6,16 +6,14 @@
   "main": "./axios-api-client.ts",
   "exports": {
     ".": "./axios-api-client.ts",
-    "./axios": "./axios-api-client.ts",
-    "./supabase": "./supabase-api-client.ts"
+    "./axios": "./axios-api-client.ts"
   },
   "files": [
-    "./axios-api-client.ts",
-    "./supabase-api-client.ts"
+    "./axios-api-client.ts"
   ],
   "dependencies": {
     "@studybot/types": "*",
-    "@supabase/supabase-js": "^2.49.4",
+    "@studybot/utils": "*",
     "axios": "^1.13.2"
   }
 }

@@ -16,14 +16,15 @@ import {
   WalletCards,
 } from "lucide-react";
 import useChatContext from "@/hooks/chat/useChatContext";
-import { uploadDocument } from "@studybot/api-client/supabase";
+import { uploadDocument } from "@studybot/api-client";
 
+// Import validators directly from file-utils to avoid barrel export ambiguity.
 import {
   getSupportedExtensions,
-  MAX_FILE_SIZE_MB,
-  uploadFilesWithProgress,
-  validateUploadableFile,
-} from "@studybot/utils/global";
+  validateFile,
+} from "@studybot/utils/global/file-utils";
+// Import upload orchestration helper directly from upload-utils.
+import { uploadFilesWithProgress } from "@studybot/utils/global/upload.utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,13 +41,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 const SUPPORTED_FILE_TYPES = getSupportedExtensions();
-
-// Validate file before upload
-const validateFile = (file: File) =>
-  validateUploadableFile(file, {
-    maxFileSizeMb: MAX_FILE_SIZE_MB,
-    supportedExtensions: SUPPORTED_FILE_TYPES,
-  });
 
 const Input = () => {
   // Context
@@ -151,7 +145,7 @@ const Input = () => {
       messageForAI = `${documentsContent}\n\n[User Request]: ${userPrompt}`;
     }
 
-    // AI SDK 5.0+ expects a message object with parts, not a plain string
+    // AI SDK 5.0+ expects a message object with parts, not a string
     sendMessage({
       role: "user",
       content: messageForAI,

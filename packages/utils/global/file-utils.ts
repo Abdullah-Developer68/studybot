@@ -21,6 +21,27 @@ const getExtension = (fileName: string): string => {
   return ext ?? "";
 };
 
+// Validate a browser File object for upload and return a UI-friendly result shape.
+const validateFile = (file: File) => {
+  // Guard against missing file input.
+  if (!file) {
+    return { valid: false, error: "File is required." };
+  }
+
+  try {
+    // Enforce the shared size limit.
+    validateFileSize(file.size, MAX_FILE_SIZE_MB);
+    // Enforce the shared extension allow-list.
+    validateFileExtension(file.name);
+    return { valid: true, error: null };
+  } catch (error: unknown) {
+    return {
+      valid: false,
+      error: error instanceof Error ? error.message : "Invalid file",
+    };
+  }
+};
+
 // Validate file size (bytes)
 const validateFileSize = (fileSize: number, maxSizeInMB = 10): boolean => {
   const maxBytes = maxSizeInMB * 1024 * 1024;
@@ -55,6 +76,7 @@ export {
   MAX_TEXT_LENGTH,
   getExtension,
   getSupportedExtensions,
+  validateFile,
   validateFileSize,
   validateFileExtension,
 };
