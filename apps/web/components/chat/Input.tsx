@@ -135,6 +135,7 @@ const Input = () => {
 
     // Build the full message content for AI (all file contents first, then user prompt)
     let messageForAI = userPrompt;
+
     if (attachedFiles.length > 0) {
       const documentsContent = attachedFiles
         .map(
@@ -142,6 +143,7 @@ const Input = () => {
             `[Document: ${file.name}]\n\n${file.extractedText}`,
         )
         .join("\n\n---\n\n");
+
       messageForAI = `${documentsContent}\n\n[User Request]: ${userPrompt}`;
     }
 
