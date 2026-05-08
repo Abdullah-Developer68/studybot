@@ -7,6 +7,7 @@ const nextConfig = {
     "@studybot/api-client",
     "@studybot/types",
     "@studybot/utils",
+    "@studybot/assets",
   ],
   turbopack: {
     // Resolves to: C:\Users\Thunder Flash\Desktop\Projects\StudyBot\

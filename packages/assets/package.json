@@ -1,0 +1,10 @@
+{
+  "name": "@studybot/assets",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./asset.ts",
+    "./asset": "./asset.ts"
+  }
+}

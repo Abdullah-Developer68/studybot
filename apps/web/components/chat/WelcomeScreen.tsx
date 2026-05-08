@@ -2,11 +2,11 @@ import { Sparkles, FolderSearch2, Code, BookOpen } from "lucide-react";
 import type { ReactElement } from "react";
 
 const btnBase =
-  "inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800 text-slate-100 hover:bg-slate-700 transition-shadow shadow-sm hover:shadow-md border border-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500";
+  "flex justify-center items-center gap-2 w-[130px] px-4 py-2 rounded-full bg-gray-600 text-gray-100 hover:bg-gray-400 transition-shadow shadow-sm hover:shadow-md border border-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-600";
 
 const Buttons = (): ReactElement => {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 w-full">
       <button className={btnBase}>
         <Sparkles className="w-4 h-4" />
         <span className="text-sm font-medium font-proxima">Create</span>
@@ -46,7 +46,7 @@ const WelcomeScreen = (): ReactElement => {
             How can I help you?
           </h1>
 
-          <div>
+          <div className="w-full px-2">
             <Buttons />
           </div>
 
@@ -59,14 +59,14 @@ const WelcomeScreen = (): ReactElement => {
                     className={
                       `w-full md:w-3/4 lg:w-1/2 mx-auto text-center px-6 py-3 rounded-md transition-colors ` +
                       (i === 0
-                        ? "bg-slate-700 text-slate-100 font-proxima"
-                        : "text-slate-300 hover:bg-slate-800/50 font-proxima")
+                        ? "bg-gray-600 text-gray-100 font-proxima"
+                        : "text-gray-300 hover:bg-gray-600/50 font-proxima")
                     }
                   >
                     {text}
                   </button>
 
-                  <div className="w-full md:w-3/4 lg:w-1/2 mx-auto border-t border-slate-800 mt-3" />
+                  <div className="w-full md:w-3/4 lg:w-1/2 mx-auto border-t border-gray-600 mt-3" />
                 </div>
               ))}
             </div>

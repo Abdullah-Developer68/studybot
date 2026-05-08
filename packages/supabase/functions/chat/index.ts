@@ -135,7 +135,7 @@ Deno.serve(async (req: Request) => {
     // streamText returns an AI SDK stream response that can be forwarded to the client.
     // This is what gives you token-by-token streaming instead of waiting for a full response.
     const result = streamText({
-      model: openrouter("nvidia/nemotron-3-super-120b-a12b:free"),
+      model: openrouter("z-ai/glm-4.5-air:free"),
       messages: transformedMessages,
       experimental_transform: smoothStream({
         delayInMs: 10,

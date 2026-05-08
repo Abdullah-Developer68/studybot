@@ -4,16 +4,17 @@ import type { ChangeEvent } from "react";
 import type { AttachedFile, FormSubmitEvent } from "@studybot/types";
 
 import { useState, useRef } from "react";
-import { IconPlus } from "@tabler/icons-react";
+import Image from "next/image";
+import { assets } from "@studybot/assets/asset";
+
 import {
   ArrowUpIcon,
   X,
   FileText,
   Loader2,
   Square,
-  Bolt,
-  BadgeQuestionMark,
-  WalletCards,
+  ChevronDown,
+  Paperclip,
 } from "lucide-react";
 import useChatContext from "@/hooks/chat/useChatContext";
 import { createClient } from "@/utils/supabase/client";
@@ -44,6 +45,12 @@ import { Separator } from "@/components/ui/separator";
 const SUPPORTED_FILE_TYPES = getSupportedExtensions();
 const supabaseClient = createClient();
 
+const modelOptions = [
+  { label: "GLM 4.5 Air", value: "z-ai/glm-4.5-air:free" },
+  { label: "GPT-4o mini", value: "openai/gpt-4o-mini" },
+  { label: "Claude 3.5 Haiku", value: "anthropic/claude-3.5-haiku" },
+];
+
 const Input = () => {
   // Context
   const { sendMessage, status, stop } = useChatContext();
@@ -54,6 +61,7 @@ const Input = () => {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedModel, setSelectedModel] = useState(modelOptions[0]);
 
   // isLoading is derived from status which is a state variable managed by useChat
   const isLoading = status === "submitted" || status === "streaming";
@@ -285,38 +293,61 @@ const Input = () => {
             {isUploading ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
-              <IconPlus />
+              <Paperclip size={16} />
             )}
           </InputGroupButton>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <InputGroupButton type="button" variant="ghost" className="">
-                <Bolt size={28} />
+              <InputGroupButton
+                type="button"
+                variant="ghost"
+                className="min-w-40 px-3 justify-between rounded-full"
+              >
+                <span className="flex items-center gap-2 min-w-0">
+                  <Image
+                    src={assets.openAiLogo}
+                    alt="Model"
+                    width={16}
+                    height={16}
+                    className="h-4 w-4 shrink-0 invert"
+                  />
+                  <span className="truncate text-sm font-medium">
+                    {selectedModel.label}
+                  </span>
+                </span>
+                <ChevronDown size={14} className="shrink-0 opacity-70" />
               </InputGroupButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               side="top"
               align="start"
-              className="[--radius:0.95rem]"
+              className="[--radius:0.95rem] min-w-56"
             >
-              <DropdownMenuItem className="" inset={false}>
-                <span className="flex items-center gap-2 justify-between w-full">
-                  <p>Quiz</p>
-                  <BadgeQuestionMark size={20} />
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="" inset={false}>
-                <span className="flex items-center gap-2 justify-between w-full">
-                  <p>Flash Cards</p>
-                  <WalletCards size={20} />
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="" inset={false}>
-                <span className="flex items-center gap-2 justify-between w-full">
-                  <p>Manual</p>
-                </span>
-              </DropdownMenuItem>
+              {modelOptions.map((model) => (
+                <DropdownMenuItem
+                  key={model.value}
+                  className=""
+                  inset={false}
+                  onSelect={() => setSelectedModel(model)}
+                >
+                  <span className="flex items-center gap-2 justify-between w-full">
+                    <span className="flex items-center gap-2">
+                      <Image
+                        src={assets.openAiLogo}
+                        alt="Model"
+                        width={16}
+                        height={16}
+                        className="h-4 w-4 shrink-0 invert"
+                      />
+                      <span>{model.label}</span>
+                    </span>
+                    {selectedModel.value === model.value && (
+                      <span className="text-xs text-muted-foreground">Active</span>
+                    )}
+                  </span>
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
           <InputGroupText className="ml-auto group relative">

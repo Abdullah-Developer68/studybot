@@ -1,7 +1,9 @@
 "use client";
 import useChatContext from "@/hooks/chat/useChatContext.js";
 import type { CodeRendererProps } from "@studybot/types";
-import { Bot, Loader2, User, FileText } from "lucide-react";
+import { Loader2, FileText } from "lucide-react";
+import Image from "next/image";
+import { assets } from "@studybot/assets/asset";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -63,15 +65,18 @@ const ChatBox = () => {
   // Show welcome screen when no messages
   if (messages.length === 0 && !isLoading) {
     return (
-      <div className="flex flex-col p-4 gap-4 w-[90%] overflow-auto max-h-[80%] h-full mt-16 pb-44 scroll-pb-44">
-        <WelcomeScreen />
+      <div className="h-full w-full overflow-y-auto pb-44 pt-16">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-6 md:px-0">
+          <WelcomeScreen />
+        </div>
       </div>
     );
   }
 
   return (
     <>
-      <div className="flex flex-col p-4 gap-4 w-[90%] overflow-auto max-h-[80%] h-full mt-16 pb-44 scroll-pb-44">
+      <div className="h-full w-full overflow-y-auto pb-44 pt-16">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4">
         {messages.map((message, index) => {
           const content = getMessageContent(message);
 
@@ -122,8 +127,14 @@ const ChatBox = () => {
                     </ReactMarkdown>
                   </div>
                 </div>
-                <div className="shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-                  <User size={18} className="text-white" />
+                <div className="shrink-0 w-8 h-8 overflow-hidden rounded-full bg-blue-600">
+                  <Image
+                    src={assets.chillGuy}
+                    alt="User"
+                    width={32}
+                    height={32}
+                    className="h-full w-full object-cover"
+                  />
                 </div>
               </div>
             );
@@ -133,8 +144,14 @@ const ChatBox = () => {
                 key={index}
                 className="flex justify-center items-start gap-2"
               >
-                <div className="shrink-0 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-                  <Bot size={18} className="text-white" />
+                <div className="shrink-0 w-8 h-8 overflow-hidden rounded-full bg-gray-700">
+                  <Image
+                    src={assets.openAiLogo}
+                    alt="AI"
+                    width={32}
+                    height={32}
+                    className="h-full w-full object-contain invert"
+                  />
                 </div>
                 <div className=" text-gray-100 rounded-2xl rounded-tl-sm p-3 min-w-[80%]">
                   <div className="prose prose-sm prose-invert max-w-none wrap-break-words">
@@ -223,14 +240,21 @@ const ChatBox = () => {
 
         {isLoading && (
           <div className="flex justify-start items-start gap-2">
-            <div className="shrink-0 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-              <Bot size={18} className="text-white" />
+            <div className="shrink-0 w-8 h-8 overflow-hidden rounded-full bg-gray-700">
+              <Image
+                src={assets.openAiLogo}
+                alt="AI"
+                width={32}
+                height={32}
+                className="h-full w-full object-contain invert"
+              />
             </div>
             <div className="bg-gray-800 text-gray-100 rounded-2xl rounded-tl-sm p-3">
               <Loader2 size={20} className="animate-spin" />
             </div>
           </div>
         )}
+        </div>
       </div>
     </>
   );

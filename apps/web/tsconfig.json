@@ -6,7 +6,9 @@
     "paths": {
       "@/*": ["./*"],
       "@lib/*": ["./lib/*"],
-      "@components/*": ["./components/*"]
+      "@components/*": ["./components/*"],
+      "@studybot/assets": ["../../packages/assets/asset.ts"],
+      "@studybot/assets/*": ["../../packages/assets/*"]
     },
     "plugins": [
       {

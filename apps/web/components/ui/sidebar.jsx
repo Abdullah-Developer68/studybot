@@ -2,7 +2,8 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva } from "class-variance-authority";
-import { PanelLeftIcon } from "lucide-react";
+import { PanelLeftIcon, Plus } from "lucide-react";
+
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -231,10 +232,17 @@ function Sidebar({
 }
 
 function SidebarTrigger({ className, onClick, ...props }) {
-  const { toggleSidebar } = useSidebar();
+  const { toggleSidebar, open, isMobile, openMobile } = useSidebar();
+  const sidebarOpen = isMobile ? openMobile : open;
 
   return (
-    <Button
+    <div
+      className={cn(
+        "fixed top-3 left-5 z-999 h-fit rounded-md p-2 pointer-events-auto",
+        sidebarOpen ? "bg-transparent" : "bg-gray-600",
+      )}
+    >
+      <Button
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
       variant="ghost"
@@ -248,7 +256,18 @@ function SidebarTrigger({ className, onClick, ...props }) {
     >
       <PanelLeftIcon />
       <span className="sr-only">Toggle Sidebar</span>
-    </Button>
+      </Button>
+      {!sidebarOpen && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7"
+          aria-label="New chat"
+        >
+          <Plus className="size-4" />
+        </Button>
+      )}
+    </div>
   );
 }
 
