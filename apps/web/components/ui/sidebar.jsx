@@ -575,7 +575,7 @@ function getDeterministicSkeletonWidth(seed) {
 }
 
 function SidebarMenuSkeleton({ className, showIcon = false, ...props }) {
-// creates a unique id for this component instance
+// creates a unique id for this component instance (:r0: or :R1: or :r1:-0 etc)
   const id = React.useId();
   const width = getDeterministicSkeletonWidth(id);
 
