@@ -564,11 +564,20 @@ function SidebarMenuBadge({ className, ...props }) {
   );
 }
 
+function getDeterministicSkeletonWidth(seed) {
+  let hash = 0;
+
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  }
+
+  return `${50 + (Math.abs(hash) % 41)}%`;
+}
+
 function SidebarMenuSkeleton({ className, showIcon = false, ...props }) {
-  // Random width between 50 to 90%.
-  const width = React.useMemo(() => {
-    return `${Math.floor(Math.random() * 40) + 50}%`;
-  }, []);
+// creates a unique id for this component instance
+  const id = React.useId();
+  const width = getDeterministicSkeletonWidth(id);
 
   return (
     <div
