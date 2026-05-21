@@ -61,7 +61,7 @@ const AppSidebar = () => {
                       <Icon className="h-4 w-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="right">{item.label}</TooltipContent>
+                  <TooltipContent side="top">{item.label}</TooltipContent>
                 </Tooltip>
               );
             })}
