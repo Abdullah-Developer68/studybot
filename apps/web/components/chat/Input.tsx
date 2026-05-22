@@ -14,7 +14,7 @@ import {
   Loader2,
   Square,
   ChevronDown,
-  Paperclip,
+  Plus,
 } from "lucide-react";
 import useChatContext from "@/hooks/chat/useChatContext";
 import { createClient } from "@/utils/supabase/client";
@@ -293,7 +293,7 @@ const Input = () => {
             {isUploading ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
-              <Paperclip size={16} />
+              <Plus size={16} />
             )}
           </InputGroupButton>
 
