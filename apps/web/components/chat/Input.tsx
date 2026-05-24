@@ -183,7 +183,7 @@ const Input = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-3xl">
+    <form onSubmit={handleSubmit} className="w-full max-w-3xl">
       {/* File attachments preview */}
       {attachedFiles.length > 0 && (
         <div className="mb-2">

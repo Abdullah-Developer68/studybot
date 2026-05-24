@@ -9,7 +9,7 @@ export default function ChatPage() {
     <ChatProvider>
       <div className="relative flex h-screen w-full flex-col overflow-hidden">
         <ChatBox />
-        <span className="fixed bottom-5 left-1/2 w-3/4 -translate-x-1/2 flex items-center justify-center">
+        <span className="absolute inset-x-0 bottom-5 flex items-center justify-center px-4 md:px-6">
           <Input />
         </span>
       </div>
