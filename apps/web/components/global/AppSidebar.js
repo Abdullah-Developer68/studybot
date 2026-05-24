@@ -49,7 +49,7 @@ const AppSidebar = () => {
     "User";
 
   return (
-    <Sidebar className="border-r border-white/10 [&>[data-sidebar=sidebar]]:bg-zinc-950/95">
+    <Sidebar className="border-r border-white/10 *:data-[sidebar=sidebar]:bg-zinc-950/95">
       <SidebarHeader className="px-2 pt-3 pb-2 flex flex-col gap-4">
         <div className="flex items-center px-1">
           <Button
@@ -64,9 +64,9 @@ const AppSidebar = () => {
         </div>
 
         {/* New Chat Button */}
-        <Button className="w-full bg-white text-black hover:bg-gray-200 justify-start font-medium h-10 rounded-xl px-4">
-          <Plus className="mr-2 size-4" />
-          New Chat
+        <Button className="w-full h-10 justify-center gap-2 rounded-xl bg-white px-4 font-medium text-black hover:bg-gray-200">
+          <span>New Chat</span>
+          <Plus className="size-4" />
         </Button>
 
         {/* Horizontal Quick Actions */}

@@ -216,10 +216,10 @@ function Sidebar({
       <div
         data-slot="sidebar-container"
         className={cn(
-          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
+          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transform-gpu transition-transform duration-200 ease-linear md:flex",
           side === "left"
-            ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
-            : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+            ? "left-0 group-data-[collapsible=offcanvas]:-translate-x-full"
+            : "right-0 group-data-[collapsible=offcanvas]:translate-x-full",
           // Adjust the padding for floating and inset variants.
           variant === "floating" || variant === "inset"
             ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
@@ -260,6 +260,100 @@ function SidebarTrigger({ className, onClick, ...props }) {
     user?.user_metadata?.picture ||
     user?.user_metadata?.image ||
     assets.chillGuy;
+
+  if (isMobile) {
+    return (
+      <nav
+        aria-label="Sidebar navigation"
+        className={cn(
+          "fixed inset-x-0 top-0 z-999 flex h-14 items-center justify-between border-b border-white/10 bg-zinc-950/95 px-3 pointer-events-auto backdrop-blur",
+          className,
+        )}
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          <Button
+            data-sidebar="trigger"
+            data-slot="sidebar-trigger"
+            variant="ghost"
+            size="icon"
+            className="size-8 shrink-0 rounded-xl text-white/70 hover:bg-white/10 hover:text-white"
+            onClick={(event) => {
+              onClick?.(event);
+              toggleSidebar();
+            }}
+            {...props}
+          >
+            <PanelLeftIcon className="size-4" />
+            <span className="sr-only">Toggle Sidebar</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 shrink-0 rounded-xl text-white/70 hover:bg-white/10 hover:text-white"
+            aria-label="New chat"
+          >
+            <Plus className="size-4" />
+          </Button>
+
+          <div className="flex min-w-0 items-center gap-1 rounded-2xl bg-zinc-900/90 p-1 ring-1 ring-white/10 shadow-lg overflow-hidden">
+            {quickActions.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <Tooltip key={item.key}>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label={item.label}
+                      title={item.label}
+                      className="relative z-10 flex h-8 w-8 items-center justify-center rounded-lg ring-1 transition-colors bg-transparent text-white/70 ring-transparent hover:bg-white/5 hover:text-white"
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" sideOffset={8}>
+                    {item.label}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                aria-label="Settings"
+                title="Settings"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 ring-1 ring-transparent transition-colors hover:bg-white/5 hover:text-white"
+              >
+                <Settings2 className="h-3.5 w-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Settings</TooltipContent>
+          </Tooltip>
+
+          <button
+            type="button"
+            aria-label="Profile"
+            title="Profile"
+            className="h-8 w-8 overflow-hidden rounded-full ring-1 ring-white/10 transition-transform hover:scale-[1.02]"
+          >
+            <Image
+              src={avatarSrc}
+              alt="Profile"
+              width={32}
+              height={32}
+              className="h-full w-full object-cover"
+            />
+          </button>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <div
@@ -310,7 +404,9 @@ function SidebarTrigger({ className, onClick, ...props }) {
                     <Icon className="h-3.5 w-3.5" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent side="right" sideOffset={8}>{item.label}</TooltipContent>
+                <TooltipContent side="right" sideOffset={8}>
+                  {item.label}
+                </TooltipContent>
               </Tooltip>
             );
           })}

@@ -42,9 +42,7 @@ export default async function RootLayout({ children }) {
               disableTransitionOnChange
             >
               <SidebarProvider defaultOpen={defaultOpen}>
-                <span className="absolute z-40">
-                  <AppSidebar />
-                </span>
+                <AppSidebar />
 
                 <main className="w-full flex">
                   {/* This is the button to open or close the sidebar */}
