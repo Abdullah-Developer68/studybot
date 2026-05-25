@@ -1,11 +1,11 @@
-import bot from "./bot.webp";
-import chillGuy from "./chill guy.jpg";
+import defaultProfile from "./defaultProfile.webp";
 import openAiLogo from "./OpenAI logo.svg";
+import nerdbot from "./nerdbot.webp";
 
 export const assets = {
-  bot,
-  chillGuy,
+  defaultProfile,
   openAiLogo,
+  nerdbot,
 } as const;
 
 export type AssetKey = keyof typeof assets;

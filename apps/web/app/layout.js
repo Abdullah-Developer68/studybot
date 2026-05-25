@@ -2,7 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import AuthProvider from "@/app/providers/AuthProvider";
 import { ThemeProvider } from "@/app/providers/ThemeProvider";
-import Sidebar from "@/components/global/Sidebar";
+import ControlPanel from "@/components/global/ControlPanel";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,8 +34,8 @@ export default function RootLayout({ children }) {
               disableTransitionOnChange
             >
               <main className="w-full flex">
-                <Sidebar />
-                {children}
+                <ControlPanel />
+                <div className="flex-1 pt-14 md:pt-0">{children}</div>
               </main>
             </ThemeProvider>
           </AuthProvider>
