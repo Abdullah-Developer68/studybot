@@ -123,6 +123,8 @@ const ExpandedSidebar = () => {
         {/* New Chat */}
         <div className="px-2 pb-2">
           <Button
+            variant="default"
+            size="default"
             className="w-full cursor-pointer bg-white text-zinc-900 hover:bg-zinc-100"
             asChild
           >
