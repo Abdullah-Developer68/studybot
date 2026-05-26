@@ -5,7 +5,7 @@ import type { AttachedFile, FormSubmitEvent } from "@studybot/types";
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import { assets } from "@studybot/assets/asset";
+import { assets } from "@studybot/assets/assets";
 
 import {
   ArrowUpIcon,

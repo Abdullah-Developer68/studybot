@@ -20,6 +20,7 @@ import { assets } from "@studybot/assets";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useControlPanelStore } from "@/stores/controlPanelStore";
 
 const navItems = [
   { icon: MessageSquare, label: "Chat", href: "/chat" },
@@ -27,12 +28,9 @@ const navItems = [
   { icon: FileText, label: "Templates", href: "/templates" },
 ];
 
-type Props = {
-  onExpand: () => void;
-};
-
-const CompactSidebar = ({ onExpand }: Props) => {
+const CompactSidebar = () => {
   const pathname = usePathname();
+  const expandPanel = useControlPanelStore((state) => state.actions.expandPanel);
 
   return (
     <aside className="flex h-screen w-14 shrink-0 flex-col border-r border-zinc-800 bg-zinc-950/95">
@@ -43,7 +41,7 @@ const CompactSidebar = ({ onExpand }: Props) => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={onExpand}
+            onClick={expandPanel}
             className="h-9 w-9 cursor-pointer text-zinc-400 hover:text-white"
           >
             <PanelLeft className="h-5 w-5" />

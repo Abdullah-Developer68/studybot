@@ -16,10 +16,11 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { assets } from "@studybot/assets";
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useControlPanelStore } from "@/stores/controlPanelStore";
 
 const navItems = [
   { icon: MessageSquare, label: "Chat", href: "/chat" },
@@ -27,15 +28,25 @@ const navItems = [
   { icon: FileText, label: "Templates", href: "/templates" },
 ];
 
-type Props = {
-  onCollapse: () => void;
-};
-
-const ExpandedSidebar = ({ onCollapse }: Props) => {
+const ExpandedSidebar = () => {
   const pathname = usePathname();
+  const collapsePanel = useControlPanelStore(
+    (state) => state.actions.collapsePanel,
+  );
+  const [closing, setClosing] = useState(false);
+
+  const handleCollapse = () => setClosing(true);
 
   return (
-    <aside className="flex h-screen w-56 shrink-0 flex-col border-r border-zinc-800 bg-zinc-950/95">
+    <aside
+      onAnimationEnd={() => { if (closing) collapsePanel(); }}
+      className={cn(
+        "flex h-screen w-56 shrink-0 flex-col border-r border-zinc-800 bg-zinc-950/95",
+        closing
+          ? "animate-out slide-out-to-left-full duration-300 ease-in"
+          : "animate-in slide-in-from-left-full duration-300 ease-out"
+      )}
+    >
       <div className="flex flex-1 flex-col overflow-hidden py-3">
 
         {/* Header: title + collapse button */}
@@ -46,7 +57,7 @@ const ExpandedSidebar = ({ onCollapse }: Props) => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={onCollapse}
+            onClick={handleCollapse}
             className="h-8 w-8 shrink-0 cursor-pointer text-zinc-400 hover:text-white"
           >
             <PanelLeft className="h-4 w-4 rotate-180" />

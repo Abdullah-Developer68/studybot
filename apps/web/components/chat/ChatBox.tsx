@@ -3,7 +3,7 @@ import useChatContext from "@/hooks/chat/useChatContext.js";
 import type { CodeRendererProps } from "@studybot/types";
 import { Loader2, FileText } from "lucide-react";
 import Image from "next/image";
-import { assets } from "@studybot/assets/asset";
+import { assets } from "@studybot/assets/assets";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -129,7 +129,7 @@ const ChatBox = () => {
                 </div>
                 <div className="shrink-0 w-8 h-8 overflow-hidden rounded-full bg-blue-600">
                   <Image
-                    src={assets.chillGuy}
+                    src={assets.defaultProfile}
                     alt="User"
                     width={32}
                     height={32}

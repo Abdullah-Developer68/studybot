@@ -1,20 +1,20 @@
 "use client";
 
-import { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Navbar from "./Navbar";
 import CompactSidebar from "./CompactSidebar";
 import ExpandedSidebar from "./ExpandedSidebar";
+import { useControlPanelStore } from "@/stores/controlPanelStore";
 
 const ControlPanel = () => {
   const isMobile = useIsMobile();
-  const [expanded, setExpanded] = useState(false);
+  const expanded = useControlPanelStore((state) => state.expanded);
 
   if (isMobile) return <Navbar />;
 
-  if (expanded) return <ExpandedSidebar onCollapse={() => setExpanded(false)} />;
+  if (expanded) return <ExpandedSidebar />;
 
-  return <CompactSidebar onExpand={() => setExpanded(true)} />;
+  return <CompactSidebar />;
 };
 
 export default ControlPanel;
