@@ -39,7 +39,7 @@ const suggestions: string[] = [
 
 const WelcomeScreen = (): ReactElement => {
   return (
-    <div className="w-full min-h-[60vh] flex items-center justify-center">
+    <div className="w-full min-h-[60vh] flex items-center justify-cente">
       <div className="w-full max-w-3xl px-6 md:px-0">
         <div className="flex flex-col items-center text-center gap-6">
           <h1 className="text-3xl md:text-4xl font-bold font-proxima">

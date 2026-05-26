@@ -20,7 +20,7 @@ import { assets } from "@studybot/assets";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { useControlPanelStore } from "@/stores/controlPanelStore";
+import { useControlPanelActions } from "@/stores/controlPanelStore";
 
 const navItems = [
   { icon: MessageSquare, label: "Chat", href: "/chat" },
@@ -30,7 +30,7 @@ const navItems = [
 
 const CompactSidebar = () => {
   const pathname = usePathname();
-  const expandPanel = useControlPanelStore((state) => state.actions.expandPanel);
+  const {expandPanel} = useControlPanelActions();
 
   return (
     <aside className="flex h-screen w-14 shrink-0 flex-col border-r border-zinc-800 bg-zinc-950/95">

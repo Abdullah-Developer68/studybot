@@ -17,3 +17,11 @@ export const useControlPanelStore = create<ControlPanelTypes>()(
     },
   ),
 );
+
+// Custom hooks for easier access to actions and states
+
+export const useIsPanelExpanded = () =>
+  useControlPanelStore((state) => state.expanded);
+
+export const useControlPanelActions = () =>
+  useControlPanelStore((state) => state.actions);

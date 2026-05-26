@@ -4,8 +4,6 @@ import type { ChangeEvent } from "react";
 import type { AttachedFile, FormSubmitEvent } from "@studybot/types";
 
 import { useState, useRef } from "react";
-import Image from "next/image";
-import { assets } from "@studybot/assets/assets";
 
 import {
   ArrowUpIcon,
@@ -13,7 +11,6 @@ import {
   FileText,
   Loader2,
   Square,
-  ChevronDown,
   Plus,
 } from "lucide-react";
 import useChatContext from "@/hooks/chat/useChatContext";
@@ -27,12 +24,7 @@ import {
 } from "@studybot/utils/global/file-utils";
 // Import upload orchestration helper directly from upload-utils.
 import { uploadFilesWithProgress } from "@studybot/utils/global/upload.utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import {
   InputGroup,
   InputGroupAddon,
@@ -41,19 +33,20 @@ import {
   InputGroupTextarea,
 } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
+import ModelSelectionMenu from "./ModelSelectionMenu";
+import { useModelSelectionStore } from "@/stores/modelSelectionStore";
 
 const SUPPORTED_FILE_TYPES = getSupportedExtensions();
 const supabaseClient = createClient();
 
-const modelOptions = [
-  { label: "GLM 4.5 Air", value: "z-ai/glm-4.5-air:free" },
-  { label: "GPT-4o mini", value: "openai/gpt-4o-mini" },
-  { label: "Claude 3.5 Haiku", value: "anthropic/claude-3.5-haiku" },
-];
+
 
 const Input = () => {
   // Context
   const { sendMessage, status, stop } = useChatContext();
+  const selectedModelId = useModelSelectionStore(
+    (state) => state.selectedModelId,
+  );
   // State variables
   const [prompt, setPrompt] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
@@ -61,7 +54,7 @@ const Input = () => {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [selectedModel, setSelectedModel] = useState(modelOptions[0]);
+
 
   // isLoading is derived from status which is a state variable managed by useChat
   const isLoading = status === "submitted" || status === "streaming";
@@ -172,10 +165,17 @@ const Input = () => {
     }
 
     // AI SDK 5.0+ expects a message object with parts, not a string
-    sendMessage({
-      role: "user",
-      content: messageForAI,
-    });
+    sendMessage(
+      {
+        role: "user",
+        content: messageForAI,
+      },
+      {
+        body: {
+          model: selectedModelId,
+        },
+      },
+    );
 
     setPrompt("");
     setAttachedFiles([]);
@@ -297,59 +297,7 @@ const Input = () => {
             )}
           </InputGroupButton>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <InputGroupButton
-                type="button"
-                variant="ghost"
-                className="min-w-40 px-3 justify-between rounded-full"
-              >
-                <span className="flex items-center gap-2 min-w-0">
-                  <Image
-                    src={assets.openAiLogo}
-                    alt="Model"
-                    width={16}
-                    height={16}
-                    className="h-4 w-4 shrink-0 invert"
-                  />
-                  <span className="truncate text-sm font-medium">
-                    {selectedModel.label}
-                  </span>
-                </span>
-                <ChevronDown size={14} className="shrink-0 opacity-70" />
-              </InputGroupButton>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              side="top"
-              align="start"
-              className="[--radius:0.95rem] min-w-56"
-            >
-              {modelOptions.map((model) => (
-                <DropdownMenuItem
-                  key={model.value}
-                  className=""
-                  inset={false}
-                  onSelect={() => setSelectedModel(model)}
-                >
-                  <span className="flex items-center gap-2 justify-between w-full">
-                    <span className="flex items-center gap-2">
-                      <Image
-                        src={assets.openAiLogo}
-                        alt="Model"
-                        width={16}
-                        height={16}
-                        className="h-4 w-4 shrink-0 invert"
-                      />
-                      <span>{model.label}</span>
-                    </span>
-                    {selectedModel.value === model.value && (
-                      <span className="text-xs text-muted-foreground">Active</span>
-                    )}
-                  </span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ModelSelectionMenu />
           <InputGroupText className="ml-auto group relative">
             {/* Context Window */}
             <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-600 cursor-help"></div>

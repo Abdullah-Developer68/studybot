@@ -65,7 +65,7 @@ const ChatBox = () => {
   // Show welcome screen when no messages
   if (messages.length === 0 && !isLoading) {
     return (
-      <div className="h-full w-full overflow-y-auto pb-44 pt-16">
+      <div className="h-full w-full overflow-y-auto pb-28 md:pb-44 pt-4 md:pt-16">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-6 md:px-0">
           <WelcomeScreen />
         </div>
@@ -75,7 +75,7 @@ const ChatBox = () => {
 
   return (
     <>
-      <div className="h-full w-full overflow-y-auto pb-44 pt-16">
+      <div className="h-full w-full overflow-y-auto pb-28 md:pb-44 pt-4 md:pt-16">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4">
         {messages.map((message, index) => {
           const content = getMessageContent(message);

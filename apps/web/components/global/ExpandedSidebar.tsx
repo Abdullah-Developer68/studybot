@@ -20,7 +20,7 @@ import { Fragment, useState } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { useControlPanelStore } from "@/stores/controlPanelStore";
+import { useControlPanelActions } from "@/stores/controlPanelStore";
 
 const navItems = [
   { icon: MessageSquare, label: "Chat", href: "/chat" },
@@ -30,25 +30,24 @@ const navItems = [
 
 const ExpandedSidebar = () => {
   const pathname = usePathname();
-  const collapsePanel = useControlPanelStore(
-    (state) => state.actions.collapsePanel,
-  );
+  const { collapsePanel } = useControlPanelActions();
   const [closing, setClosing] = useState(false);
 
   const handleCollapse = () => setClosing(true);
 
   return (
     <aside
-      onAnimationEnd={() => { if (closing) collapsePanel(); }}
+      onAnimationEnd={() => {
+        if (closing) collapsePanel();
+      }}
       className={cn(
         "flex h-screen w-56 shrink-0 flex-col border-r border-zinc-800 bg-zinc-950/95",
         closing
           ? "animate-out slide-out-to-left-full duration-300 ease-in"
-          : "animate-in slide-in-from-left-full duration-300 ease-out"
+          : "animate-in slide-in-from-left-full duration-300 ease-out",
       )}
     >
       <div className="flex flex-1 flex-col overflow-hidden py-3">
-
         {/* Header: title + collapse button */}
         <div className="flex h-10 items-center justify-between px-3 mb-5">
           <span className="text-sm font-bold tracking-widest text-white">
@@ -66,53 +65,52 @@ const ExpandedSidebar = () => {
 
         {/* Nav items */}
         <div className="flex flex-col gap-3 px-2 mb-2">
-
           {/* Route items — horizontal icon row with tooltips */}
           <TooltipProvider delayDuration={200}>
             <div className="flex items-center justify-center">
-            <div className="flex items-center rounded-lg border border-zinc-800 bg-zinc-900 overflow-hidden px-2">
-              {navItems.map(({ icon: Icon, label, href }, index) => {
-                const isActive =
-                  pathname === href || pathname.startsWith(href + "/");
-                return (
-                  <Fragment key={label}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={cn(
-                            "relative h-12 w-12 cursor-pointer shrink-0",
-                            isActive
-                              ? "text-white"
-                              : "text-zinc-500 hover:text-white"
-                          )}
-                          asChild
-                        >
-                          <Link href={href}>
-                            <Icon className="h-6 w-6" />
-                            {/* Active underline indicator */}
-                            {isActive && (
-                              <span className="absolute bottom-1 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-white" />
+              <div className="flex items-center rounded-lg border border-zinc-800 bg-zinc-900 overflow-hidden px-2">
+                {navItems.map(({ icon: Icon, label, href }, index) => {
+                  const isActive =
+                    pathname === href || pathname.startsWith(href + "/");
+                  return (
+                    <Fragment key={label}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                              "relative h-12 w-12 cursor-pointer shrink-0",
+                              isActive
+                                ? "text-white"
+                                : "text-zinc-500 hover:text-white",
                             )}
-                          </Link>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="bottom"
-                        className="border-zinc-700 bg-zinc-900 text-zinc-100 text-xs"
-                      >
-                        {label}
-                      </TooltipContent>
-                    </Tooltip>
-                    {/* Divider between items */}
-                    {index < navItems.length - 1 && (
-                      <div className="w-px h-5 bg-zinc-800 shrink-0" />
-                    )}
-                  </Fragment>
-                );
-              })}
-            </div>
+                            asChild
+                          >
+                            <Link href={href}>
+                              <Icon className="h-6 w-6" />
+                              {/* Active underline indicator */}
+                              {isActive && (
+                                <span className="absolute bottom-1 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-white" />
+                              )}
+                            </Link>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          side="bottom"
+                          className="border-zinc-700 bg-zinc-900 text-zinc-100 text-xs"
+                        >
+                          {label}
+                        </TooltipContent>
+                      </Tooltip>
+                      {/* Divider between items */}
+                      {index < navItems.length - 1 && (
+                        <div className="w-px h-5 bg-zinc-800 shrink-0" />
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </div>
             </div>
           </TooltipProvider>
         </div>
@@ -139,7 +137,6 @@ const ExpandedSidebar = () => {
 
         {/* Chat threads — scrollable */}
         <div className="flex flex-1 flex-col gap-1 overflow-y-auto min-h-0 px-2">
-
           {/* Placeholder threads */}
           {[
             { title: "Explain quantum entanglement", time: "2m ago" },
@@ -194,7 +191,6 @@ const ExpandedSidebar = () => {
             <Settings className="h-5 w-5" />
           </Button>
         </div>
-
       </div>
     </aside>
   );

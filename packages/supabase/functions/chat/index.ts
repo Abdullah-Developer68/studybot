@@ -23,6 +23,20 @@ type IncomingMessage = {
   parts?: Array<{ type?: string; text?: string }>;
 };
 
+const DEFAULT_MODEL = "z-ai/glm-4.5-air:free";
+
+const supportedModels = new Set([
+  "openai/gpt-5.5",
+  "openai/gpt-5.4",
+  "openai/gpt-imagegen-2",
+  "openai/gpt-4o-mini",
+  "anthropic/claude-3.5-haiku",
+  "google/gemini-2.0-flash",
+  "meta/llama-3.3-70b",
+  "deepseek/deepseek-r1",
+  DEFAULT_MODEL,
+]);
+
 // AI SDK model messages only support a limited set of roles here.
 // This guard lets TypeScript narrow a generic string role into a valid AI SDK role.
 const isSupportedRole = (
@@ -110,8 +124,14 @@ Deno.serve(async (req: Request) => {
 
     // useChat sends a JSON body containing the conversation history.
     // We only read the messages array and ignore everything else.
-    const body = (await req.json()) as { messages?: IncomingMessage[] };
+    const body = (await req.json()) as {
+      messages?: IncomingMessage[];
+      model?: string;
+    };
     const incomingMessages = body?.messages;
+    const selectedModel = supportedModels.has(body?.model ?? "")
+      ? body.model!
+      : DEFAULT_MODEL;
 
     if (!Array.isArray(incomingMessages) || incomingMessages.length === 0) {
       return jsonResponse({ error: "Messages are required" }, 400);
@@ -134,7 +154,7 @@ Deno.serve(async (req: Request) => {
     // streamText returns an AI SDK stream response that can be forwarded to the client.
     // This is what gives you token-by-token streaming instead of waiting for a full response.
     const result = streamText({
-      model: openrouter("z-ai/glm-4.5-air:free"),
+      model: openrouter(selectedModel),
       messages: transformedMessages,
       experimental_transform: smoothStream({
         delayInMs: 10,
