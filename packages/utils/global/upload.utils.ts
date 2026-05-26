@@ -2,7 +2,7 @@ import {
   getExtension,
   validateFileExtension,
   validateFileSize,
-} from "./file-utils.ts";
+} from "./file-utils";
 import type {
   ParseFileArgs,
   UploadFilesWithProgressArgs,

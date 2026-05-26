@@ -5,7 +5,7 @@
     "types": ["https://deno.land/std@0.224.0/types.d.ts"]
   },
   "imports": {
-    "@studybot/types": "../../../types/index.d.ts",
+    "@studybot/types": "../../../types/index.types.ts",
     "@studybot/types/": "../../../types/",
     "@studybot/utils/server/": "../../../utils/server/",
     "@studybot/utils/global/": "../../../utils/global/",

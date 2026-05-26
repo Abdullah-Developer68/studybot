@@ -3,16 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "types": "./index.d.ts",
+  "types": "./index.types.ts",
   "exports": {
     ".": {
-      "types": "./index.d.ts"
+      "types": "./index.types.ts"
     }
   },
   "files": [
-    "index.d.ts",
-    "upload.d.ts",
-    "chat-markdown.d.ts",
-    "form-events.d.ts"
+    "index.types.ts",
+    "upload.types.ts",
+    "file.types.ts",
+    "chat-markdown.types.ts",
+    "form-events.types.ts"
   ]
 }

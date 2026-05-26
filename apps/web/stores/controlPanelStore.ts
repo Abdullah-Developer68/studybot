@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { ControlPanelTypes } from "../types/controlPanel";
+import type { ControlPanelTypes } from "../types/controlPanel.types";
 
 export const useControlPanelStore = create<ControlPanelTypes>()(
   persist(

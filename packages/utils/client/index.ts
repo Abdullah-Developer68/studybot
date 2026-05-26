@@ -1,1 +1,1 @@
-export * from "../global/index.ts";
+export * from "../global/index";

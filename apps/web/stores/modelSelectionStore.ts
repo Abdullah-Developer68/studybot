@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { ModelSelectionStoreTypes } from "../types/modelSelection";
+import type { ModelSelectionStoreTypes } from "../types/modelSelection.types";
 
 const DEFAULT_MODEL_ID = "z-ai/glm-4.5-air:free";
 

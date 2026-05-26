@@ -29,7 +29,7 @@ import type {
   ModelCapability,
   ModelOption,
   ModelProviderId,
-} from "@/types/modelSelection";
+} from "@/types/modelSelection.types";
 
 const modelOptions: ModelOption[] = [
   {
@@ -132,7 +132,10 @@ const providers: Array<{
   { id: "zai", label: "Z.ai", railLabel: "Z" },
 ];
 
-const capabilityIcons: Record<ModelCapability, { icon: LucideIcon; label: string }> = {
+const capabilityIcons: Record<
+  ModelCapability,
+  { icon: LucideIcon; label: string }
+> = {
   vision: { icon: Eye, label: "Vision" },
   reasoning: { icon: Brain, label: "Reasoning" },
   tools: { icon: Puzzle, label: "Tools" },
@@ -167,7 +170,9 @@ const ProviderMark = ({
     );
   }
 
-  const providerLabel = providers.find((item) => item.id === provider)?.railLabel;
+  const providerLabel = providers.find(
+    (item) => item.id === provider,
+  )?.railLabel;
 
   return (
     <span
@@ -199,7 +204,8 @@ const ModelSelectionMenu = () => {
   );
 
   const selectedModel =
-    modelOptions.find((model) => model.id === selectedModelId) ?? modelOptions[0];
+    modelOptions.find((model) => model.id === selectedModelId) ??
+    modelOptions[0];
 
   const filteredModels = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -359,7 +365,8 @@ const ModelSelectionMenu = () => {
                         <span className="flex items-center gap-2">
                           <span className="hidden items-center gap-1 rounded-full bg-zinc-900 px-2 py-1 sm:flex">
                             {model.capabilities.map((capability) => {
-                              const CapabilityIcon = capabilityIcons[capability].icon;
+                              const CapabilityIcon =
+                                capabilityIcons[capability].icon;
 
                               return (
                                 <CapabilityIcon
