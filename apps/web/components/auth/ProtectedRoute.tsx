@@ -1,15 +1,21 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import useAuth from "@/hooks/auth/useAuth";
+
+type ProtectedRouteProps = {
+  children: ReactNode;
+  redirectTo?: string;
+  loadingComponent?: ReactNode | null;
+};
 
 const ProtectedRoute = ({
   children,
   redirectTo = "/auth",
   loadingComponent = null,
-}) => {
-  const { user, loading, isAuthenticated } = useAuth();
+}: ProtectedRouteProps) => {
+  const { loading, isAuthenticated } = useAuth();
   const router = useRouter();
 
   useEffect(() => {

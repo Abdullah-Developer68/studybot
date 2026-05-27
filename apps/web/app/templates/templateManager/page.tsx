@@ -1,5 +1,6 @@
 "use client";
-import React, { useEffect, useState } from "react";
+
+import { useEffect, useState, type ChangeEvent, type ComponentType } from "react";
 import {
   Search,
   LayoutGrid,
@@ -18,33 +19,55 @@ import {
   ensureDefaultTemplates,
   listTemplates,
 } from "@studybot/supabase";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Input as InputBase } from "@/components/ui/input";
+import { Button as ButtonBase } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu as DropdownMenuBase,
+  DropdownMenuContent as DropdownMenuContentBase,
+  DropdownMenuItem as DropdownMenuItemBase,
+  DropdownMenuTrigger as DropdownMenuTriggerBase,
 } from "@/components/ui/dropdown-menu";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+  Card as CardBase,
+  CardContent as CardContentBase,
+  CardDescription as CardDescriptionBase,
+  CardHeader as CardHeaderBase,
+  CardTitle as CardTitleBase,
 } from "@/components/ui/card";
 import useAuth from "@/hooks/auth/useAuth";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 
+type TemplateItem = {
+  templateId: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  tags: string[];
+  content: unknown;
+  updatedAt: string;
+};
+
+const Input = InputBase as ComponentType<any>;
+const Button = ButtonBase as ComponentType<any>;
+const DropdownMenu = DropdownMenuBase as ComponentType<any>;
+const DropdownMenuContent = DropdownMenuContentBase as ComponentType<any>;
+const DropdownMenuItem = DropdownMenuItemBase as ComponentType<any>;
+const DropdownMenuTrigger = DropdownMenuTriggerBase as ComponentType<any>;
+const Card = CardBase as ComponentType<any>;
+const CardContent = CardContentBase as ComponentType<any>;
+const CardDescription = CardDescriptionBase as ComponentType<any>;
+const CardHeader = CardHeaderBase as ComponentType<any>;
+const CardTitle = CardTitleBase as ComponentType<any>;
+
 const supabaseClient = createClient();
 
 const TemplateManager = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState("grid");
-  const [templates, setTemplates] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [templates, setTemplates] = useState<TemplateItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
   const { userId, loading: authLoading } = useAuth();
 
   useEffect(() => {
@@ -88,7 +111,7 @@ const TemplateManager = () => {
         return;
       }
 
-      setTemplates(result.templates ?? []);
+      setTemplates((result.templates ?? []) as TemplateItem[]);
       setIsLoading(false);
     };
 
@@ -109,7 +132,7 @@ const TemplateManager = () => {
         .includes(searchQuery.toLowerCase()),
   );
 
-  const formatDate = (value) => {
+  const formatDate = (value: string | null | undefined) => {
     if (!value) {
       return "Unknown";
     }
@@ -117,7 +140,7 @@ const TemplateManager = () => {
     return new Date(value).toLocaleDateString();
   };
 
-  const handleDeleteTemplate = async (templateId) => {
+  const handleDeleteTemplate = async (templateId: string) => {
     const result = await deleteTemplate(supabaseClient, templateId);
 
     if (result.error) {
@@ -130,7 +153,7 @@ const TemplateManager = () => {
     );
   };
 
-  const handleDuplicateTemplate = async (templateId) => {
+  const handleDuplicateTemplate = async (templateId: string) => {
     const templateToDuplicate = templates.find(
       (template) => template.templateId === templateId,
     );
@@ -173,7 +196,9 @@ const TemplateManager = () => {
               type="text"
               placeholder="Search templates..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setSearchQuery(e.target.value)
+              }
               className="pl-10"
             />
           </div>
@@ -237,9 +262,7 @@ const TemplateManager = () => {
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     <FileText size={20} className="text-blue-500" />
-                    <CardTitle className="text-base">
-                      {template.name}
-                    </CardTitle>
+                    <CardTitle className="text-base">{template.name}</CardTitle>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

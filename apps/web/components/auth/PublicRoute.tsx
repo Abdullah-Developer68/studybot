@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import useAuth from "@/hooks/auth/useAuth";
+
+type PublicRouteProps = {
+  children: ReactNode;
+  redirectTo?: string;
+  loadingComponent?: ReactNode | null;
+};
 
 /**
  * PublicRoute Component
@@ -27,8 +33,8 @@ const PublicRoute = ({
   children,
   redirectTo = "/",
   loadingComponent = null,
-}) => {
-  const { user, loading, isAuthenticated } = useAuth();
+}: PublicRouteProps) => {
+  const { loading, isAuthenticated } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 

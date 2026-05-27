@@ -1,5 +1,5 @@
 "use client";
-import useChatContext from "@/hooks/chat/useChatContext.js";
+import useChatContext from "@/hooks/chat/useChatContext";
 import type { CodeRendererProps } from "@studybot/types";
 import { Loader2, FileText } from "lucide-react";
 import Image from "next/image";
