@@ -8,7 +8,7 @@
     "mammoth": "^1.11.0",
     "officeparser": "^6.0.4",
     "unpdf": "^1.4.0",
-    "axios": "^1.13.2",
+    "axios": "^1.16.1",
     "@studybot/types": "*"
   },
   "exports": {

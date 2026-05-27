@@ -12,6 +12,15 @@
     "typecheck": "turbo run check-types"
   },
   "devDependencies": {
-    "turbo": "^2.8.20"
+    "turbo": "^2.9.15"
+  },
+  "overrides": {
+    "axios": "1.16.1",
+    "follow-redirects": "1.16.0",
+    "postcss": "8.5.15",
+    "brace-expansion": "5.0.6",
+    "tmp": "0.2.7",
+    "uuid": "11.1.1",
+    "@xmldom/xmldom": "0.8.13"
   }
 }

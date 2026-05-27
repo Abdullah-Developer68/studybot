@@ -23,6 +23,12 @@ type IncomingMessage = {
   parts?: Array<{ type?: string; text?: string }>;
 };
 
+type ChatRequestBody = {
+  messages?: IncomingMessage[];
+  model?: string;
+  session_id?: string;
+};
+
 const DEFAULT_MODEL = "z-ai/glm-4.5-air:free";
 
 const supportedModels = new Set([

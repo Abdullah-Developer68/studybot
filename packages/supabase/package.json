@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "./sdk/supabase.methods.js",
+  "main": "./sdk/supabase.methods.ts",
   "scripts": {
     "functions:serve:pdf": "supabase functions serve parse-pdf",
     "functions:serve:word": "supabase functions serve parse-word",
@@ -17,11 +17,11 @@
     "functions:deploy:text": "supabase functions deploy parse-text --project-ref kmhsyvcjoctqyyaarjmu"
   },
   "exports": {
-    ".": "./sdk/supabase.methods.js",
-    "./auth": "./sdk/auth/index.js",
-    "./chat": "./sdk/chat/index.js",
-    "./storage": "./sdk/storage/index.js",
-    "./templates": "./sdk/templates/index.js"
+    ".": "./sdk/supabase.methods.ts",
+    "./auth": "./sdk/auth/index.ts",
+    "./chat": "./sdk/chat/index.ts",
+    "./storage": "./sdk/storage/index.ts",
+    "./templates": "./sdk/templates/index.ts"
   },
   "dependencies": {
     "supabase": "^2.84.4"

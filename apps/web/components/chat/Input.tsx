@@ -1,10 +1,10 @@
 "use client";
-// Type-only imports first to keep runtime imports grouped separately.
+
 import type { ChangeEvent } from "react";
 import type { AttachedFile, FormSubmitEvent } from "@studybot/types";
 
-import { useState, useRef } from "react";
-
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowUpIcon,
   X,
@@ -16,15 +16,11 @@ import {
 import useChatContext from "@/hooks/chat/useChatContext";
 import { createClient } from "@/utils/supabase/client";
 import { uploadDocument } from "@studybot/api-client";
-
-// Import validators directly from file-utils to avoid barrel export ambiguity.
 import {
   getSupportedExtensions,
   validateFile,
 } from "@studybot/utils/global/file-utils";
-// Import upload orchestration helper directly from upload-utils.
 import { uploadFilesWithProgress } from "@studybot/utils/global/upload.utils";
-
 import {
   InputGroup,
   InputGroupAddon,
@@ -39,15 +35,12 @@ import { useModelSelectionStore } from "@/stores/modelSelectionStore";
 const SUPPORTED_FILE_TYPES = getSupportedExtensions();
 const supabaseClient = createClient();
 
-
-
 const Input = () => {
-  // Context
-  const { sendMessage, status, stop } = useChatContext();
+  const router = useRouter();
+  const { sendMessage, status, stop, threadId, setThreadId } = useChatContext();
   const selectedModelId = useModelSelectionStore(
     (state) => state.selectedModelId,
   );
-  // State variables
   const [prompt, setPrompt] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -55,24 +48,18 @@ const Input = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-
-  // isLoading is derived from status which is a state variable managed by useChat
   const isLoading = status === "submitted" || status === "streaming";
 
-  // Handle file selection button click
   const handleFileButtonClick = () => {
     fileInputRef.current?.click();
   };
 
-  // Handle file selection (multiple files)
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    // Reset previous error
     setUploadError(null);
 
-    // Validate all files first
     for (const file of files) {
       const validation = validateFile(file);
       if (!validation.valid) {
@@ -81,7 +68,6 @@ const Input = () => {
       }
     }
 
-    // prepare for upload
     setIsUploading(true);
     setUploadProgress(0);
 
@@ -99,7 +85,6 @@ const Input = () => {
         throw new Error("Please sign in again before uploading files.");
       }
 
-      // Upload all files in parallel
       const uploadedFiles = await uploadFilesWithProgress({
         files,
         uploadDocument: (file, onProgress) =>
@@ -109,7 +94,6 @@ const Input = () => {
         },
       });
 
-      // Add to existing attached files
       setAttachedFiles((prev) => [...prev, ...uploadedFiles]);
     } catch (error: unknown) {
       console.error("File upload error:", error);
@@ -119,38 +103,23 @@ const Input = () => {
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
-      // Reset file input so same files can be selected again
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
     }
   };
 
-  // Remove a specific attached file
   const handleRemoveFile = (index: number) => {
     setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
     setUploadError(null);
   };
 
-  // Remove all attached files
   const handleRemoveAllFiles = () => {
     setAttachedFiles([]);
     setUploadError(null);
   };
 
-  const handleSubmit = (e: FormSubmitEvent) => {
-    e.preventDefault();
-    if (
-      (!prompt.trim() && attachedFiles.length === 0) ||
-      isLoading ||
-      isUploading
-    )
-      return;
-
-    // Get user's actual prompt
-    const userPrompt = prompt.trim() || "Please summarize these documents.";
-
-    // Build the full message content for AI (all file contents first, then user prompt)
+  const buildMessageForAI = (userPrompt: string) => {
     let messageForAI = userPrompt;
 
     if (attachedFiles.length > 0) {
@@ -164,7 +133,65 @@ const Input = () => {
       messageForAI = `${documentsContent}\n\n[User Request]: ${userPrompt}`;
     }
 
-    // AI SDK 5.0+ expects a message object with parts, not a string
+    return messageForAI;
+  };
+
+  const ensureThread = async (userPrompt: string) => {
+    if (threadId) {
+      return threadId;
+    }
+
+    const { data, error } = await supabaseClient.auth.getUser();
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const user = data.user;
+    if (!user) {
+      throw new Error("Please sign in again before starting a chat.");
+    }
+
+    const title = userPrompt.replace(/\s+/g, " ").trim().slice(0, 80) || "New Chat";
+
+    const { data: session, error: createError } = await supabaseClient
+      .from("chat_sessions")
+      .insert({
+        profile_id: user.id,
+        title,
+        model: selectedModelId,
+      })
+      .select("session_id")
+      .single();
+
+    if (createError) {
+      throw new Error(createError.message);
+    }
+
+    const newThreadId = session?.session_id;
+    if (!newThreadId) {
+      throw new Error("Failed to create a new chat thread.");
+    }
+
+    setThreadId(newThreadId);
+    router.replace(`/chat/${newThreadId}`);
+    return newThreadId;
+  };
+
+  const handleSubmit = async (e: FormSubmitEvent) => {
+    e.preventDefault();
+
+    if (
+      (!prompt.trim() && attachedFiles.length === 0) ||
+      isLoading ||
+      isUploading
+    ) {
+      return;
+    }
+
+    const userPrompt = prompt.trim() || "Please summarize these documents.";
+    const messageForAI = buildMessageForAI(userPrompt);
+    const activeThreadId = await ensureThread(userPrompt);
+
     sendMessage(
       {
         role: "user",
@@ -173,6 +200,12 @@ const Input = () => {
       {
         body: {
           model: selectedModelId,
+          threadId: activeThreadId,
+          attachments: attachedFiles.map((file) => ({
+            name: file.name,
+            type: file.type,
+            wasTruncated: file.wasTruncated,
+          })),
         },
       },
     );
@@ -184,7 +217,6 @@ const Input = () => {
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-3xl">
-      {/* File attachments preview */}
       {attachedFiles.length > 0 && (
         <div className="mb-2">
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-blue-700 scrollbar-track-transparent">
@@ -228,7 +260,6 @@ const Input = () => {
         </div>
       )}
 
-      {/* Upload error message */}
       {uploadError && (
         <div className="mb-2 flex items-center gap-2 bg-red-900/30 border border-red-700 rounded-lg px-3 py-2 text-sm text-red-300">
           <span>{uploadError}</span>
@@ -269,7 +300,6 @@ const Input = () => {
           disabled={isLoading}
         />
         <InputGroupAddon align="block-end" className="">
-          {/* Hidden file input */}
           <input
             ref={fileInputRef}
             type="file"
@@ -280,7 +310,6 @@ const Input = () => {
             multiple
           />
 
-          {/* File upload button */}
           <InputGroupButton
             type="button"
             variant="outline"
@@ -299,16 +328,13 @@ const Input = () => {
 
           <ModelSelectionMenu />
           <InputGroupText className="ml-auto group relative">
-            {/* Context Window */}
             <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-600 cursor-help"></div>
-            {/* Tooltip */}
             <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
               52% context used
             </div>
           </InputGroupText>
           <Separator orientation="vertical" className="h-4" />
 
-          {/* Send or Stop button */}
           {isLoading ? (
             <InputGroupButton
               type="button"

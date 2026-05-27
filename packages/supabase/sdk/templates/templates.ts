@@ -1,20 +1,106 @@
-const ensureClient = (supabaseClient) => {
-  if (!supabaseClient?.from) {
-    throw new Error("Supabase client is required");
-  }
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+type PlainObject = Record<string, unknown>;
+
+type TemplateContent = {
+  type: "doc";
+  content: PlainObject[];
+} & PlainObject;
+
+type TemplateView = {
+  templateId: string;
+  profileId: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  tags: string[];
+  content: TemplateContent;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type TemplateDatabaseRow = {
+  template_id: string;
+  profile_id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  tags: string[] | null;
+  content: TemplateContent;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+type TemplateSummaryRow = Pick<
+  TemplateDatabaseRow,
+  "template_id" | "name" | "category"
+>;
+
+type TemplateInsertRow = {
+  profile_id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  tags: string[];
+  content: TemplateContent;
+  is_public: boolean;
+};
+
+type TemplateUpdateRow = {
+  updated_at: string;
+  name?: string;
+  description?: string | null;
+  category?: string | null;
+  tags?: string[];
+  content?: TemplateContent;
+  is_public?: boolean;
+};
+
+type TemplateInput = {
+  profileId?: string | null;
+  name?: string;
+  description?: string | null;
+  category?: string | null;
+  tags?: unknown;
+  content?: unknown;
+};
+
+type TemplateUpdateInput = Omit<TemplateInput, "profileId">;
+
+type TemplateResult = {
+  template: TemplateView | null;
+  error: string | null;
+};
+
+type TemplatesResult = {
+  templates: TemplateView[] | null;
+  error: string | null;
+};
+
+type SeedResult = {
+  seeded: boolean;
+  error: string | null;
 };
 
 const DEFAULT_TEMPLATE_SEED_NAME = "__studybot_defaults_seed_v1__";
 const DEFAULT_TEMPLATE_SEED_CATEGORY = "__system__";
 
-const EMPTY_PARAGRAPH = {
+const EMPTY_PARAGRAPH: PlainObject = {
   type: "paragraph",
   attrs: {
     textAlign: null,
   },
 };
 
-const DEFAULT_TEMPLATES = [
+const DEFAULT_TEMPLATES: Array<{
+  name: string;
+  description: string;
+  category: string;
+  tags: string[];
+  content: TemplateContent;
+}> = [
   {
     name: "Meeting Notes",
     description: "Capture agenda items, discussion points, and follow-ups.",
@@ -125,21 +211,34 @@ const DEFAULT_TEMPLATES = [
   },
 ];
 
-const isPlainObject = (value) =>
-  value !== null && typeof value === "object" && !Array.isArray(value);
+function ensureClient(
+  supabaseClient: SupabaseClient | null | undefined,
+): asserts supabaseClient is SupabaseClient {
+  if (!supabaseClient?.from) {
+    throw new Error("Supabase client is required");
+  }
+}
 
-const normalizeTags = (tags) => {
+function isPlainObject(value: unknown): value is PlainObject {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
+const normalizeTags = (tags: unknown): string[] => {
   if (!Array.isArray(tags)) {
     return [];
   }
 
   return tags
-    .filter((tag) => typeof tag === "string")
+    .filter((tag): tag is string => typeof tag === "string")
     .map((tag) => tag.trim())
     .filter(Boolean);
 };
 
-const normalizeTemplateContent = (content) => {
+const normalizeTemplateContent = (content: unknown): TemplateContent => {
   if (!isPlainObject(content)) {
     throw new Error("Template content must be a JSON object");
   }
@@ -152,14 +251,18 @@ const normalizeTemplateContent = (content) => {
     throw new Error("Template content must include a content array");
   }
 
-  return content;
+  return content as TemplateContent;
 };
 
-const isSeedMarkerRow = (row) =>
+const isSeedMarkerRow = (
+  row: TemplateSummaryRow | null | undefined,
+): boolean =>
   row?.name === DEFAULT_TEMPLATE_SEED_NAME &&
   row?.category === DEFAULT_TEMPLATE_SEED_CATEGORY;
 
-const mapTemplateRow = (row) => {
+const mapTemplateRow = (
+  row: TemplateDatabaseRow | null | undefined,
+): TemplateView | null => {
   if (!row) {
     return null;
   }
@@ -178,8 +281,11 @@ const mapTemplateRow = (row) => {
   };
 };
 
-const buildDefaultTemplateRows = (profileId, existingNames = []) => {
-  const usedNames = new Set(existingNames);
+const buildDefaultTemplateRows = (
+  profileId: string,
+  existingNames: string[] = [],
+): TemplateInsertRow[] => {
+  const usedNames = new Set<string>(existingNames);
 
   return DEFAULT_TEMPLATES.filter(
     (template) => !usedNames.has(template.name),
@@ -194,7 +300,10 @@ const buildDefaultTemplateRows = (profileId, existingNames = []) => {
   }));
 };
 
-const ensureDefaultTemplates = async (supabaseClient, profileId) => {
+const ensureDefaultTemplates = async (
+  supabaseClient: SupabaseClient | null | undefined,
+  profileId: string | null | undefined,
+): Promise<SeedResult> => {
   try {
     ensureClient(supabaseClient);
 
@@ -211,18 +320,30 @@ const ensureDefaultTemplates = async (supabaseClient, profileId) => {
       return { seeded: false, error: fetchError.message };
     }
 
-    const rows = existingRows ?? [];
+    const rows = (existingRows ?? []) as TemplateSummaryRow[];
 
     if (rows.some(isSeedMarkerRow)) {
       return { seeded: false, error: null };
     }
 
-    const templateRows = buildDefaultTemplateRows(
-      profileId,
-      rows.filter((row) => !isSeedMarkerRow(row)).map((row) => row.name),
-    );
+    const existingNames = rows.reduce<string[]>((acc, row) => {
+      if (!isSeedMarkerRow(row)) {
+        acc.push(row.name);
+      }
+      return acc;
+    }, []);
 
-    const payload = [
+    const templateRows = buildDefaultTemplateRows(profileId, existingNames);
+
+    const payload: Array<TemplateInsertRow | TemplateInsertRow & {
+      profile_id: string;
+      name: string;
+      description: string;
+      category: string;
+      tags: string[];
+      content: TemplateContent;
+      is_public: boolean;
+    }> = [
       ...templateRows,
       {
         profile_id: profileId,
@@ -247,15 +368,18 @@ const ensureDefaultTemplates = async (supabaseClient, profileId) => {
     }
 
     return { seeded: true, error: null };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       seeded: false,
-      error: error?.message || "Failed to seed default templates",
+      error: getErrorMessage(error, "Failed to seed default templates"),
     };
   }
 };
 
-const listTemplates = async (supabaseClient, profileId) => {
+const listTemplates = async (
+  supabaseClient: SupabaseClient | null | undefined,
+  profileId: string | null | undefined,
+): Promise<TemplatesResult> => {
   try {
     ensureClient(supabaseClient);
 
@@ -274,20 +398,24 @@ const listTemplates = async (supabaseClient, profileId) => {
     }
 
     return {
-      templates: (data ?? [])
+      templates: ((data ?? []) as TemplateDatabaseRow[])
         .filter((row) => !isSeedMarkerRow(row))
-        .map(mapTemplateRow),
+        .map(mapTemplateRow)
+        .filter((template): template is TemplateView => template !== null),
       error: null,
     };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       templates: null,
-      error: error?.message || "Failed to list templates",
+      error: getErrorMessage(error, "Failed to list templates"),
     };
   }
 };
 
-const getTemplateById = async (supabaseClient, templateId) => {
+const getTemplateById = async (
+  supabaseClient: SupabaseClient | null | undefined,
+  templateId: string | null | undefined,
+): Promise<TemplateResult> => {
   try {
     ensureClient(supabaseClient);
 
@@ -306,18 +434,21 @@ const getTemplateById = async (supabaseClient, templateId) => {
     }
 
     return {
-      template: mapTemplateRow(data),
+      template: mapTemplateRow(data as TemplateDatabaseRow | null),
       error: null,
     };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       template: null,
-      error: error?.message || "Failed to fetch template",
+      error: getErrorMessage(error, "Failed to fetch template"),
     };
   }
 };
 
-const createTemplate = async (supabaseClient, input = {}) => {
+const createTemplate = async (
+  supabaseClient: SupabaseClient | null | undefined,
+  input: TemplateInput = {},
+): Promise<TemplateResult> => {
   try {
     ensureClient(supabaseClient);
 
@@ -342,7 +473,7 @@ const createTemplate = async (supabaseClient, input = {}) => {
       return { template: null, error: "Template name is reserved" };
     }
 
-    const payload = {
+    const payload: TemplateInsertRow = {
       profile_id: profileId,
       name: name.trim(),
       description: typeof description === "string" ? description.trim() : null,
@@ -369,18 +500,22 @@ const createTemplate = async (supabaseClient, input = {}) => {
     }
 
     return {
-      template: mapTemplateRow(data),
+      template: mapTemplateRow(data as TemplateDatabaseRow | null),
       error: null,
     };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       template: null,
-      error: error?.message || "Failed to create template",
+      error: getErrorMessage(error, "Failed to create template"),
     };
   }
 };
 
-const updateTemplate = async (supabaseClient, templateId, input = {}) => {
+const updateTemplate = async (
+  supabaseClient: SupabaseClient | null | undefined,
+  templateId: string | null | undefined,
+  input: TemplateUpdateInput = {},
+): Promise<TemplateResult> => {
   try {
     ensureClient(supabaseClient);
 
@@ -388,7 +523,7 @@ const updateTemplate = async (supabaseClient, templateId, input = {}) => {
       return { template: null, error: "Template ID is required" };
     }
 
-    const patch = {
+    const patch: TemplateUpdateRow = {
       updated_at: new Date().toISOString(),
     };
 
@@ -439,18 +574,21 @@ const updateTemplate = async (supabaseClient, templateId, input = {}) => {
     }
 
     return {
-      template: mapTemplateRow(data),
+      template: mapTemplateRow(data as TemplateDatabaseRow | null),
       error: null,
     };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       template: null,
-      error: error?.message || "Failed to update template",
+      error: getErrorMessage(error, "Failed to update template"),
     };
   }
 };
 
-const deleteTemplate = async (supabaseClient, templateId) => {
+const deleteTemplate = async (
+  supabaseClient: SupabaseClient | null | undefined,
+  templateId: string | null | undefined,
+): Promise<{ error: string | null }> => {
   try {
     ensureClient(supabaseClient);
 
@@ -468,9 +606,9 @@ const deleteTemplate = async (supabaseClient, templateId) => {
     }
 
     return { error: null };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
-      error: error?.message || "Failed to delete template",
+      error: getErrorMessage(error, "Failed to delete template"),
     };
   }
 };
