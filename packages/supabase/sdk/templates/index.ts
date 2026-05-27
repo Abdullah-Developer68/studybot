@@ -1,1 +1,1 @@
-export * from "./templates.ts";
+export * from "./templates";
