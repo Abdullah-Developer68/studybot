@@ -38,14 +38,15 @@ const isSupportedRole = (
 
 // Small helper for consistent JSON error responses.
 // It ensures all non-streaming errors return the same JSON shape and CORS headers.
-const jsonResponse = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), {
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
     status,
     headers: {
       ...corsHeaders,
       "Content-Type": "application/json",
     },
   });
+}
 
 const extractAssistantTextFromParts = (
   parts: IncomingMessage["parts"],
@@ -67,12 +68,14 @@ const normalizeMessages = (messages: IncomingMessage[]): ModelMessage[] => {
 
   for (const message of messages) {
     if (!isSupportedRole(message.role)) {
+      console.warn("Skipped message with unsupported role:", message.role);
       continue;
     }
 
     if (message.role === "assistant" && Array.isArray(message.parts)) {
       const content = extractAssistantTextFromParts(message.parts).trim();
       if (!content) {
+        console.warn("Skipped assistant message with empty parts");
         continue;
       }
 
@@ -87,6 +90,7 @@ const normalizeMessages = (messages: IncomingMessage[]): ModelMessage[] => {
           ? message.text.trim()
           : "";
     if (!content) {
+      console.warn("Skipped message with empty content. Message:", message);
       continue;
     }
 
@@ -132,10 +136,16 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: "Messages are required" }, 400);
     }
 
+    console.log("Processing", incomingMessages.length, "incoming messages");
+
     // Convert the loose client payload into the exact message format the AI SDK expects.
     const transformedMessages = normalizeMessages(incomingMessages);
 
     if (transformedMessages.length === 0) {
+      console.error(
+        "No messages survived normalization. Raw input:",
+        incomingMessages
+      );
       return jsonResponse(
         { error: "Messages must contain non-empty content" },
         400,
