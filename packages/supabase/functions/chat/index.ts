@@ -72,10 +72,11 @@ const normalizeMessages = (messages: IncomingMessage[]): ModelMessage[] => {
       continue;
     }
 
-    if (message.role === "assistant" && Array.isArray(message.parts)) {
+    // Handle messages that arrive with a parts array (either user or assistant)
+    if (Array.isArray(message.parts)) {
       const content = extractAssistantTextFromParts(message.parts).trim();
       if (!content) {
-        console.warn("Skipped assistant message with empty parts");
+        console.warn("Skipped message with empty parts");
         continue;
       }
 
@@ -84,10 +85,10 @@ const normalizeMessages = (messages: IncomingMessage[]): ModelMessage[] => {
     }
 
     const content =
-      typeof message.content === "string"
-        ? message.content.trim()
-        : typeof message.text === "string"
-          ? message.text.trim()
+      typeof message.text === "string"
+        ? message.text.trim()
+        : typeof message.content === "string"
+          ? message.content.trim()
           : "";
     if (!content) {
       console.warn("Skipped message with empty content. Message:", message);
