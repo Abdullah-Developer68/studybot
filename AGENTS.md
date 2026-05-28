@@ -21,13 +21,19 @@ This repository is a Turborepo monorepo for StudyBot, an AI-assisted academic pr
 
 ## Working Rules
 
-- Prefer feature-local stores over a single global Zustand store unless several features must coordinate tightly.
-- If a type is shared or reused across both web and mobile codebases, keep it in `packages/types`.
-- If a type is shared or used within a single codebase, keep it in that codebase's own types directory, such as `apps/web/types` for web codebase.
+- If states needs to be shared for a new set of components then create a sepearte store for them using zustand. Do not use a single store for everything.
 
-- Keep store types near the store implementation when they describe that store’s public state.
+- If a type is shared or reused across both web and mobile codebases, keep it in `packages/types`.
+
+- If a type is shared or used within a single codebase (e.g web or app), keep it in that codebase's own types directory, such as `apps/web/types` for web codebase.
+
+- Supabase functions and sdk folders have types directories in their repective roots. Define types there and import them and use them in funcitons and sdk. Use "@:" "../" alias in import object in deno.json of both sdk and functions of supabase and import types using @ alias
+
 - For client-side Next.js code, use static `process.env.NEXT_PUBLIC_*` references rather than dynamic env lookup.
+
 - The web chat path currently points to `/api/chat`; the Supabase chat edge function exists separately and should only be wired in deliberately.
+
+- Always write comments to explain the code that you write and use only // to write them. Do not use multiline comments syntax
 
 ## Editing Guidance
 

@@ -6,6 +6,7 @@
   },
   "imports": {
     "ai": "npm:ai@6.0.3",
+    "@/": "../",
     "@openrouter/ai-sdk-provider": "npm:@openrouter/ai-sdk-provider@2.0.0"
   }
 }

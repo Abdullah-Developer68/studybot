@@ -1,7 +1,7 @@
 /// <reference path="../deno-globals.d.ts" />
-
-import { streamText, smoothStream } from "ai";
 import type { ModelMessage } from "ai";
+import type { IncomingMessage } from "@/types/chat.types.ts";
+import { streamText, smoothStream } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
 // CORS headers keep browser requests to this edge function working.
@@ -12,21 +12,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-
-// The edge function accepts the same chat payload shape used by useChat.
-// We keep this loose because the client may send extra fields, but we only
-// care about role, content, and assistant parts when building the prompt.
-type IncomingMessage = {
-  role: "user" | "assistant" | "system" | string;
-  content?: string;
-  parts?: Array<{ type?: string; text?: string }>;
-};
-
-type ChatRequestBody = {
-  messages?: IncomingMessage[];
-  model?: string;
-  session_id?: string;
 };
 
 const DEFAULT_MODEL = "z-ai/glm-4.5-air:free";
@@ -96,7 +81,11 @@ const normalizeMessages = (messages: IncomingMessage[]): ModelMessage[] => {
     }
 
     const content =
-      typeof message.content === "string" ? message.content.trim() : "";
+      typeof message.content === "string"
+        ? message.content.trim()
+        : typeof message.text === "string"
+          ? message.text.trim()
+          : "";
     if (!content) {
       continue;
     }

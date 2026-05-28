@@ -4,15 +4,7 @@ import type { ChangeEvent } from "react";
 import type { AttachedFile, FormSubmitEvent } from "@studybot/types";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import {
-  ArrowUpIcon,
-  X,
-  FileText,
-  Loader2,
-  Square,
-  Plus,
-} from "lucide-react";
+import { ArrowUpIcon, X, FileText, Loader2, Square, Plus } from "lucide-react";
 import useChatContext from "@/hooks/chat/useChatContext";
 import { createClient } from "@/utils/supabase/client";
 import { uploadDocument } from "@studybot/api-client";
@@ -36,8 +28,7 @@ const SUPPORTED_FILE_TYPES = getSupportedExtensions();
 const supabaseClient = createClient();
 
 const Input = () => {
-  const router = useRouter();
-  const { sendMessage, status, stop, threadId, setThreadId } = useChatContext();
+  const { sendMessage, status, stop } = useChatContext();
   const selectedModelId = useModelSelectionStore(
     (state) => state.selectedModelId,
   );
@@ -136,47 +127,6 @@ const Input = () => {
     return messageForAI;
   };
 
-  const ensureThread = async (userPrompt: string) => {
-    if (threadId) {
-      return threadId;
-    }
-
-    const { data, error } = await supabaseClient.auth.getUser();
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    const user = data.user;
-    if (!user) {
-      throw new Error("Please sign in again before starting a chat.");
-    }
-
-    const title = userPrompt.replace(/\s+/g, " ").trim().slice(0, 80) || "New Chat";
-
-    const { data: session, error: createError } = await supabaseClient
-      .from("chat_sessions")
-      .insert({
-        profile_id: user.id,
-        title,
-        model: selectedModelId,
-      })
-      .select("session_id")
-      .single();
-
-    if (createError) {
-      throw new Error(createError.message);
-    }
-
-    const newThreadId = session?.session_id;
-    if (!newThreadId) {
-      throw new Error("Failed to create a new chat thread.");
-    }
-
-    setThreadId(newThreadId);
-    router.replace(`/chat/${newThreadId}`);
-    return newThreadId;
-  };
-
   const handleSubmit = async (e: FormSubmitEvent) => {
     e.preventDefault();
 
@@ -190,17 +140,15 @@ const Input = () => {
 
     const userPrompt = prompt.trim() || "Please summarize these documents.";
     const messageForAI = buildMessageForAI(userPrompt);
-    const activeThreadId = await ensureThread(userPrompt);
 
     sendMessage(
       {
         role: "user",
-        content: messageForAI,
+        text: messageForAI,
       },
       {
         body: {
           model: selectedModelId,
-          threadId: activeThreadId,
           attachments: attachedFiles.map((file) => ({
             name: file.name,
             type: file.type,
