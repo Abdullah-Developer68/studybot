@@ -1,4 +1,20 @@
-export type ModelProviderId =
+type ModelSelectionActions = {
+  openMenu: () => void;
+  closeMenu: () => void;
+  toggleMenu: () => void;
+  setMenuOpen: (isOpen: boolean) => void;
+  selectModel: (modelId: string) => void;
+};
+
+// The ones below are exported
+
+ type ModelSelectionStoreTypes = {
+  isOpen: boolean;
+  selectedModelId: string;
+  actions: ModelSelectionActions;
+ };
+
+type ModelProviderId =
   | "openai"
   | "anthropic"
   | "google"
@@ -6,9 +22,9 @@ export type ModelProviderId =
   | "deepseek"
   | "zai";
 
-export type ModelCapability = "vision" | "reasoning" | "tools" | "image";
+type ModelCapability = "vision" | "reasoning" | "tools" | "image";
 
-export type ModelOption = {
+type ModelOption = {
   id: string;
   label: string;
   provider: ModelProviderId;
@@ -19,16 +35,6 @@ export type ModelOption = {
   capabilities: ModelCapability[];
 };
 
-type ModelSelectionActions = {
-  openMenu: () => void;
-  closeMenu: () => void;
-  toggleMenu: () => void;
-  setMenuOpen: (isOpen: boolean) => void;
-  selectModel: (modelId: string) => void;
-};
 
-export type ModelSelectionStoreTypes = {
-  isOpen: boolean;
-  selectedModelId: string;
-  actions: ModelSelectionActions;
-};
+
+export type { ModelProviderId, ModelCapability, ModelOption, ModelSelectionStoreTypes };

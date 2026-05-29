@@ -1,9 +1,5 @@
 import { createContext } from "react";
-import type { useChat } from "@ai-sdk/react";
-
-type ChatContextValue = ReturnType<typeof useChat> & {
-  stop: () => void;
-};
+import type {ChatContextValue} from "@/types/chatContext.types";
 
 const ChatContext = createContext<ChatContextValue | null>(null);
 
