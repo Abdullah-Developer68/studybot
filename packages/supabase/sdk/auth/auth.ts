@@ -1,12 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-
-type AuthCallback = Parameters<
-  SupabaseClient["auth"]["onAuthStateChange"]
->[0];
-
-type OAuthProvider = Parameters<
-  SupabaseClient["auth"]["signInWithOAuth"]
->[0]["provider"];
+import { AuthCallback, OAuthProvider } from "../types/auth.sdk.types";
 
 // asserts tells TS that this function verifies the value at runtime. if it does not throw,
 // the value is safe to use as SupabaseClient. if assert is not used we will get a compile time error

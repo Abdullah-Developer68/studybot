@@ -1,26 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-
-type UploadOptions = {
-  contentType?: string;
-  upsert?: boolean;
-};
-
-type UploadImageOptions = {
-  templateId?: string | null;
-  onProgress?: ((progress: { progress: number }) => void) | null;
-};
-
-type SignedImageOptions = {
-  bucket?: string;
-  expiresIn?: number;
-};
-
-type OwnedImageParams = {
-  requesterId?: string | null;
-  pathOrUrl?: string | null;
-  bucket?: string;
-  expiresIn?: number;
-};
+import type { OwnedImageParams, SignedImageOptions, UploadImageOptions, UploadOptions } from "../types/storage.sdk.types";
 
 // Validates that a usable Supabase client with storage access is provided.
 function ensureClient(

@@ -1,5 +1,5 @@
 import type { ModelMessage } from "ai";
-import type { IncomingMessage } from "@/types/chat.types.ts";
+import type { IncomingMessage } from "@/types/chat.function.types.ts";
 import { streamText, smoothStream } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
