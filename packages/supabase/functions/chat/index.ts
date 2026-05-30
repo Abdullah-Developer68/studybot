@@ -1,5 +1,5 @@
 import type { ModelMessage } from "ai";
-import type { IncomingMessage, IncomingMessageRole } from "@/types/chat.function.types.ts";
+import type { IncomingMessage, AllowedRoles } from "@/types/chat.function.types.ts";
 import { streamText, smoothStream } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 
@@ -30,7 +30,7 @@ const supportedModels = new Set([
 // used for debugging. Accepts any value, but returns true only if it is valid
 const isSupportedRole = (
   role: unknown,
-): role is IncomingMessageRole => {
+): role is AllowedRoles => {
   return role === "user" || role === "assistant" || role === "system" || role === "tool";
 };
 
@@ -57,13 +57,20 @@ const extractAssistantTextFromParts = (
     .join("");
 };
 
-// Normalize user/assistant messages into the strict AI SDK ModelMessage format.
+// Normalize user/assistant/tools messages into the strict AI SDK ModelMessage format.
 const normalizeMessages = (messages: IncomingMessage[]): ModelMessage[] => {
   const normalized: ModelMessage[] = [];
 
   for (const message of messages) {
+    // warn about skipped messages due to unsupported role
     if (!isSupportedRole(message.role)) {
       console.warn("Skipped message with unsupported role:", message.role);
+      continue;
+    }
+
+    // Tools will be supported later.
+    if (message.role === "tool") {
+      console.warn("Skipped message with role 'tool' since tools are not supported in this example");
       continue;
     }
 
@@ -158,7 +165,6 @@ Deno.serve(async (req: Request) => {
       model: openrouter(selectedModel),
       messages: transformedMessages,
       experimental_transform: smoothStream({
-        delayInMs: 10,
         chunking: "word",
       }),
     });
