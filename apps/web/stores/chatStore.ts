@@ -61,9 +61,7 @@ const useChatStoreStates = () =>
     })),
   );
 
-const useChatStoreActions = () => {
-  const { actions } = useChatStore();
-  return actions;
-}
+const useChatStoreActions = () =>
+  useChatStore((state) => state.actions);
 
 export { useChatStoreStates, useChatStoreActions };
