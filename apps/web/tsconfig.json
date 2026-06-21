@@ -7,13 +7,14 @@
       "@lib/*": ["./lib/*"],
       "@components/*": ["./components/*"],
       "@studybot/assets": ["../../packages/assets/assets.ts"],
-      "@studybot/assets/*": ["../../packages/assets/*"]
+      "@studybot/assets/*": ["../../packages/assets/*"],
+      "@studybot/types": ["../../packages/types"],
     },
     "plugins": [
       {
-        "name": "next"
-      }
-    ]
+        "name": "next",
+      },
+    ],
   },
   "include": [
     "next-env.d.ts",
@@ -21,6 +22,6 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts",
     "**/*.ts",
-    "**/*.tsx"
-  ]
+    "**/*.tsx",
+  ],
 }

@@ -11,6 +11,7 @@
     "@studybot/utils/server/": "../../../utils/server/",
     "@studybot/utils/global/": "../../../utils/global/",
     "@studybot/utils/": "../../../utils/",
-    "xlsx": "npm:xlsx@0.18.5"
+    "xlsx": "npm:xlsx@0.18.5",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2.97.0"
   }
 }

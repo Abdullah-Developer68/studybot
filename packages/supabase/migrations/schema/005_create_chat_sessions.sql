@@ -11,3 +11,11 @@ CREATE TABLE IF NOT EXISTS public.chat_sessions (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Create index for efficient thread retrieval by user
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_profile_id
+ON public.chat_sessions(profile_id, updated_at DESC);
+
+-- Create index for archived status filtering
+CREATE INDEX IF NOT EXISTS idx_chat_sessions_archived
+ON public.chat_sessions(profile_id, is_archived, updated_at DESC);

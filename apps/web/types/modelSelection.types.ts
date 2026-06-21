@@ -8,11 +8,11 @@ type ModelSelectionActions = {
 
 // The ones below are exported
 
- type ModelSelectionStoreTypes = {
+type ModelSelectionStoreTypes = {
   isOpen: boolean;
   selectedModelId: string;
   actions: ModelSelectionActions;
- };
+};
 
 type ModelProviderId =
   | "openai"
@@ -20,7 +20,8 @@ type ModelProviderId =
   | "google"
   | "meta"
   | "deepseek"
-  | "zai";
+  | "zai"
+  | "poolside";
 
 type ModelCapability = "vision" | "reasoning" | "tools" | "image";
 
@@ -35,6 +36,9 @@ type ModelOption = {
   capabilities: ModelCapability[];
 };
 
-
-
-export type { ModelProviderId, ModelCapability, ModelOption, ModelSelectionStoreTypes };
+export type {
+  ModelProviderId,
+  ModelCapability,
+  ModelOption,
+  ModelSelectionStoreTypes,
+};

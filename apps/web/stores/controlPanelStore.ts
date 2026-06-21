@@ -6,13 +6,19 @@ export const useControlPanelStore = create<ControlPanelTypes>()(
   persist(
     (set) => ({
       expanded: false,
+      settingsMenuOpen: false,
       actions: {
         expandPanel: () => set({ expanded: true }),
         collapsePanel: () => set({ expanded: false }),
+        // opens the settings popup menu
+        openSettingsMenu: () => set({ settingsMenuOpen: true }),
+        // closes the settings popup menu
+        closeSettingsMenu: () => set({ settingsMenuOpen: false }),
       },
     }),
     {
       name: "controlPanel",
+      // only persist the sidebar expanded state, not the menu open state
       partialize: (state) => ({ expanded: state.expanded }),
     },
   ),
@@ -22,6 +28,9 @@ export const useControlPanelStore = create<ControlPanelTypes>()(
 
 export const useIsPanelExpanded = () =>
   useControlPanelStore((state) => state.expanded);
+
+export const useIsSettingsMenuOpen = () =>
+  useControlPanelStore((state) => state.settingsMenuOpen);
 
 export const useControlPanelActions = () =>
   useControlPanelStore((state) => state.actions);

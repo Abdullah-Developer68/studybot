@@ -59,6 +59,11 @@ const signOut = async (supabase: SupabaseClient | null | undefined) => {
   }
 };
 
+// Logs out the current user - semantic alias for signOut used by client UIs.
+const logout = async (supabase: SupabaseClient | null | undefined) => {
+  return signOut(supabase);
+};
+
 // Starts OAuth sign-in flow for the given provider.
 const signInWithOAuth = async (
   supabase: SupabaseClient | null | undefined,
@@ -167,6 +172,7 @@ export {
   signUp,
   signIn,
   signOut,
+  logout,
   signInWithOAuth,
   getUser,
   getUserFromSession,

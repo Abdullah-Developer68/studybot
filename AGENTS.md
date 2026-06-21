@@ -49,6 +49,15 @@ This repository is a Turborepo monorepo for StudyBot, an AI-assisted academic pr
 - `npm run build`
 - `npm run typecheck`
 
+## Supabase Edge Functions Pattern
+
+- All Edge Functions are located in `supabase/functions/`.
+- The `_shared/` folder (prefixed with underscore) contains reusable helpers that get bundled into each function but are not deployed as standalone functions.
+- Use `getSupabaseClient(req)` for user-authenticated operations (respects RLS).
+- Use `getAdminClient()` only for admin tasks that bypass RLS.
+- Import the `deno.json` alias `@supabase/supabase-js` for clean imports.
+- Frontend calls Edge Functions via `supabase.functions.invoke()`, which automatically sends the user's auth token in the request headers.
+
 ## Notes for Supabase and Env Work
 
 - Keep browser-facing Supabase env access static so Next.js can inline values.

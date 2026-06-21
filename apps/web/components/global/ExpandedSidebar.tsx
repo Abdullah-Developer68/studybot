@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   PanelLeft,
+  Plus,
   MessageSquare,
   PencilLine,
   FileText,
@@ -21,6 +22,8 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useControlPanelActions } from "@/stores/controlPanelStore";
+import useChatSessions from "@/hooks/chat/useChatSessions";
+import SettingsMenu from "./SettingsMenu";
 
 const navItems = [
   { icon: MessageSquare, label: "Chat", href: "/chat" },
@@ -32,8 +35,18 @@ const ExpandedSidebar = () => {
   const pathname = usePathname();
   const { collapsePanel } = useControlPanelActions();
   const [closing, setClosing] = useState(false);
+  const { threads, activeThreadId, isLoading, createThread, switchThread } =
+    useChatSessions();
 
   const handleCollapse = () => setClosing(true);
+
+  const handleNewChat = async () => {
+    await createThread("New Chat");
+  };
+
+  const handleSwitchThread = (threadId: string) => {
+    switchThread(threadId);
+  };
 
   return (
     <aside
@@ -49,7 +62,7 @@ const ExpandedSidebar = () => {
     >
       <div className="flex flex-1 flex-col overflow-hidden py-3">
         {/* Header: title + collapse button */}
-        <div className="flex h-10 items-center justify-between px-3 mb-5">
+        <div className="mb-5 flex h-10 items-center justify-between px-3">
           <span className="text-sm font-bold tracking-widest text-white">
             Studybot
           </span>
@@ -64,11 +77,11 @@ const ExpandedSidebar = () => {
         </div>
 
         {/* Nav items */}
-        <div className="flex flex-col gap-3 px-2 mb-2">
+        <div className="mb-2 flex flex-col gap-3 px-2">
           {/* Route items — horizontal icon row with tooltips */}
           <TooltipProvider delayDuration={200}>
             <div className="flex items-center justify-center">
-              <div className="flex items-center rounded-lg border border-zinc-800 bg-zinc-900 overflow-hidden px-2">
+              <div className="flex items-center overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 px-2">
                 {navItems.map(({ icon: Icon, label, href }, index) => {
                   const isActive =
                     pathname === href || pathname.startsWith(href + "/");
@@ -80,7 +93,7 @@ const ExpandedSidebar = () => {
                             variant="ghost"
                             size="icon"
                             className={cn(
-                              "relative h-12 w-12 cursor-pointer shrink-0",
+                              "relative h-12 w-12 shrink-0 cursor-pointer",
                               isActive
                                 ? "text-white"
                                 : "text-zinc-500 hover:text-white",
@@ -98,14 +111,14 @@ const ExpandedSidebar = () => {
                         </TooltipTrigger>
                         <TooltipContent
                           side="bottom"
-                          className="border-zinc-700 bg-zinc-900 text-zinc-100 text-xs"
+                          className="border-zinc-700 bg-zinc-900 text-xs text-zinc-100"
                         >
                           {label}
                         </TooltipContent>
                       </Tooltip>
                       {/* Divider between items */}
                       {index < navItems.length - 1 && (
-                        <div className="w-px h-5 bg-zinc-800 shrink-0" />
+                        <div className="h-5 w-px shrink-0 bg-zinc-800" />
                       )}
                     </Fragment>
                   );
@@ -124,9 +137,11 @@ const ExpandedSidebar = () => {
             variant="default"
             size="default"
             className="w-full cursor-pointer bg-white text-zinc-900 hover:bg-zinc-100"
-            asChild
+            onClick={handleNewChat}
+            disabled={isLoading}
           >
-            <Link href="/chat">New Chat</Link>
+            <Plus className="mr-2 h-4 w-4" />
+            New Chat
           </Button>
         </div>
 
@@ -136,40 +151,37 @@ const ExpandedSidebar = () => {
         </p>
 
         {/* Chat threads — scrollable */}
-        <div className="flex flex-1 flex-col gap-1 overflow-y-auto min-h-0 px-2">
-          {/* Placeholder threads */}
-          {[
-            { title: "Explain quantum entanglement", time: "2m ago" },
-            { title: "Help me write a cover letter", time: "1h ago" },
-            { title: "Summarise this PDF", time: "3h ago" },
-            { title: "Python list comprehensions", time: "Yesterday" },
-            { title: "Essay on climate change", time: "Yesterday" },
-            { title: "What is the Turing test?", time: "2d ago" },
-            { title: "Solve this calculus problem", time: "2d ago" },
-            { title: "Best practices for React hooks", time: "3d ago" },
-            { title: "Summarise Newton's laws", time: "3d ago" },
-            { title: "Write a haiku about the ocean", time: "4d ago" },
-            { title: "Pros and cons of TypeScript", time: "4d ago" },
-            { title: "How does photosynthesis work?", time: "5d ago" },
-            { title: "Debug my Express server", time: "5d ago" },
-            { title: "Outline a research paper", time: "6d ago" },
-            { title: "Explain Big O notation", time: "6d ago" },
-            { title: "Translate this to Spanish", time: "1w ago" },
-            { title: "Compare SQL vs NoSQL", time: "1w ago" },
-            { title: "Ideas for my history essay", time: "1w ago" },
-            { title: "What caused World War I?", time: "2w ago" },
-            { title: "Set up a Next.js project", time: "2w ago" },
-          ].map((thread) => (
-            <button
-              key={thread.title}
-              className="group flex w-full flex-col rounded-md px-2 py-2 text-left hover:bg-zinc-800/60 cursor-pointer"
-            >
-              <span className="truncate text-sm text-zinc-300 group-hover:text-white">
-                {thread.title}
-              </span>
-              <span className="text-[11px] text-zinc-600">{thread.time}</span>
-            </button>
-          ))}
+        <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-2">
+          {threads.length === 0 ? (
+            <div className="rounded-md border border-dashed border-zinc-800 px-3 py-3 text-sm text-zinc-500">
+              No chat sessions yet.
+            </div>
+          ) : (
+            threads.map((thread) => {
+              const isActive = activeThreadId === thread.session_id;
+              return (
+                <button
+                  key={thread.session_id}
+                  type="button"
+                  className={cn(
+                    "group flex w-full flex-col rounded-md px-2 py-2 text-left cursor-pointer hover:bg-zinc-800/60",
+                    isActive && "bg-zinc-800/70",
+                  )}
+                  onClick={() => handleSwitchThread(thread.session_id)}
+                >
+                  <span className="truncate text-sm text-zinc-300 group-hover:text-white">
+                    {thread.title}
+                  </span>
+                  <span className="text-[11px] text-zinc-600">
+                    {new Date(thread.updated_at).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </span>
+                </button>
+              );
+            })
+          )}
         </div>
 
         {/* Footer */}
@@ -183,13 +195,16 @@ const ExpandedSidebar = () => {
             </Avatar>
             <span className="truncate text-sm text-zinc-400">Profile</span>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 cursor-pointer text-zinc-400 hover:text-white"
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
+          {/* Settings button opens the shared settings popup */}
+          <SettingsMenu>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 cursor-pointer text-zinc-400 hover:text-white"
+            >
+              <Settings className="h-5 w-5" />
+            </Button>
+          </SettingsMenu>
         </div>
       </div>
     </aside>

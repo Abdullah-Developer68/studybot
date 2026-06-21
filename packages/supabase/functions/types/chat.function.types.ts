@@ -1,4 +1,3 @@
-
 type AllowedRoles = "user" | "assistant" | "system" | "tool";
 
 type IncomingMessage = {
@@ -8,10 +7,11 @@ type IncomingMessage = {
   parts?: Array<{ type?: string; text?: string }>;
 };
 
-// export type ChatRequestBody = {
-//   messages?: IncomingMessage[];
-//   model?: string;
-//   session_id?: string;
-// };
+// Request body sent from the client (ChatProvider)
+export type ChatRequestBody = {
+  messages?: IncomingMessage[];
+  model?: string;
+  threadId?: string; // Session/thread ID to associate messages
+};
 
 export type { IncomingMessage, AllowedRoles };

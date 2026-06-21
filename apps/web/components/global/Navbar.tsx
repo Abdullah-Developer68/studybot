@@ -19,6 +19,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import useChatSessions from "@/hooks/chat/useChatSessions";
+import SettingsMenu from "./SettingsMenu";
 
 const navItems = [
   { icon: MessageSquare, label: "Chat", href: "/chat" },
@@ -28,6 +30,11 @@ const navItems = [
 
 const Navbar = () => {
   const pathname = usePathname();
+  const { createThread, isLoading } = useChatSessions();
+
+  const handleNewChat = async () => {
+    await createThread("New Chat");
+  };
 
   return (
     <nav className="fixed inset-x-0 top-0 z-50 flex h-14 items-center justify-between border-b border-zinc-800 bg-zinc-950/95 px-3">
@@ -49,11 +56,10 @@ const Navbar = () => {
                 variant="ghost"
                 size="icon"
                 className="h-9 w-9 cursor-pointer text-zinc-400 hover:text-white"
-                asChild
+                onClick={handleNewChat}
+                disabled={isLoading}
               >
-                <Link href="/chat">
-                  <Plus className="h-5 w-5" />
-                </Link>
+                <Plus className="h-5 w-5" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
@@ -71,7 +77,7 @@ const Navbar = () => {
                     "h-9 w-9 cursor-pointer",
                     pathname === href
                       ? "text-white"
-                      : "text-zinc-400 hover:text-white"
+                      : "text-zinc-400 hover:text-white",
                   )}
                   asChild
                 >
@@ -90,13 +96,16 @@ const Navbar = () => {
 
       {/* Right: settings + avatar */}
       <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 cursor-pointer text-zinc-400 hover:text-white"
-        >
-          <Settings className="h-5 w-5" />
-        </Button>
+        {/* Settings button opens the shared settings popup */}
+        <SettingsMenu>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 cursor-pointer text-zinc-400 hover:text-white"
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
+        </SettingsMenu>
         <Avatar className="h-8 w-8 cursor-pointer border border-zinc-700">
           <AvatarImage src="/profile-pic.png" alt="Profile" />
           <AvatarFallback className="bg-zinc-800 text-[10px] text-white">

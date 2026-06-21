@@ -11,6 +11,7 @@
     "@studybot/utils/server/": "../../../utils/server/",
     "@studybot/utils/global/": "../../../utils/global/",
     "@studybot/utils/": "../../../utils/",
-    "officeparser": "npm:officeparser@6.0.4"
+    "officeparser": "npm:officeparser@6.0.4",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2.97.0"
   }
 }

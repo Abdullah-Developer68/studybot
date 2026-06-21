@@ -107,10 +107,10 @@ const modelOptions: ModelOption[] = [
     capabilities: ["reasoning"],
   },
   {
-    id: "z-ai/glm-4.5-air:free",
-    label: "GLM 4.5 Air",
-    provider: "zai",
-    providerLabel: "Z.ai",
+    id: "poolside/laguna-xs.2:free",
+    label: "Laguna XS.2",
+    provider: "poolside",
+    providerLabel: "Poolside",
     description: "Free fast model for everyday study help",
     priceLabel: "Free",
     highlighted: true,
@@ -130,6 +130,7 @@ const providers: Array<{
   { id: "meta", label: "Meta", railLabel: "∞" },
   { id: "deepseek", label: "DeepSeek", railLabel: "DS" },
   { id: "zai", label: "Z.ai", railLabel: "Z" },
+  { id: "poolside", label: "Poolside", railLabel: "PS" },
 ];
 
 const capabilityIcons: Record<
@@ -149,6 +150,7 @@ const providerAccent: Record<ModelProviderId, string> = {
   meta: "text-blue-300 bg-blue-500/10 border-blue-400/15",
   deepseek: "text-purple-300 bg-purple-500/10 border-purple-400/15",
   zai: "text-pink-300 bg-pink-500/10 border-pink-400/15",
+  poolside: "text-teal-300 bg-teal-500/10 border-teal-400/15",
 };
 
 const ProviderMark = ({

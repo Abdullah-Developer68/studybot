@@ -21,6 +21,8 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useControlPanelActions } from "@/stores/controlPanelStore";
+import useChatSessions from "@/hooks/chat/useChatSessions";
+import SettingsMenu from "./SettingsMenu";
 
 const navItems = [
   { icon: MessageSquare, label: "Chat", href: "/chat" },
@@ -30,14 +32,18 @@ const navItems = [
 
 const CompactSidebar = () => {
   const pathname = usePathname();
-  const {expandPanel} = useControlPanelActions();
+  const { expandPanel } = useControlPanelActions();
+  const { createThread, isLoading } = useChatSessions();
+
+  const handleNewChat = async () => {
+    await createThread("New Chat");
+  };
 
   return (
     <aside className="flex h-screen w-14 shrink-0 flex-col border-r border-zinc-800 bg-zinc-950/95">
       <div className="flex flex-1 flex-col py-3">
-
         {/* Toggle */}
-        <div className="flex px-2 mb-3">
+        <div className="mb-3 flex px-2">
           <Button
             variant="ghost"
             size="icon"
@@ -50,7 +56,6 @@ const CompactSidebar = () => {
 
         {/* Nav items */}
         <div className="flex flex-1 flex-col gap-1 px-2">
-
           {/* New Chat */}
           <TooltipProvider>
             <Tooltip>
@@ -59,11 +64,10 @@ const CompactSidebar = () => {
                   variant="ghost"
                   size="icon"
                   className="h-9 w-9 cursor-pointer text-zinc-400 hover:text-white"
-                  asChild
+                  onClick={handleNewChat}
+                  disabled={isLoading}
                 >
-                  <Link href="/chat">
-                    <Plus className="h-5 w-5" />
-                  </Link>
+                  <Plus className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="right">
@@ -87,7 +91,7 @@ const CompactSidebar = () => {
                         "h-9 w-9 cursor-pointer",
                         isActive
                           ? "bg-zinc-800 text-white hover:bg-zinc-700 hover:text-white"
-                          : "text-zinc-400 hover:text-white"
+                          : "text-zinc-400 hover:text-white",
                       )}
                       asChild
                     >
@@ -107,13 +111,16 @@ const CompactSidebar = () => {
 
         {/* Footer */}
         <div className="flex flex-col items-center gap-2 px-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 cursor-pointer text-zinc-400 hover:text-white"
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
+          {/* Settings button opens the shared settings popup */}
+          <SettingsMenu>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 cursor-pointer text-zinc-400 hover:text-white"
+            >
+              <Settings className="h-5 w-5" />
+            </Button>
+          </SettingsMenu>
           <Avatar className="h-8 w-8 shrink-0 cursor-pointer border border-zinc-700">
             <AvatarImage src={assets.defaultProfile.src} alt="Profile" />
             <AvatarFallback className="bg-zinc-800 text-[10px] text-white">
@@ -121,7 +128,6 @@ const CompactSidebar = () => {
             </AvatarFallback>
           </Avatar>
         </div>
-
       </div>
     </aside>
   );

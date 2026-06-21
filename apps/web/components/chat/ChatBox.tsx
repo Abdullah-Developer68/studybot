@@ -11,10 +11,22 @@ import "highlight.js/styles/github-dark.css";
 import WelcomeScreen from "./WelcomeScreen";
 
 const ChatBox = () => {
-  const { messages, status } = useChatContext();
+  const { messages, status, error, isLoadingMessages } = useChatContext();
   // console.log("These are the messages in the ChatBox.js");
   // console.log(messages);
   const isLoading = status === "submitted" || status === "streaming";
+
+  // While existing messages are being fetched from the database (on mount
+  // or thread switch), show a centered spinner instead of the welcome screen
+  // or an empty chat — this prevents a flash of "no messages" before the
+  // thread history loads.
+  if (isLoadingMessages) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+      </div>
+    );
+  }
 
   // Helper function to extract text content from a message
   const getMessageContent = (message) => {
@@ -251,6 +263,24 @@ const ChatBox = () => {
               </div>
               <div className="bg-gray-800 text-gray-100 rounded-2xl rounded-tl-sm p-3">
                 <Loader2 size={20} className="animate-spin" />
+              </div>
+            </div>
+          )}
+
+          {/* Render any error from the chat transport so failures are not silent. */}
+          {error && (
+            <div className="flex justify-start items-start gap-2">
+              <div className="shrink-0 w-8 h-8 overflow-hidden rounded-full bg-gray-700">
+                <Image
+                  src={assets.openAiLogo}
+                  alt="AI"
+                  width={32}
+                  height={32}
+                  className="h-full w-full object-contain invert"
+                />
+              </div>
+              <div className="border border-red-700 bg-red-900/40 text-red-200 rounded-2xl rounded-tl-sm p-3 text-sm max-w-[80%]">
+                Something went wrong while contacting the AI. Please try again.
               </div>
             </div>
           )}
