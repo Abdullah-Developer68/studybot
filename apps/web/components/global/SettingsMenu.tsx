@@ -16,6 +16,7 @@ import { logout } from "@studybot/supabase";
 import { createClient } from "@/utils/supabase/client";
 import {
   useIsSettingsMenuOpen,
+  useIsPanelExpanded,
   useControlPanelActions,
 } from "@/stores/controlPanelStore";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -30,6 +31,7 @@ interface SettingsMenuProps {
 const SettingsMenu = ({ children }: SettingsMenuProps) => {
   const router = useRouter();
   const isMobile = useIsMobile();
+  const expanded = useIsPanelExpanded();
   const isOpen = useIsSettingsMenuOpen();
   const { openSettingsMenu, closeSettingsMenu } = useControlPanelActions();
 
@@ -43,6 +45,9 @@ const SettingsMenu = ({ children }: SettingsMenuProps) => {
     }
   };
 
+  const side = isMobile ? "bottom" : expanded ? "top" : "right";
+  const align = isMobile ? "end" : expanded ? "end" : "start";
+
   return (
     <DropdownMenu
       open={isOpen}
@@ -51,9 +56,8 @@ const SettingsMenu = ({ children }: SettingsMenuProps) => {
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
 
       <DropdownMenuContent
-        // on mobile the navbar is at the top so open downward, on desktop sidebars sit at the bottom so open upward
-        side={isMobile ? "bottom" : "top"}
-        align="end"
+        side={side}
+        align={align}
         sideOffset={8}
         className="w-52 max-w-[calc(100vw-1rem)] border-zinc-800 bg-zinc-900 text-zinc-100"
       >
@@ -67,7 +71,10 @@ const SettingsMenu = ({ children }: SettingsMenuProps) => {
         <DropdownMenuSeparator className="bg-zinc-800" />
 
         {/* Theme switcher - UI only, logic to be wired later */}
-        <DropdownMenuLabel inset={false} className="pb-1 text-xs text-zinc-500">
+        <DropdownMenuLabel
+          inset={false}
+          className="pb-1 text-xs text-zinc-500"
+        >
           Theme
         </DropdownMenuLabel>
         <div className="flex gap-1 px-2 pb-2">

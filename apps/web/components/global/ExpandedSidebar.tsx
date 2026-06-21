@@ -17,11 +17,11 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { assets } from "@studybot/assets";
-import { Fragment, useState } from "react";
+import { Fragment } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { useControlPanelActions } from "@/stores/controlPanelStore";
+import { useControlPanelActions, useIsPanelExpanded } from "@/stores/controlPanelStore";
 import useChatSessions from "@/hooks/chat/useChatSessions";
 import SettingsMenu from "./SettingsMenu";
 
@@ -33,12 +33,12 @@ const navItems = [
 
 const ExpandedSidebar = () => {
   const pathname = usePathname();
+  const expanded = useIsPanelExpanded();
   const { collapsePanel } = useControlPanelActions();
-  const [closing, setClosing] = useState(false);
   const { threads, activeThreadId, isLoading, createThread, switchThread } =
     useChatSessions();
 
-  const handleCollapse = () => setClosing(true);
+  const handleCollapse = () => collapsePanel();
 
   const handleNewChat = async () => {
     await createThread("New Chat");
@@ -49,17 +49,7 @@ const ExpandedSidebar = () => {
   };
 
   return (
-    <aside
-      onAnimationEnd={() => {
-        if (closing) collapsePanel();
-      }}
-      className={cn(
-        "flex h-screen w-56 shrink-0 flex-col border-r border-zinc-800 bg-zinc-950/95",
-        closing
-          ? "animate-out slide-out-to-left-full duration-300 ease-in"
-          : "animate-in slide-in-from-left-full duration-300 ease-out",
-      )}
-    >
+    <div className="flex h-full w-56 flex-col">
       <div className="flex flex-1 flex-col overflow-hidden py-3">
         {/* Header: title + collapse button */}
         <div className="mb-5 flex h-10 items-center justify-between px-3">
@@ -195,19 +185,33 @@ const ExpandedSidebar = () => {
             </Avatar>
             <span className="truncate text-sm text-zinc-400">Profile</span>
           </div>
-          {/* Settings button opens the shared settings popup */}
-          <SettingsMenu>
+          {/* Settings button opens the shared settings popup.
+              Only the active sidebar mounts the SettingsMenu so the
+              hidden sidebar can't spawn a second dropdown portal. */}
+          {expanded ? (
+            <SettingsMenu>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 cursor-pointer text-zinc-400 hover:text-white"
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
+            </SettingsMenu>
+          ) : (
             <Button
               variant="ghost"
               size="icon"
               className="h-9 w-9 cursor-pointer text-zinc-400 hover:text-white"
+              aria-hidden
+              tabIndex={-1}
             >
               <Settings className="h-5 w-5" />
             </Button>
-          </SettingsMenu>
+          )}
         </div>
       </div>
-    </aside>
+    </div>
   );
 };
 
