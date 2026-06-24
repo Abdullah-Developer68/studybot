@@ -215,16 +215,23 @@ const ModelSelectionMenu = () => {
   const filteredModels = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return modelOptions.filter((model) => {
-      const matchesProvider =
-        activeProvider === "all" || model.provider === activeProvider;
-      const matchesQuery =
-        !normalizedQuery ||
-        model.label.toLowerCase().includes(normalizedQuery) ||
-        model.providerLabel.toLowerCase().includes(normalizedQuery) ||
-        model.description.toLowerCase().includes(normalizedQuery);
+    // When the user is searching we deliberately ignore the active provider
+    // filter so the query looks across every model in the catalog. The rail
+    // continues to scope results when the search box is empty.
+    if (normalizedQuery) {
+      return modelOptions.filter((model) => {
+        return (
+          model.label.toLowerCase().includes(normalizedQuery) ||
+          model.providerLabel.toLowerCase().includes(normalizedQuery) ||
+          model.description.toLowerCase().includes(normalizedQuery) ||
+          model.provider.toLowerCase().includes(normalizedQuery) ||
+          model.id.toLowerCase().includes(normalizedQuery)
+        );
+      });
+    }
 
-      return matchesProvider && matchesQuery;
+    return modelOptions.filter((model) => {
+      return activeProvider === "all" || model.provider === activeProvider;
     });
   }, [activeProvider, query]);
 
