@@ -11,33 +11,30 @@ const ControlPanel = () => {
   const isMobile = useIsMobile();
   const expanded = useIsPanelExpanded();
 
+  // On mobile the sidebar is replaced by a fixed top navbar.
   if (isMobile) return <Navbar />;
 
-
   return (
-    <aside
-      className={cn(
-        "relative flex h-screen shrink-0 flex-col overflow-hidden border-r border-zinc-800 bg-zinc-950/95 transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
-        expanded ? "w-56" : "w-14",
-      )}
-    >
-      <div
-        className={cn(
-          "absolute inset-0 transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-          expanded ? "pointer-events-none opacity-0" : "opacity-100",
-        )}
-      >
+    <>
+      {/* Compact sidebar lives in the normal layout flow at a constant
+          width so the main content area never reflows when the panel is
+          expanded or collapsed. */}
+      <aside className="relative flex h-screen w-14 shrink-0 flex-col overflow-hidden border-r border-zinc-800 bg-zinc-950/95">
         <CompactSidebar />
-      </div>
+      </aside>
+
+      {/* Expanded sidebar renders as a fixed overlay that floats on top of
+          the content instead of pushing it. It cross-fades via opacity so
+          the main content width stays stable during the switch. */}
       <div
         className={cn(
-          "absolute inset-0 transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+          "fixed left-0 top-0 z-50 flex h-screen w-56 shrink-0 flex-col overflow-hidden border-r border-zinc-800 bg-zinc-950/95 transition-opacity duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
           expanded ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       >
         <ExpandedSidebar />
       </div>
-    </aside>
+    </>
   );
 };
 
