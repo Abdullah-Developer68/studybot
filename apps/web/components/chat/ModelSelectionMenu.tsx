@@ -143,14 +143,17 @@ const capabilityIcons: Record<
   image: { icon: ImageIcon, label: "Image" },
 };
 
+// Kept as a consistent ice-blue accent so every provider badge shares the
+// black + ice-blue theme. Lightness is nudged per provider only for subtle
+// differentiation while staying inside the theme palette.
 const providerAccent: Record<ModelProviderId, string> = {
-  openai: "text-emerald-300 bg-emerald-500/10 border-emerald-400/15",
-  anthropic: "text-orange-300 bg-orange-500/10 border-orange-400/15",
-  google: "text-sky-300 bg-sky-500/10 border-sky-400/15",
-  meta: "text-blue-300 bg-blue-500/10 border-blue-400/15",
-  deepseek: "text-purple-300 bg-purple-500/10 border-purple-400/15",
-  zai: "text-pink-300 bg-pink-500/10 border-pink-400/15",
-  poolside: "text-teal-300 bg-teal-500/10 border-teal-400/15",
+  openai: "text-sky-200 bg-sky-400/10 border-sky-300/20",
+  anthropic: "text-sky-300 bg-sky-500/10 border-sky-400/15",
+  google: "text-cyan-200 bg-cyan-400/10 border-cyan-300/20",
+  meta: "text-sky-300 bg-sky-500/10 border-sky-400/15",
+  deepseek: "text-cyan-300 bg-cyan-500/10 border-cyan-400/15",
+  zai: "text-sky-200 bg-sky-400/10 border-sky-300/20",
+  poolside: "text-cyan-200 bg-cyan-400/10 border-cyan-300/20",
 };
 
 const ProviderMark = ({
@@ -253,9 +256,9 @@ const ModelSelectionMenu = () => {
         side="top"
         align="start"
         sideOffset={12}
-        className="w-[min(36rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border-zinc-800 bg-zinc-950/95 p-0 text-zinc-100 shadow-2xl shadow-black/60 backdrop-blur-xl"
+        className="w-[min(36rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border-zinc-800 bg-black/95 p-0 text-zinc-100 shadow-2xl shadow-black/60 backdrop-blur-xl"
       >
-        <div className="border-b border-zinc-900 bg-[radial-gradient(circle_at_18%_0%,rgba(236,72,153,0.17),transparent_32%),linear-gradient(180deg,rgba(63,63,70,0.24),transparent)] px-4 py-4">
+        <div className="border-b border-zinc-900 bg-[radial-gradient(circle_at_18%_0%,rgba(56,189,248,0.17),transparent_32%),linear-gradient(180deg,rgba(37,99,235,0.18),transparent)] px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-white">Choose a model</p>
@@ -265,7 +268,7 @@ const ModelSelectionMenu = () => {
             </div>
             <button
               type="button"
-              className="rounded-lg border border-pink-400/25 bg-pink-500/15 px-3 py-2 text-xs font-semibold text-pink-100 hover:bg-pink-500/25"
+              className="rounded-lg border border-sky-400/25 bg-sky-500/15 px-3 py-2 text-xs font-semibold text-sky-100 hover:bg-sky-500/25"
             >
               Upgrade
             </button>
@@ -284,8 +287,9 @@ const ModelSelectionMenu = () => {
                   title={provider.label}
                   onClick={() => setActiveProvider(provider.id)}
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-white",
-                    isActive && "bg-zinc-900 text-white shadow-inner",
+                    "flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold text-zinc-500 transition-colors hover:bg-sky-500/10 hover:text-sky-200",
+                    isActive &&
+                      "bg-sky-500/15 text-sky-200 shadow-inner ring-1 ring-sky-400/20",
                   )}
                 >
                   {provider.id === "openai" ? (
@@ -328,8 +332,8 @@ const ModelSelectionMenu = () => {
                         type="button"
                         onClick={() => selectModel(model.id)}
                         className={cn(
-                          "group grid w-full grid-cols-[1fr_auto] items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-zinc-900/80",
-                          isSelected && "bg-zinc-900/95 ring-1 ring-white/10",
+                          "group grid w-full grid-cols-[1fr_auto] items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-sky-500/10",
+                          isSelected && "bg-sky-500/15 ring-1 ring-sky-400/25",
                         )}
                       >
                         <span className="min-w-0">
@@ -347,14 +351,14 @@ const ModelSelectionMenu = () => {
                               className={cn(
                                 "text-xs font-semibold",
                                 model.priceLabel === "Free"
-                                  ? "text-emerald-300"
-                                  : "text-pink-300/80",
+                                  ? "text-sky-200"
+                                  : "text-sky-300/80",
                               )}
                             >
                               {model.priceLabel}
                             </span>
                             {model.highlighted ? (
-                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                              <Star className="h-4 w-4 fill-sky-400 text-sky-400" />
                             ) : (
                               <Star className="h-4 w-4 text-zinc-600" />
                             )}
@@ -365,7 +369,7 @@ const ModelSelectionMenu = () => {
                         </span>
 
                         <span className="flex items-center gap-2">
-                          <span className="hidden items-center gap-1 rounded-full bg-zinc-900 px-2 py-1 sm:flex">
+<span className="hidden items-center gap-1 rounded-full bg-black/40 ring-1 ring-sky-400/15 px-2 py-1 sm:flex">
                             {model.capabilities.map((capability) => {
                               const CapabilityIcon =
                                 capabilityIcons[capability].icon;
@@ -374,13 +378,13 @@ const ModelSelectionMenu = () => {
                                 <CapabilityIcon
                                   key={capability}
                                   aria-label={capabilityIcons[capability].label}
-                                  className="h-3.5 w-3.5 text-violet-300"
+                                  className="h-3.5 w-3.5 text-sky-300"
                                 />
                               );
                             })}
                           </span>
                           {isSelected ? (
-                            <Check className="h-4 w-4 text-emerald-300" />
+                            <Check className="h-4 w-4 text-sky-300" />
                           ) : (
                             <Info className="h-4 w-4 text-zinc-600" />
                           )}
