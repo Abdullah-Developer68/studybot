@@ -22,7 +22,6 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useControlPanelActions, useIsPanelExpanded } from "@/stores/controlPanelStore";
 import useChatSessions from "@/hooks/chat/useChatSessions";
-import SettingsMenu from "./SettingsMenu";
 
 const navItems = [
   { icon: MessageSquare, label: "Chat", href: "/chat" },
@@ -112,19 +111,20 @@ const CompactSidebar = () => {
 
         {/* Footer */}
         <div className="flex flex-col items-center gap-2 px-2">
-          {/* Settings button opens the shared settings popup.
-              Only the active sidebar mounts the SettingsMenu so the
-              hidden sidebar can't spawn a second dropdown portal. */}
+          {/* Settings icon navigates to the settings page.
+              Only the visible compact sidebar renders a real link so the
+              expanded overlay doesn't add an extra focus stop. */}
           {!expanded ? (
-            <SettingsMenu>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 cursor-pointer text-zinc-400 hover:text-white"
-              >
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 cursor-pointer text-zinc-400 hover:text-white"
+              asChild
+            >
+              <Link href="/settings">
                 <Settings className="h-5 w-5" />
-              </Button>
-            </SettingsMenu>
+              </Link>
+            </Button>
           ) : (
             <Button
               variant="ghost"

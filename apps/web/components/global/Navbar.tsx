@@ -20,7 +20,6 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import useChatSessions from "@/hooks/chat/useChatSessions";
-import SettingsMenu from "./SettingsMenu";
 
 const navItems = [
   { icon: MessageSquare, label: "Chat", href: "/chat" },
@@ -96,16 +95,17 @@ const Navbar = () => {
 
       {/* Right: settings + avatar */}
       <div className="flex items-center gap-2">
-        {/* Settings button opens the shared settings popup */}
-        <SettingsMenu>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 cursor-pointer text-zinc-400 hover:text-white"
-          >
+        {/* Settings icon navigates to the settings page */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 cursor-pointer text-zinc-400 hover:text-white"
+          asChild
+        >
+          <Link href="/settings">
             <Settings className="h-5 w-5" />
-          </Button>
-        </SettingsMenu>
+          </Link>
+        </Button>
         <Avatar className="h-8 w-8 cursor-pointer border border-zinc-700">
           <AvatarImage src="/profile-pic.png" alt="Profile" />
           <AvatarFallback className="bg-zinc-800 text-[10px] text-white">
