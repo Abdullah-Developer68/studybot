@@ -154,7 +154,7 @@ const updateThreadTitle = async (
   return data as ChatThread;
 };
 
-// Archive thread
+// Archive thread (soft-delete — sets is_archived = true).
 const archiveThread = async (
   client: SupabaseClient,
   threadId: string,
@@ -172,10 +172,29 @@ const archiveThread = async (
   return true;
 };
 
+// Delete thread (hard-delete — removes the row; messages cascade via FK).
+const deleteThread = async (
+  client: SupabaseClient,
+  threadId: string,
+): Promise<boolean> => {
+  const { error } = await client
+    .from("chat_sessions")
+    .delete()
+    .eq("session_id", threadId);
+
+  if (error) {
+    console.error("Failed to delete thread:", error);
+    return false;
+  }
+
+  return true;
+};
+
 export {
   createChatThread,
   fetchUserThreads,
   fetchThreadWithMessages,
   updateThreadTitle,
   archiveThread,
+  deleteThread,
 };

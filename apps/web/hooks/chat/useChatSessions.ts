@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import useAuth from "@/hooks/auth/useAuth";
 import { useChatStoreActions, useChatStoreStates } from "@/stores/chatStore";
-import { createChatThread, fetchUserThreads } from "@studybot/supabase";
+import {
+  createChatThread,
+  fetchUserThreads,
+  updateThreadTitle,
+  deleteThread,
+} from "@studybot/supabase";
 
 // Loads the signed-in user's chat sessions for the sidebar and exposes
 // thread actions. No longer auto-creates a default thread on login —
@@ -21,6 +26,8 @@ const useChatSessions = () => {
     setLoading,
     setError,
     addThread,
+    removeThread,
+    updateThreadTitle: updateThreadTitleInStore,
     reset,
   } = useChatStoreActions();
 
@@ -116,6 +123,55 @@ const useChatSessions = () => {
     router.push(`/chat/${threadId}`);
   };
 
+  // Renames a thread — persists to DB and updates the local store.
+  const renameThread = async (
+    threadId: string,
+    title: string,
+  ): Promise<boolean> => {
+    if (!user?.id) return false;
+
+    try {
+      const updated = await updateThreadTitle(supabaseClient, threadId, title);
+      if (!updated) return false;
+
+      updateThreadTitleInStore(threadId, title);
+      return true;
+    } catch (renameError) {
+      setError(
+        renameError instanceof Error
+          ? renameError.message
+          : "Failed to rename thread",
+      );
+      return false;
+    }
+  };
+
+  // Hard-deletes a thread — removes the row from DB (messages cascade) and removes from store.
+  const handleDeleteThread = async (threadId: string): Promise<boolean> => {
+    if (!user?.id) return false;
+
+    try {
+      const success = await deleteThread(supabaseClient, threadId);
+      if (!success) return false;
+
+      removeThread(threadId);
+
+      // If the deleted thread was active, navigate back to /chat.
+      if (activeThreadIdRef.current === threadId) {
+        router.push("/chat");
+      }
+
+      return true;
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Failed to delete thread",
+      );
+      return false;
+    }
+  };
+
   return {
     threads,
     activeThreadId,
@@ -123,6 +179,8 @@ const useChatSessions = () => {
     error,
     createThread,
     switchThread,
+    renameThread,
+    deleteThread: handleDeleteThread,
   };
 };
 

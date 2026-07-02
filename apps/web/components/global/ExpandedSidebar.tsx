@@ -14,14 +14,30 @@ import {
   PencilLine,
   FileText,
   Settings,
+  MoreHorizontal,
+  Share2,
+  Pencil,
+  Trash2,
+  Check,
+  X,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { assets } from "@studybot/assets";
-import { Fragment } from "react";
+import { Fragment, useState, useRef, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { useControlPanelActions, useIsPanelExpanded } from "@/stores/controlPanelStore";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  useControlPanelActions,
+  useIsPanelExpanded,
+} from "@/stores/controlPanelStore";
 import useChatSessions from "@/hooks/chat/useChatSessions";
 
 const navItems = [
@@ -34,8 +50,15 @@ const ExpandedSidebar = () => {
   const pathname = usePathname();
   const expanded = useIsPanelExpanded();
   const { collapsePanel } = useControlPanelActions();
-  const { threads, activeThreadId, isLoading, createThread, switchThread } =
-    useChatSessions();
+  const {
+    threads,
+    activeThreadId,
+    isLoading,
+    createThread,
+    switchThread,
+    renameThread,
+    deleteThread,
+  } = useChatSessions();
 
   const handleCollapse = () => collapsePanel();
 
@@ -46,6 +69,60 @@ const ExpandedSidebar = () => {
   const handleSwitchThread = (threadId: string) => {
     switchThread(threadId);
   };
+
+  // Tracks which thread is being renamed (null = none).
+  const [editingThreadId, setEditingThreadId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const editInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus the input when entering edit mode.
+  useEffect(() => {
+    if (editingThreadId) {
+      editInputRef.current?.focus();
+      editInputRef.current?.select();
+    }
+  }, [editingThreadId]);
+
+  const startRename = useCallback((threadId: string, currentTitle: string) => {
+    setEditingThreadId(threadId);
+    setEditTitle(currentTitle);
+  }, []);
+
+  const cancelRename = useCallback(() => {
+    setEditingThreadId(null);
+    setEditTitle("");
+  }, []);
+
+  const confirmRename = useCallback(async () => {
+    if (!editingThreadId || !editTitle.trim()) {
+      cancelRename();
+      return;
+    }
+    await renameThread(editingThreadId, editTitle.trim());
+    cancelRename();
+  }, [editingThreadId, editTitle, renameThread, cancelRename]);
+
+  const handleRenameKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        confirmRename();
+      } else if (e.key === "Escape") {
+        cancelRename();
+      }
+    },
+    [confirmRename, cancelRename],
+  );
+
+  const handleDelete = useCallback(
+    async (threadId: string) => {
+      const confirmed = window.confirm(
+        "Are you sure you want to delete this conversation?",
+      );
+      if (!confirmed) return;
+      await deleteThread(threadId);
+    },
+    [deleteThread],
+  );
 
   return (
     <div className="flex h-full w-56 flex-col">
@@ -148,26 +225,114 @@ const ExpandedSidebar = () => {
           ) : (
             threads.map((thread) => {
               const isActive = activeThreadId === thread.session_id;
+              const isEditing = editingThreadId === thread.session_id;
+
               return (
-                <button
+                <div
                   key={thread.session_id}
-                  type="button"
                   className={cn(
-                    "group flex w-full flex-col rounded-md px-2 py-2 text-left cursor-pointer hover:bg-zinc-800/60",
+                    "group relative flex w-full items-center rounded-md pr-1 text-left",
                     isActive && "bg-zinc-800/70",
                   )}
-                  onClick={() => handleSwitchThread(thread.session_id)}
                 >
-                  <span className="truncate text-sm text-zinc-300 group-hover:text-white">
-                    {thread.title}
-                  </span>
-                  <span className="text-[11px] text-zinc-600">
-                    {new Date(thread.updated_at).toLocaleDateString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
-                </button>
+                  {isEditing ? (
+                    // Inline rename mode — title becomes an editable input.
+                    <div className="flex flex-1 items-center gap-1 px-2 py-2">
+                      <input
+                        ref={editInputRef}
+                        type="text"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        onKeyDown={handleRenameKeyDown}
+                        className="min-w-0 flex-1 rounded border border-zinc-600 bg-zinc-800 px-1.5 py-0.5 text-sm text-white outline-none focus:border-zinc-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={confirmRename}
+                        className="shrink-0 rounded p-0.5 text-zinc-400 hover:text-white"
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={cancelRename}
+                        className="shrink-0 rounded p-0.5 text-zinc-400 hover:text-white"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    // Normal display — clickable title + dropdown trigger.
+                    <>
+                      <button
+                        type="button"
+                        className="min-w-0 flex-1 cursor-pointer py-2 pl-2"
+                        onClick={() => handleSwitchThread(thread.session_id)}
+                      >
+                        <span className="block truncate text-sm text-zinc-300 group-hover:text-white">
+                          {thread.title}
+                        </span>
+                      </button>
+
+                      {/* Three-dot settings dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            className={cn(
+                              "shrink-0 rounded p-1 text-zinc-500 opacity-0 hover:bg-zinc-700 hover:text-white group-hover:opacity-100",
+                              "data-[state=open]:opacity-100 data-[state=open]:bg-zinc-700 data-[state=open]:text-white",
+                            )}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          side="bottom"
+                          className="w-44 border-zinc-700 bg-zinc-900 text-zinc-200"
+                        >
+                          <DropdownMenuItem
+                            inset
+                            className="cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Share conversation — UI placeholder.
+                              // Full sharing flow to be implemented later.
+                            }}
+                          >
+                            <Share2 className="h-4 w-4" />
+                            Share
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="bg-zinc-700" />
+                          <DropdownMenuItem
+                            inset
+                            className="cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startRename(thread.session_id, thread.title);
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                            Rename
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            inset
+                            className="cursor-pointer text-red-400 hover:bg-zinc-800 hover:text-red-300 focus:bg-zinc-800 focus:text-red-300"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(thread.session_id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </>
+                  )}
+                </div>
               );
             })
           )}
