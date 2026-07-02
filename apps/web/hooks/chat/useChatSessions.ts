@@ -7,10 +7,9 @@ import useAuth from "@/hooks/auth/useAuth";
 import { useChatStoreActions, useChatStoreStates } from "@/stores/chatStore";
 import { createChatThread, fetchUserThreads } from "@studybot/supabase";
 
-// Tracks which users have already had their default chat session initialized in this browser session.
-const initializedDefaultSessions = new Set<string>();
-
-// Loads the signed-in user's chat sessions for the sidebar and exposes thread actions.
+// Loads the signed-in user's chat sessions for the sidebar and exposes
+// thread actions. No longer auto-creates a default thread on login —
+// threads are created lazily when the user sends their first message.
 const useChatSessions = () => {
   const router = useRouter();
   const supabaseClient = createClient();
@@ -25,10 +24,10 @@ const useChatSessions = () => {
     reset,
   } = useChatStoreActions();
 
-  // Keep a ref to activeThreadId so the load-threads effect can check whether
-  // a thread is already active without including activeThreadId in its dep
-  // array. This prevents the effect from re-running (and re-fetching all
-  // threads from the DB) every time the user switches between threads.
+  // Keep a ref to activeThreadId so the load-threads effect can check
+  // whether a thread is already active without including activeThreadId
+  // in its dep array. This prevents re-fetching all threads from the DB
+  // every time the user switches between threads.
   const activeThreadIdRef = useRef(activeThreadId);
   useEffect(() => {
     activeThreadIdRef.current = activeThreadId;
@@ -47,34 +46,10 @@ const useChatSessions = () => {
       try {
         const userThreads = await fetchUserThreads(supabaseClient, user.id);
 
-        // Create a default session the first time this user opens the app and no threads exist yet.
-        if (
-          userThreads.length === 0 &&
-          !initializedDefaultSessions.has(user.id)
-        ) {
-          initializedDefaultSessions.add(user.id);
-
-          const defaultThread = await createChatThread(
-            supabaseClient,
-            user.id,
-            "New Chat",
-          );
-
-          if (defaultThread) {
-            setThreads([defaultThread]);
-            setActiveThread(defaultThread.session_id);
-            router.push(`/chat/${defaultThread.session_id}`);
-            return;
-          }
-        }
-
+        // Just populate the sidebar list. No auto-creation, no auto-selection.
+        // The user sees an empty chat interface and the first message they send
+        // creates a thread lazily (handled by Input / ChatProvider).
         setThreads(userThreads);
-
-        // Keep the active thread aligned with the first available thread if none is selected yet.
-        // Uses the ref so this effect doesn't re-run when activeThreadId changes.
-        if (!activeThreadIdRef.current && userThreads.length > 0) {
-          setActiveThread(userThreads[0].session_id);
-        }
       } catch (loadError) {
         setError(
           loadError instanceof Error
@@ -92,21 +67,29 @@ const useChatSessions = () => {
     authLoading,
     isAuthenticated,
     reset,
-    setActiveThread,
     setError,
     setLoading,
     setThreads,
     supabaseClient,
-    router,
     user?.id,
   ]);
 
+  // Manual thread creation from the sidebar "New Chat" button.
+  // Still creates the thread immediately and navigates — this is a
+  // deliberate user action, not an automatic creation on login.
   const createThread = async (title?: string) => {
     if (!user?.id) return null;
 
     setLoading(true);
     try {
-      const newThread = await createChatThread(supabaseClient, user.id, title);
+      // When creating from the sidebar, derive a title from the user's
+      // message if provided, otherwise fall back to a generic title.
+      const threadTitle = title || "New Chat";
+      const newThread = await createChatThread(
+        supabaseClient,
+        user.id,
+        threadTitle,
+      );
 
       if (!newThread) {
         throw new Error("Failed to create chat thread");

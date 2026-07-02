@@ -23,15 +23,31 @@ import {
 import { Separator } from "@/components/ui/separator";
 import ModelSelectionMenu from "./ModelSelectionMenu";
 import { useModelSelectionStore } from "@/stores/modelSelectionStore";
+import { useChatStoreStates, useChatStoreActions } from "@/stores/chatStore";
+import { createChatThread } from "@studybot/supabase";
+import useAuth from "@/hooks/auth/useAuth";
+import { useRouter } from "next/navigation";
 
 const SUPPORTED_FILE_TYPES = getSupportedExtensions();
 const supabaseClient = createClient();
 
+// Derives a thread title from the first user message.
+// Caps at 50 characters and appends "..." if truncated.
+const deriveTitle = (text: string): string => {
+  // Strip newlines and extra whitespace for a cleaner title
+  const cleaned = text.replace(/\s+/g, " ").trim();
+  return cleaned.length > 50 ? cleaned.slice(0, 50) + "..." : cleaned;
+};
+
 const Input = () => {
-  const { sendMessage, status, stop } = useChatContext();
+  const { sendMessage, status, stop, prepareForNewThread } = useChatContext();
   const selectedModelId = useModelSelectionStore(
     (state) => state.selectedModelId,
   );
+  const { activeThreadId } = useChatStoreStates();
+  const { addThread, setActiveThread } = useChatStoreActions();
+  const { user } = useAuth();
+  const router = useRouter();
   const [prompt, setPrompt] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -63,6 +79,7 @@ const Input = () => {
     setUploadProgress(0);
 
     try {
+      // REFACTOR: on every upload we are getting the session for verifying. Consumes resources and slows the site
       const { data: sessionResult, error: sessionError } =
         await supabaseClient.auth.getSession();
 
@@ -141,6 +158,44 @@ const Input = () => {
     const userPrompt = prompt.trim() || "Please summarize these documents.";
     const messageForAI = buildMessageForAI(userPrompt);
 
+    let targetThreadId: string | null = activeThreadId;
+
+    // If no active thread, create one lazily from the first user message.
+    // The thread title is derived from the message content so the sidebar
+    // list shows a descriptive name instead of the generic "New Chat".
+    if (!targetThreadId && user?.id) {
+      const title =
+        attachedFiles.length > 0
+          ? prompt.trim()
+            ? deriveTitle(prompt.trim())
+            : `Files: ${attachedFiles.map((f) => f.name).join(", ")}`
+          : deriveTitle(userPrompt);
+
+      // Tell ChatProvider to skip the load-messages effect when threadId
+      // changes from null → newId. This preserves the AI SDK's internal
+      // message state (which will contain the just-sent user message)
+      // instead of clearing it and re-fetching an empty thread from DB.
+      prepareForNewThread();
+
+      const newThread = await createChatThread(supabaseClient, user.id, title);
+
+      if (!newThread) {
+        setUploadError("Failed to create chat session. Please try again.");
+        return;
+      }
+
+      targetThreadId = newThread.session_id;
+      addThread(newThread);
+      setActiveThread(targetThreadId);
+      // Navigate to the new thread URL so it's bookmarkable and the
+      // sidebar highlights the active thread. Using replace so the
+      // bare /chat URL doesn't linger in browser history.
+      router.replace(`/chat/${targetThreadId}`);
+    }
+
+    // Pass the resolved threadId explicitly so sendMessageWithThread
+    // doesn't rely on the store's closure value (which may be stale
+    // because setActiveThread hasn't triggered a re-render yet).
     sendMessage(
       {
         role: "user",
@@ -149,6 +204,7 @@ const Input = () => {
       {
         body: {
           model: selectedModelId,
+          threadId: targetThreadId,
           attachments: attachedFiles.map((file) => ({
             name: file.name,
             type: file.type,

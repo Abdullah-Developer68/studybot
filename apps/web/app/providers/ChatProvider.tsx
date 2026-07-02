@@ -27,12 +27,21 @@ type ChatProviderProps = {
 // Provides access to the context
 const ChatProvider = ({ children }: ChatProviderProps) => {
   const { user } = useAuth();
-  // Read activeThreadId from the store — set synchronously by ChatThreadPage
-  // during render, so it's always populated before this component mounts.
+  // Read activeThreadId from the store — set by the layout when the URL
+  // param changes, or by Input when creating a new thread from a message.
   const { activeThreadId: threadId } = useChatStoreStates();
   // True while we are loading existing messages for this thread from the DB.
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const chatApi = supabaseUrl ? `${supabaseUrl}/functions/v1/chat` : undefined;
+
+  // When Input creates a new thread from a user message, it sets this flag
+  // before navigating. This prevents the load-messages effect from clearing
+  // the AI SDK's internal state (which already contains the just-sent user
+  // message) and re-fetching an empty thread from the DB.
+  const skipNextLoadRef = useRef(false);
+  const prepareForNewThread = useCallback(() => {
+    skipNextLoadRef.current = true;
+  }, []);
 
   // Custom transport that adds auth headers and points to the edge function.
   const transport = new DefaultChatTransport({
@@ -46,9 +55,7 @@ const ChatProvider = ({ children }: ChatProviderProps) => {
   const chat = useChat({
     transport,
     onFinish: undefined,
-    // Log transport errors so failures surface in the console instead of
-    // being swallowed silently. The AI SDK still updates `error` state for
-    // the UI regardless, but this makes server/500 errors visible while debugging.
+
     onError: (error) => {
       console.error("Chat transport error:", error);
     },
@@ -76,6 +83,14 @@ const ChatProvider = ({ children }: ChatProviderProps) => {
     stopRef.current();
 
     if (!user?.id || !threadId) {
+      setIsLoadingMessages(false);
+      return;
+    }
+
+    // If Input created a new thread from a user message, skip clearing
+    // and re-fetching — the AI SDK already has the just-sent message.
+    if (skipNextLoadRef.current) {
+      skipNextLoadRef.current = false;
       setIsLoadingMessages(false);
       return;
     }
@@ -124,18 +139,26 @@ const ChatProvider = ({ children }: ChatProviderProps) => {
   }, [threadId, user?.id]);
 
   // Override sendMessage to inject threadId from the store into the request body.
+  // Respects an explicitly-passed threadId in options.body so Input can pass a
+  // newly created threadId before the store has re-rendered with it.
   const originalSendMessage = chat.sendMessage;
   const sendMessageWithThread = useCallback(
     async (
       message: Parameters<typeof originalSendMessage>[0],
       options?: Parameters<typeof originalSendMessage>[1],
     ) => {
-      // Merge threadId into the request body
+      // An explicitly-passed threadId takes precedence over the store value.
+      // This handles the case where Input creates a new thread and sends
+      // a message in the same event handler — the store's activeThreadId
+      // hasn't been updated yet by the next React render.
+      const explicitBody = options?.body as Record<string, unknown> | undefined;
+      const resolvedThreadId =
+        (explicitBody?.threadId as string | undefined) ?? threadId;
       return originalSendMessage(message, {
         ...options,
         body: {
-          ...options?.body,
-          threadId,
+          ...explicitBody,
+          threadId: resolvedThreadId,
         },
       });
     },
@@ -145,12 +168,14 @@ const ChatProvider = ({ children }: ChatProviderProps) => {
   // Destructure to expose stop function along with other chat utilities
   const { stop, ...restChat } = chat;
 
-  // Include stop function, override sendMessage, and expose loading state.
+  // Include stop function, override sendMessage, expose loading state,
+  // and expose prepareForNewThread for lazy thread creation in Input.
   const value: ChatContextValue = {
     ...restChat,
     stop,
     sendMessage: sendMessageWithThread,
     isLoadingMessages,
+    prepareForNewThread,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
