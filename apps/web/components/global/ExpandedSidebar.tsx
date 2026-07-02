@@ -266,7 +266,7 @@ const ExpandedSidebar = () => {
                     <>
                       <button
                         type="button"
-                        className="min-w-0 flex-1 cursor-pointer py-2 pl-2"
+                        className="min-w-0 flex-1 cursor-pointer py-2 pl-2 text-left"
                         onClick={() => handleSwitchThread(thread.session_id)}
                       >
                         <span className="block truncate text-sm text-zinc-300 group-hover:text-white">
