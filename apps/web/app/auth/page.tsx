@@ -29,10 +29,10 @@ const CardTitle: any = CardTitleBase;
 const Input: any = InputBase;
 const Label: any = LabelBase;
 
-// This sends the browser client over to packages directory
-const supabaseClient = createClient();
-
 const Auth = () => {
+  // Lazy-create the browser client inside the component so it is not
+  // instantiated during static prerender when browser APIs are absent.
+  const supabaseClient = createClient();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -57,7 +57,9 @@ const Auth = () => {
         setMessage("Check your email to confirm your account");
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred");
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred",
+      );
     } finally {
       setLoading(false);
     }
@@ -71,7 +73,9 @@ const Auth = () => {
       await signInWithOAuth(supabaseClient, "google");
       // OAuth will redirect automatically
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to sign in with Google");
+      setError(
+        err instanceof Error ? err.message : "Failed to sign in with Google",
+      );
       setLoading(false);
     }
   };
@@ -90,7 +94,11 @@ const Auth = () => {
                 : "Enter your details below to create your account"}
             </CardDescription>
             <CardAction>
-              <Button variant="link" size="default" onClick={() => setIsLogin(!isLogin)}>
+              <Button
+                variant="link"
+                size="default"
+                onClick={() => setIsLogin(!isLogin)}
+              >
                 {isLogin ? "Sign Up" : "Login"}
               </Button>
             </CardAction>
@@ -118,7 +126,9 @@ const Auth = () => {
                     required
                     disabled={loading}
                     value={email}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setEmail(e.target.value)
+                    }
                   />
                 </div>
                 <div className="grid gap-2">
@@ -141,7 +151,9 @@ const Auth = () => {
                     disabled={loading}
                     minLength={6}
                     value={password}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setPassword(e.target.value)
+                    }
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>

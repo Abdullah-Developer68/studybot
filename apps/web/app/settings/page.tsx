@@ -10,10 +10,10 @@ import { cn } from "@/lib/utils";
 import { logout } from "@studybot/supabase";
 import { createClient } from "@/utils/supabase/client";
 
-// Browser supabase client used only for auth operations
-const supabaseClient = createClient();
-
 export default function SettingsPage() {
+  // Lazy-create the browser client inside the component so it is not
+  // instantiated during static prerender when browser APIs are absent.
+  const supabaseClient = createClient();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);

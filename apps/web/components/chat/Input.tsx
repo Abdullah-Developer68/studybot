@@ -29,7 +29,6 @@ import useAuth from "@/hooks/auth/useAuth";
 import { useRouter } from "next/navigation";
 
 const SUPPORTED_FILE_TYPES = getSupportedExtensions();
-const supabaseClient = createClient();
 
 // Derives a thread title from the first user message.
 // Caps at 50 characters and appends "..." if truncated.
@@ -40,6 +39,10 @@ const deriveTitle = (text: string): string => {
 };
 
 const Input = () => {
+  // Lazy-create the browser client inside the component so it is not
+  // instantiated during static prerender when browser APIs are absent.
+  const supabaseClient = createClient();
+
   const { sendMessage, status, stop, prepareForNewThread } = useChatContext();
   const selectedModelId = useModelSelectionStore(
     (state) => state.selectedModelId,

@@ -8,13 +8,13 @@ import { focusNextNode, isValidPosition } from "@/lib/tiptap-utils";
 import { resolveImageUrl } from "@studybot/supabase/storage";
 import { createClient } from "@/utils/supabase/client";
 
-// This sends the browser client over to packages directory
-const supabaseClient = createClient();
-
 /**
  * Custom hook for managing multiple file uploads with progress tracking and cancellation
  */
 function useFileUpload(options) {
+  // Lazy-create the browser client inside the hook so it is not
+  // instantiated during static prerender when browser APIs are absent.
+  const supabaseClient = createClient();
   const [fileItems, setFileItems] = useState([]);
 
   const uploadFile = async (file) => {

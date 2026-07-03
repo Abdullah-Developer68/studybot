@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useState, type ChangeEvent, type ComponentType } from "react";
+import {
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type ComponentType,
+} from "react";
 import {
   Search,
   LayoutGrid,
@@ -60,9 +65,10 @@ const CardDescription = CardDescriptionBase as ComponentType<any>;
 const CardHeader = CardHeaderBase as ComponentType<any>;
 const CardTitle = CardTitleBase as ComponentType<any>;
 
-const supabaseClient = createClient();
-
 const TemplateManager = () => {
+  // Lazy-create the browser client inside the component so it is not
+  // instantiated during static prerender when browser APIs are absent.
+  const supabaseClient = createClient();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [templates, setTemplates] = useState<TemplateItem[]>([]);
@@ -177,7 +183,10 @@ const TemplateManager = () => {
     }
 
     if (result.template) {
-      setTemplates((currentTemplates) => [result.template, ...currentTemplates]);
+      setTemplates((currentTemplates) => [
+        result.template,
+        ...currentTemplates,
+      ]);
     }
   };
 
@@ -276,19 +285,25 @@ const TemplateManager = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
-                        <Link href={`/templates/newTemplate?templateId=${template.templateId}`}>
+                        <Link
+                          href={`/templates/newTemplate?templateId=${template.templateId}`}
+                        >
                           <Pencil size={14} className="mr-2" />
                           Edit
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => handleDuplicateTemplate(template.templateId)}
+                        onClick={() =>
+                          handleDuplicateTemplate(template.templateId)
+                        }
                       >
                         <Copy size={14} className="mr-2" />
                         Duplicate
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => handleDeleteTemplate(template.templateId)}
+                        onClick={() =>
+                          handleDeleteTemplate(template.templateId)
+                        }
                         className="text-red-500 focus:text-red-500"
                       >
                         <Trash2 size={14} className="mr-2" />
@@ -341,13 +356,17 @@ const TemplateManager = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
-                      <Link href={`/templates/newTemplate?templateId=${template.templateId}`}>
+                      <Link
+                        href={`/templates/newTemplate?templateId=${template.templateId}`}
+                      >
                         <Pencil size={14} className="mr-2" />
                         Edit
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => handleDuplicateTemplate(template.templateId)}
+                      onClick={() =>
+                        handleDuplicateTemplate(template.templateId)
+                      }
                     >
                       <Copy size={14} className="mr-2" />
                       Duplicate

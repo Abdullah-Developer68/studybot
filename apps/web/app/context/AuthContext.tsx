@@ -1,11 +1,15 @@
 "use client";
 
-import { createContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import type { User } from "@supabase/supabase-js";
 import { onAuthStateChange, getUserFromSession } from "@studybot/supabase";
 import { createClient } from "@/utils/supabase/client";
-
-const supabaseClient = createClient();
 
 type AuthContextValue = {
   user: User | null;
@@ -17,6 +21,10 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  // Lazy-create the browser client inside the component so it is not
+  // instantiated during static prerender when browser APIs are absent.
+  const supabaseClient = useMemo(() => createClient(), []);
+
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
