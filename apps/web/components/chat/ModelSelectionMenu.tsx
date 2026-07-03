@@ -376,7 +376,7 @@ const ModelSelectionMenu = () => {
                         </span>
 
                         <span className="flex items-center gap-2">
-<span className="hidden items-center gap-1 rounded-full bg-black/40 ring-1 ring-sky-400/15 px-2 py-1 sm:flex">
+                          <span className="hidden items-center gap-1 rounded-full bg-black/40 ring-1 ring-sky-400/15 px-2 py-1 sm:flex">
                             {model.capabilities.map((capability) => {
                               const CapabilityIcon =
                                 capabilityIcons[capability].icon;

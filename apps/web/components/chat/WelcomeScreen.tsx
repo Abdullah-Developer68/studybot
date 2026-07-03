@@ -2,7 +2,7 @@ import { Sparkles, FolderSearch2, Code, BookOpen } from "lucide-react";
 import type { ReactElement } from "react";
 
 const btnBase =
-  "flex justify-center items-center gap-2 w-[130px] px-4 py-2 rounded-full bg-gray-700 text-gray-100 hover:bg-gray-400 transition-shadow shadow-sm hover:shadow-md border border-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-600";
+  "flex justify-center items-center gap-2 w-[130px] px-4 py-2 rounded-full bg-sky-500/15 text-sky-100 hover:bg-sky-500/25 transition-shadow shadow-sm hover:shadow-md border border-sky-400/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50";
 
 const Buttons = (): ReactElement => {
   return (
@@ -59,14 +59,14 @@ const WelcomeScreen = (): ReactElement => {
                     className={
                       `w-full md:w-3/4 lg:w-1/2 mx-auto text-center px-6 py-3 rounded-md transition-colors ` +
                       (i === 0
-                        ? "bg-gray-700 text-gray-100 font-proxima"
-                        : "text-gray-300 hover:bg-gray-700/50 font-proxima")
+                        ? "bg-sky-500/15 text-sky-100 border border-sky-400/25 font-proxima"
+                        : "text-sky-200 hover:bg-sky-500/10 font-proxima")
                     }
                   >
                     {text}
                   </button>
 
-                  <div className="w-full md:w-3/4 lg:w-1/2 mx-auto border-t border-gray-600 mt-3" />
+                  <div className="w-full md:w-3/4 lg:w-1/2 mx-auto border-t border-sky-400/15 mt-3" />
                 </div>
               ))}
             </div>
