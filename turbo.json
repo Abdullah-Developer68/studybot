@@ -1,8 +1,13 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
+  "globalEnv": ["AI_GATEWAY_API_KEY", "OPENROUTER_API_KEY"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": [
+        "NEXT_PUBLIC_SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY"
+      ],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "check-types": {
