@@ -10,13 +10,7 @@ import {
 import type { User } from "@supabase/supabase-js";
 import { onAuthStateChange, getUserFromSession } from "@studybot/supabase";
 import { createClient } from "@/utils/supabase/client";
-
-type AuthContextValue = {
-  user: User | null;
-  loading: boolean;
-  isAuthenticated: boolean;
-  userId: string | null;
-};
+import type { AuthContextValue } from "@/types/context.types";
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -26,6 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabaseClient = useMemo(() => createClient(), []);
 
   const [user, setUser] = useState<User | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,15 +34,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (result?.error) {
           setUser(null);
+          setAccessToken(null);
           setLoading(false);
           return;
         }
 
         setUser(result?.user ?? null);
+        setAccessToken(result?.session?.access_token ?? null);
         setLoading(false);
       } catch {
         if (!isMounted) return;
         setUser(null);
+        setAccessToken(null);
         setLoading(false);
       }
     };
@@ -66,12 +64,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (event, session) => {
         if (event === "SIGNED_IN") {
           setUser(session?.user ?? null);
+          setAccessToken(session?.access_token ?? null);
         } else if (event === "SIGNED_OUT") {
           setUser(null);
+          setAccessToken(null);
         } else if (event === "TOKEN_REFRESHED") {
           setUser(session?.user ?? null);
+          setAccessToken(session?.access_token ?? null);
         } else if (event === "USER_UPDATED") {
           setUser(session?.user ?? null);
+          setAccessToken(session?.access_token ?? null);
         }
       },
     );
@@ -87,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     isAuthenticated: !!user,
     userId: user?.id ?? null,
+    accessToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

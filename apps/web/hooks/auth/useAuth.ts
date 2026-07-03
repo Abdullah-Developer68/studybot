@@ -2,8 +2,7 @@
 
 import { useContext } from "react";
 import AuthContext from "@/app/context/AuthContext";
-
-type AuthContextValue = NonNullable<React.ContextType<typeof AuthContext>>;
+import type { AuthContextValue } from "@/types/context.types";
 
 const useAuth = (): AuthContextValue => {
   const context = useContext(AuthContext);

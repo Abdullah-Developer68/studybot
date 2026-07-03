@@ -49,7 +49,7 @@ const Input = () => {
   );
   const { activeThreadId } = useChatStoreStates();
   const { addThread, setActiveThread } = useChatStoreActions();
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   const router = useRouter();
   const [prompt, setPrompt] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
@@ -82,16 +82,8 @@ const Input = () => {
     setUploadProgress(0);
 
     try {
-      // REFACTOR: on every upload we are getting the session for verifying. Consumes resources and slows the site
-      const { data: sessionResult, error: sessionError } =
-        await supabaseClient.auth.getSession();
-
-      if (sessionError) {
-        throw new Error(sessionError.message);
-      }
-
-      const accessToken = sessionResult?.session?.access_token;
-
+      // Use the access token already stored in the auth context instead of
+      // calling getSession() on every upload, which is redundant.
       if (!accessToken) {
         throw new Error("Please sign in again before uploading files.");
       }
