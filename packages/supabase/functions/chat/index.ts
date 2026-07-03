@@ -75,7 +75,7 @@ const normalizeMessages = (messages: IncomingMessage[]): ModelMessage[] => {
       continue;
     }
 
-    // Tools will be supported later.
+    // TODD: Tools will be supported later.
     if (message.role === "tool") {
       console.warn(
         "Skipped message with role 'tool' since tools are not supported in this example",
@@ -266,17 +266,19 @@ Deno.serve(async (req: Request) => {
     // Store the user's message (the last message in the array)
     const lastMessage = transformedMessages[transformedMessages.length - 1];
     if (lastMessage.role === "user") {
-      const stored = await storeMessage(
+      console.log("Type of LastMessage.content:", typeof lastMessage.content);
+      // Removed the usage of await so TTFT can be improved.
+      storeMessage(
         supabase,
         threadId,
         "user",
-        lastMessage.content,
-      );
-      if (!stored) {
-        console.warn(
-          "Failed to store user message, but continuing with AI response",
+        String(lastMessage.content),
+      ).catch((error) => {
+        console.error(
+          "Failed to store user message, but continuing with AI response:",
+          error,
         );
-      }
+      });
     }
 
     const openrouter = createOpenRouter({
@@ -288,9 +290,7 @@ Deno.serve(async (req: Request) => {
     const result = streamText({
       model: openrouter(selectedModel),
       messages: transformedMessages,
-      experimental_transform: smoothStream({
-        chunking: "word",
-      }),
+      experimental_transform: smoothStream(),
     });
 
     const streamResponse = result.toUIMessageStreamResponse();
