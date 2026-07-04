@@ -18,13 +18,14 @@ import "highlight.js/styles/github-dark.css";
 import { useState } from "react";
 import WelcomeScreen from "./WelcomeScreen";
 import { useChatStoreStates } from "@/stores/chatStore";
+import { useHighlightLanguages } from "@/hooks/chat/useHighlightLanguages";
 
 const ChatBox = () => {
   const { messages, status, error, isLoadingMessages, setMessages } =
     useChatContext();
   const { threads, activeThreadId } = useChatStoreStates();
-  // console.log("These are the messages in the ChatBox.js");
-  // console.log(messages);
+  // Lazy-loads highlight.js language grammars based on code blocks in messages
+  const { lowlight } = useHighlightLanguages(messages, status);
   // submitted = waiting for the first token; streaming = response is arriving.
   const isSubmitted = status === "submitted";
   const isStreaming = status === "streaming";
@@ -229,7 +230,7 @@ const ChatBox = () => {
                           <div className="prose prose-sm prose-invert max-w-none wrap-break-words">
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
-                              rehypePlugins={[rehypeHighlight]}
+                              rehypePlugins={[[rehypeHighlight, { lowlight }]]}
                               components={{
                                 // `node` is an object representing a markdown element in the parsed tree.
                                 pre: ({ node: _node, ...props }) => (
@@ -325,7 +326,7 @@ const ChatBox = () => {
                         {/* Markdown Handling */}
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeHighlight]}
+                          rehypePlugins={[[rehypeHighlight, { lowlight }]]}
                           components={{
                             // In here we are saying if you encounter these tags then apply the following styles to them
                             pre: ({ node: _node, ...props }) => (
