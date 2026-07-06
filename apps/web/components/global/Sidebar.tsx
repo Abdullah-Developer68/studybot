@@ -230,8 +230,16 @@ const Sidebar = () => {
       >
         {/* ── Header ──────────────────────────────────────────────── */}
         {isCompact ? (
-          // Compact header: toggle button to expand
-          <div className="mb-3 flex px-2">
+          // Compact header: nerdbot logo (same h-10 row as expanded) +
+          // toggle button stacked below to avoid any vertical shift of the logo.
+          <div className="mb-5 flex flex-col items-center gap-2 px-2">
+            <div className="flex h-10 items-center justify-center">
+              <img
+                src={assets.nerdbot.src}
+                alt="Studybot"
+                className="h-8 w-8 shrink-0"
+              />
+            </div>
             <Button
               variant="ghost"
               size="icon"
@@ -390,7 +398,7 @@ const Sidebar = () => {
             </p>
 
             {/* Chat threads — fixed height with scroll overflow */}
-            <div className="flex h-[480px] flex-col gap-1 overflow-y-auto px-2">
+            <div className="flex h-115 flex-col gap-1 overflow-y-auto px-2">
               {threads.length === 0 ? (
                 <div className="rounded-md border border-dashed border-zinc-800 px-3 py-3 text-sm text-zinc-500">
                   No chat sessions yet.
