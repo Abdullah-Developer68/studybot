@@ -1,11 +1,3 @@
-type Actions = {
-  expandPanel: () => void;
-  collapsePanel: () => void;
-};
-
-type ControlPanelTypes = {
-  expanded: boolean;
-  actions: Actions;
-};
-
-export type { ControlPanelTypes };
+// Placeholder types for future control-panel state sharing
+// between Navbar and Sidebar. Will be populated later.
+export type {};

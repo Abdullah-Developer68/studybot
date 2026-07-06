@@ -1,28 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import type { ControlPanelTypes } from "../types/controlPanel.types";
 
-export const useControlPanelStore = create<ControlPanelTypes>()(
-  persist(
-    (set) => ({
-      expanded: false,
-      actions: {
-        expandPanel: () => set({ expanded: true }),
-        collapsePanel: () => set({ expanded: false }),
-      },
-    }),
-    {
-      name: "controlPanel",
-      // only persist the sidebar expanded state
-      partialize: (state) => ({ expanded: state.expanded }),
-    },
-  ),
-);
-
-// Custom hooks for easier access to actions and states
-
-export const useIsPanelExpanded = () =>
-  useControlPanelStore((state) => state.expanded);
-
-export const useControlPanelActions = () =>
-  useControlPanelStore((state) => state.actions);
+// Placeholder store for future control-panel state that will be
+// shared between Navbar and Sidebar. Intentionally empty for now.
+export const useControlPanelStore = create(() => ({}));
