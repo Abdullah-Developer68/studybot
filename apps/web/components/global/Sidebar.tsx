@@ -244,9 +244,11 @@ const Sidebar = () => {
         ) : (
           // Expanded header: title + toggle button to collapse
           <div className="mb-5 flex h-10 items-center justify-between px-3">
-            <span className="text-sm font-bold tracking-widest text-white">
-              Studybot
-            </span>
+            <img
+              src={assets.nerdbot.src}
+              alt="Studybot"
+              className="h-8 w-auto"
+            />
             <Button
               variant="ghost"
               size="icon"
@@ -378,7 +380,6 @@ const Sidebar = () => {
                 onClick={handleNewChat}
                 disabled={isLoading}
               >
-                <Plus className="mr-2 h-4 w-4" />
                 New Chat
               </Button>
             </div>
@@ -388,8 +389,8 @@ const Sidebar = () => {
               Recent
             </p>
 
-            {/* Chat threads — scrollable */}
-            <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-2">
+            {/* Chat threads — fixed height with scroll overflow */}
+            <div className="flex h-[480px] flex-col gap-1 overflow-y-auto px-2">
               {threads.length === 0 ? (
                 <div className="rounded-md border border-dashed border-zinc-800 px-3 py-3 text-sm text-zinc-500">
                   No chat sessions yet.
@@ -517,7 +518,7 @@ const Sidebar = () => {
         {/* ── Footer ───────────────────────────────────────────────── */}
         <div
           className={cn(
-            "flex items-center",
+            "mt-auto flex items-center",
             isCompact ? "flex-col gap-2 px-2" : "justify-between px-3 py-1",
           )}
         >

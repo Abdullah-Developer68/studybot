@@ -1,6 +1,6 @@
-import defaultProfile from "./defaultProfile.webp";
-import openAiLogo from "./OpenAI logo.svg";
-import nerdbot from "./nerdbot.webp";
+import defaultProfile from "./img/defaultProfile.webp";
+import openAiLogo from "./img/OpenAI logo.svg";
+import nerdbot from "./img/nerdbot.png";
 
 export const assets = {
   defaultProfile,
