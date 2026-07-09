@@ -341,7 +341,8 @@ const Sidebar = () => {
                                 variant="ghost"
                                 size="icon"
                                 className={cn(
-                                  "relative h-12 w-12 shrink-0 cursor-pointer",
+                                  // Keep original hit area; kill ghost's full-button dark hover
+                                  "group relative h-12 w-12 shrink-0 cursor-pointer hover:bg-transparent dark:hover:bg-transparent",
                                   isActive
                                     ? "text-white"
                                     : "text-zinc-500 hover:text-white",
@@ -349,7 +350,15 @@ const Sidebar = () => {
                                 asChild
                               >
                                 <Link href={href}>
-                                  <Icon className="h-6 w-6" />
+                                  {/* Smaller hover surface so the highlight doesn't fill the whole button */}
+                                  <span
+                                    className={cn(
+                                      "flex h-8 w-8 items-center justify-center rounded-md transition-colors",
+                                      "group-hover:bg-zinc-700",
+                                    )}
+                                  >
+                                    <Icon className="h-6 w-6" />
+                                  </span>
                                   {/* Active underline indicator */}
                                   {isActive && (
                                     <span className="absolute bottom-1 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-white" />
@@ -357,11 +366,8 @@ const Sidebar = () => {
                                 </Link>
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent
-                              side="bottom"
-                              className="border-zinc-700 bg-zinc-900 text-xs text-zinc-100"
-                            >
-                              {label}
+                            <TooltipContent side="top">
+                              <p>{label}</p>
                             </TooltipContent>
                           </Tooltip>
                           {/* Divider between items */}
