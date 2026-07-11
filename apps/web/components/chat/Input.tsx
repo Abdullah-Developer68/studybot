@@ -7,7 +7,7 @@ import { useRef, useState } from "react";
 import { ArrowUpIcon, X, FileText, Loader2, Square, Plus } from "lucide-react";
 import useChatContext from "@/hooks/chat/useChatContext";
 import { createClient } from "@/utils/supabase/client";
-import { uploadDocument } from "@studybot/api-client";
+import { uploadDocument, generateChatTitle } from "@studybot/api-client";
 import {
   getSupportedExtensions,
   validateFile,
@@ -23,14 +23,15 @@ import {
 import { Separator } from "@/components/ui/separator";
 import ModelSelectionMenu from "./ModelSelectionMenu";
 import { useModelSelectionStore } from "@/stores/modelSelectionStore";
-import { useChatStoreStates, useChatStoreActions } from "@/stores/chatStore";
-import { createChatThread } from "@studybot/supabase";
+import { useChatStoreStates, useChatStoreActions, useChatStore } from "@/stores/chatStore";
+import { createChatThread, updateThreadTitle } from "@studybot/supabase";
 import useAuth from "@/hooks/auth/useAuth";
 import { useRouter } from "next/navigation";
 
 const SUPPORTED_FILE_TYPES = getSupportedExtensions();
 
 // Derives a thread title from the first user message.
+// Used only as a fallback when the AI title generation fails.
 // Caps at 50 characters and appends "..." if truncated.
 const deriveTitle = (text: string): string => {
   // Strip newlines and extra whitespace for a cleaner title
@@ -38,19 +39,28 @@ const deriveTitle = (text: string): string => {
   return cleaned.length > 50 ? cleaned.slice(0, 50) + "..." : cleaned;
 };
 
+// Derives a thread title from the first user message.
 const Input = () => {
   // Lazy-create the browser client inside the component so it is not
   // instantiated during static prerender when browser APIs are absent.
   const supabaseClient = createClient();
 
+  // Context States
   const { sendMessage, status, stop, prepareForNewThread } = useChatContext();
+  const { user, accessToken } = useAuth();
+
+  // Zustand States
   const selectedModelId = useModelSelectionStore(
     (state) => state.selectedModelId,
   );
+
+  // Zustand Actions
   const { activeThreadId } = useChatStoreStates();
   const { addThread, setActiveThread } = useChatStoreActions();
-  const { user, accessToken } = useAuth();
+
   const router = useRouter();
+
+  // States
   const [prompt, setPrompt] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -82,8 +92,6 @@ const Input = () => {
     setUploadProgress(0);
 
     try {
-      // Use the access token already stored in the auth context instead of
-      // calling getSession() on every upload, which is redundant.
       if (!accessToken) {
         throw new Error("Please sign in again before uploading files.");
       }
@@ -156,15 +164,11 @@ const Input = () => {
     let targetThreadId: string | null = activeThreadId;
 
     // If no active thread, create one lazily from the first user message.
-    // The thread title is derived from the message content so the sidebar
-    // list shows a descriptive name instead of the generic "New Chat".
+    // The thread is created with a placeholder title; an AI-generated title
+    // is requested asynchronously and applied when it arrives.
     if (!targetThreadId && user?.id) {
-      const title =
-        attachedFiles.length > 0
-          ? prompt.trim()
-            ? deriveTitle(prompt.trim())
-            : `Files: ${attachedFiles.map((f) => f.name).join(", ")}`
-          : deriveTitle(userPrompt);
+      // Use a placeholder — the real title will come from the AI async.
+      const placeholderTitle = "New Chat...";
 
       // Tell ChatProvider to skip the load-messages effect when threadId
       // changes from null → newId. This preserves the AI SDK's internal
@@ -172,7 +176,11 @@ const Input = () => {
       // instead of clearing it and re-fetching an empty thread from DB.
       prepareForNewThread();
 
-      const newThread = await createChatThread(supabaseClient, user.id, title);
+      const newThread = await createChatThread(
+        supabaseClient,
+        user.id,
+        placeholderTitle,
+      );
 
       if (!newThread) {
         setUploadError("Failed to create chat session. Please try again.");
@@ -186,6 +194,60 @@ const Input = () => {
       // sidebar highlights the active thread. Using replace so the
       // bare /chat URL doesn't linger in browser history.
       router.replace(`/chat/${targetThreadId}`);
+
+      // Fire-and-forget: generate an AI title in the background.
+      // The Sidebar will show a blur + spinner until the title arrives.
+      const { markTitleLoading, unmarkTitleLoading, updateThreadTitle: updateThreadTitleInStore } =
+        useChatStore.getState().actions;
+
+      // Only the user's typed prompt is needed for title generation.
+      markTitleLoading(targetThreadId);
+
+      // If there is no access token, skip the AI title generation to avoid
+      // a 401 from the generate-title edge function and fall back to a
+      // derived title immediately.
+      if (!accessToken) {
+        const fallbackTitle = deriveTitle(userPrompt);
+        updateThreadTitle(supabaseClient, targetThreadId!, fallbackTitle)
+          .then(() => {
+            updateThreadTitleInStore(targetThreadId!, fallbackTitle);
+          })
+          .catch(() => {
+            // Silently ignore — the placeholder title stays.
+          })
+          .finally(() => {
+            unmarkTitleLoading(targetThreadId!);
+          });
+      } else {
+        console.log("Access Token:", accessToken);
+        generateChatTitle(userPrompt, { accessToken })
+          .then(async (aiTitle) => {
+            if (aiTitle) {
+              // Persist to DB, then update the store.
+              await updateThreadTitle(
+                supabaseClient,
+                targetThreadId!,
+                aiTitle,
+              );
+              updateThreadTitleInStore(targetThreadId!, aiTitle);
+            } else {
+              // Fall back to the deriveTitle behavior on failure.
+              const fallbackTitle = deriveTitle(userPrompt);
+              await updateThreadTitle(
+                supabaseClient,
+                targetThreadId!,
+                fallbackTitle,
+              );
+              updateThreadTitleInStore(targetThreadId!, fallbackTitle);
+            }
+          })
+          .catch(() => {
+            // Silently ignore — the placeholder title stays.
+          })
+          .finally(() => {
+            unmarkTitleLoading(targetThreadId!);
+          });
+      }
     }
 
     // Pass the resolved threadId explicitly so sendMessageWithThread

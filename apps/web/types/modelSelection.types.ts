@@ -21,7 +21,7 @@ type ModelProviderId =
   | "meta"
   | "deepseek"
   | "zai"
-  | "poolside";
+  | "nvidia";
 
 type ModelCapability = "vision" | "reasoning" | "tools" | "image";
 

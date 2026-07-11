@@ -7,6 +7,9 @@ type ChatStoreStates = {
   messages: ChatMessage[];
   isLoading: boolean;
   error: string | null;
+  // Tracks which threads are awaiting AI-generated titles.
+  // Used by Sidebar to show blur + spinner on those tabs.
+  titleLoadingThreadIds: string[];
 };
 
 type ChatStoreActions = {
@@ -20,6 +23,8 @@ type ChatStoreActions = {
     updateThreadTitle: (threadId: string, title: string) => void;
     setLoading: (isLoading: boolean) => void;
     setError: (error: string | null) => void;
+    markTitleLoading: (threadId: string) => void;
+    unmarkTitleLoading: (threadId: string) => void;
     reset: () => void;
   };
 };

@@ -41,7 +41,7 @@ const createChatThread = async (
   supabase: SupabaseClient,
   userId: string,
   title: string = "New Chat",
-  model: string = "poolside/laguna-xs.2:free",
+  model: string = "nvidia/nemotron-3-nano-30b-a3b:free",
 ): Promise<ChatThread | null> => {
   try {
     await ensureProfileExists(supabase, userId);

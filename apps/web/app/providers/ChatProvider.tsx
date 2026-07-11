@@ -26,7 +26,7 @@ type ChatProviderProps = {
 
 // Provides access to the context
 const ChatProvider = ({ children }: ChatProviderProps) => {
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   // Read activeThreadId from the store — set by the layout when the URL
   // param changes, or by Input when creating a new thread from a message.
   const { activeThreadId: threadId } = useChatStoreStates();
@@ -43,13 +43,12 @@ const ChatProvider = ({ children }: ChatProviderProps) => {
     skipNextLoadRef.current = true;
   }, []);
 
-  // Custom transport that adds auth headers and points to the edge function.
   const transport = new DefaultChatTransport({
     api: chatApi || "/api/chat",
-    headers: {
-      Authorization: `Bearer ${supabaseKey || ""}`,
+    headers: () => ({
+      Authorization: `Bearer ${accessToken}`,
       apikey: supabaseKey || "",
-    },
+    }),
   });
 
   const chat = useChat({

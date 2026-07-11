@@ -20,6 +20,7 @@ import {
   Trash2,
   Check,
   X,
+  Loader2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { assets } from "@studybot/assets";
@@ -35,6 +36,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import useChatSessions from "@/hooks/chat/useChatSessions";
+import { useChatStoreStates } from "@/stores/chatStore";
 
 // Sidebar width constants
 const MIN_SIDEBAR_WIDTH = 56;
@@ -103,6 +105,9 @@ const Sidebar = () => {
     renameThread,
     deleteThread,
   } = useChatSessions();
+
+  // Threads awaiting an AI-generated title show a blur + spinner.
+  const { titleLoadingThreadIds } = useChatStoreStates();
 
   const isCompact = sidebarWidth < COMPACT_BREAKPOINT;
 
@@ -413,6 +418,10 @@ const Sidebar = () => {
                 threads.map((thread) => {
                   const isActive = activeThreadId === thread.session_id;
                   const isEditing = editingThreadId === thread.session_id;
+                  // True while the AI is generating a title for this thread.
+                  const isTitleLoading = titleLoadingThreadIds.includes(
+                    thread.session_id,
+                  );
 
                   return (
                     <div
@@ -450,7 +459,14 @@ const Sidebar = () => {
                         </div>
                       ) : (
                         // Normal display — clickable title + dropdown trigger.
+                        // When the AI is generating a title, show a blurred
+                        // placeholder with a small animated spinner on the left.
                         <>
+                          {/* Title-loading spinner — shown while AI generates a title */}
+                          {isTitleLoading && (
+                            <Loader2 className="ml-2 h-3 w-3 shrink-0 animate-spin text-zinc-400" />
+                          )}
+
                           <button
                             type="button"
                             className="min-w-0 flex-1 cursor-pointer py-2 pl-2 text-left"
@@ -458,7 +474,12 @@ const Sidebar = () => {
                               handleSwitchThread(thread.session_id)
                             }
                           >
-                            <span className="block truncate text-sm text-zinc-300 group-hover:text-white">
+                            <span
+                              className={cn(
+                                "block truncate text-sm text-zinc-300 group-hover:text-white",
+                                isTitleLoading && "blur-[2px] opacity-50",
+                              )}
+                            >
                               {thread.title}
                             </span>
                           </button>

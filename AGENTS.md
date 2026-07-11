@@ -18,6 +18,7 @@ This repository is a Turborepo monorepo for StudyBot, an AI-assisted academic pr
 - AI SDK with OpenRouter and Vercel AI Gateway for model access.
 - Zustand for client state management where needed.
 - PostHog for analytics and Socket.io where real-time messaging is required.
+- pnpm is the package manager.
 
 ## Working Rules
 
@@ -53,10 +54,11 @@ This repository is a Turborepo monorepo for StudyBot, an AI-assisted academic pr
 
 - All Edge Functions are located in `packages/supabase/functions/`.
 - The `_shared/` folder (prefixed with underscore) contains reusable helpers that get bundled into each function but are not deployed as standalone functions.
-- Use `getSupabaseClient(req)` for user-authenticated operations (respects RLS).
-- Use `getAdminClient()` only for admin tasks that bypass RLS.
+- Wrap functions with `withSupabase({ auth: "user" }, handler)` from `@supabase/server` for user-authenticated operations.
+- Use `ctx.supabase` for RLS-scoped client operations and `ctx.supabaseAdmin` for admin tasks that bypass RLS.
+- Keep an explicit `ctx.authMode !== "user"` guard inside the handler so it fails closed if the auth config changes.
 - Import the `deno.json` alias `@supabase/supabase-js` for clean imports.
-- Frontend calls Edge Functions via `supabase.functions.invoke()`, which automatically sends the user's auth token in the request headers.
+- Frontend calls Edge Functions via `supabase.functions.invoke()` or direct `fetch`, sending the user's access token in the `Authorization: Bearer <token>` header.
 
 ## Notes for Supabase and Env Work
 

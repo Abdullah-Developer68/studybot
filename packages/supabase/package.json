@@ -14,7 +14,10 @@
     "functions:deploy:word": "supabase functions deploy parse-word --project-ref kmhsyvcjoctqyyaarjmu",
     "functions:deploy:excel": "supabase functions deploy parse-excel --project-ref kmhsyvcjoctqyyaarjmu",
     "functions:deploy:powerpoint": "supabase functions deploy parse-powerpoint --project-ref kmhsyvcjoctqyyaarjmu",
-    "functions:deploy:text": "supabase functions deploy parse-text --project-ref kmhsyvcjoctqyyaarjmu"
+    "functions:deploy:text": "supabase functions deploy parse-text --project-ref kmhsyvcjoctqyyaarjmu",
+    "functions:deploy:generate-title": "supabase functions deploy generate-title --project-ref kmhsyvcjoctqyyaarjmu",
+    "functions:deploy:chat": "supabase functions deploy chat --project-ref kmhsyvcjoctqyyaarjmu",
+    "functions:deploy:all": "supabase functions deploy --project-ref kmhsyvcjoctqyyaarjmu"
   },
   "exports": {
     ".": "./sdk/supabase.methods.ts",

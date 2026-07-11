@@ -10,33 +10,50 @@ import {
   getErrorMessage,
   getSupabasePublishableKey,
   getSupabaseUrl,
-  invokeSupabaseFunction,
 } from "@studybot/utils/client/api.client.utils";
-
-const api = axios.create({
-  baseURL: "http://localhost:3000/api/",
-  withCredentials: true,
-});
 
 // ------------------------ APIS --------------------------
 
-// 1) Send a user prompt to the chat API
-const sendUserPrompt = async (prompt: string) => {
-  if (!prompt) {
-    throw new Error("Prompt is required");
+// 1) Generate a short descriptive title for a chat session from the first user message.
+// Routes the message to a cheap AI model via the generate-title edge function.
+const generateChatTitle = async (
+  message: string,
+  options?: SupabaseRequestOptions,
+): Promise<string | null> => {
+  if (!message?.trim()) {
+    throw new Error("Message is required");
   }
 
+  const supabaseUrl = getSupabaseUrl();
+  const publishableKey = getSupabasePublishableKey();
+  const endpoint = `${supabaseUrl}/functions/v1/generate-title`;
+
   try {
-    const res = await api.post("chat", { prompt });
-    // {Promise} - API response with the generated answer and metadata
-    return res;
+    const response = await axios.post<{
+      title?: string;
+      error?: string;
+    }>(endpoint, { message }, {
+      headers: {
+        ...buildSupabaseHeaders(publishableKey, options),
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = response.data;
+
+    if (!data?.title) {
+      console.warn("generate-title returned no title:", data?.error);
+      return null;
+    }
+
+    return data.title.trim() || null;
   } catch (err) {
-    console.error("Error sending prompt:", err);
-    throw err;
+    console.error("Failed to generate chat title:", err);
+    return null;
   }
 };
 
-// --- from here on out the apis are written
+// --- file upload apis
 const uploadDocument = async (
   file: File,
   onProgress?: UploadProgressCallback,
@@ -131,4 +148,4 @@ const uploadDocument = async (
   }
 };
 
-export { sendUserPrompt, uploadDocument, invokeSupabaseFunction, api };
+export { generateChatTitle, uploadDocument };
