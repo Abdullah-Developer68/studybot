@@ -18,11 +18,23 @@ const useStreamingContent = (targetContent: string, isStreaming: boolean) => {
   const [displayed, setDisplayed] = useState(targetContent);
   const pendingRef = useRef(false);
   const latestRef = useRef(targetContent);
-
+  // used to measure time b/w consecutive raf commits
+const lastCommitTime = useRef(performance.now())
   // Keep the ref current so the rAF callback always reads the freshest value.
   latestRef.current = targetContent;
 
   const commit = useCallback(() => {
+    const now = performance.now();
+
+        console.log(
+          `rAF commit | Δ ${(now - lastCommitTime.current).toFixed(
+            2
+          )} ms | content length: ${latestRef.current.length}`
+        );
+
+        lastCommitTime.current = now;
+
+
     pendingRef.current = false;
     setDisplayed(latestRef.current);
   }, []);
