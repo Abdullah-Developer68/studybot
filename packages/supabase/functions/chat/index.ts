@@ -17,7 +17,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const DEFAULT_MODEL = "poolside/laguna-xs.2:free";
+const DEFAULT_MODEL = "cohere/north-mini-code:free";
 
 const supportedModels = new Set([
   "openai/gpt-5.5",

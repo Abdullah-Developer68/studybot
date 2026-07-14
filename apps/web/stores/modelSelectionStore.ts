@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ModelSelectionStoreTypes } from "../types/modelSelection.types";
 
-const DEFAULT_MODEL_ID = "poolside/laguna-xs.2:free";
+const DEFAULT_MODEL_ID = "cohere/north-mini-code:free";
 
 // Must match the model list in ModelSelectionMenu.tsx and supportedModels
 // in the chat edge function. Used to validate persisted localStorage state.

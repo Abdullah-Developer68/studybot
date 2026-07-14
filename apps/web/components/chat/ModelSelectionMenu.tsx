@@ -107,11 +107,11 @@ const modelOptions: ModelOption[] = [
     capabilities: ["reasoning"],
   },
   {
-    id: "poolside/laguna-xs.2:free",
-    label: "Laguna XS.2",
-    provider: "poolside",
-    providerLabel: "Poolside",
-    description: "Free fast model for everyday study help",
+    id: "cohere/north-mini-code:free",
+    label: "North Mini Code",
+    provider: "cohere",
+    providerLabel: "Cohere",
+    description: "Cohere's free coding model for everyday study help",
     priceLabel: "Free",
     highlighted: true,
     capabilities: ["reasoning", "tools"],
@@ -130,7 +130,7 @@ const providers: Array<{
   { id: "meta", label: "Meta", railLabel: "∞" },
   { id: "deepseek", label: "DeepSeek", railLabel: "DS" },
   { id: "zai", label: "Z.ai", railLabel: "Z" },
-  { id: "poolside", label: "Poolside", railLabel: "PS" },
+  { id: "cohere", label: "Cohere", railLabel: "CO" },
 ];
 
 const capabilityIcons: Record<
@@ -153,7 +153,7 @@ const providerAccent: Record<ModelProviderId, string> = {
   meta: "text-sky-300 bg-sky-500/10 border-sky-400/15",
   deepseek: "text-cyan-300 bg-cyan-500/10 border-cyan-400/15",
   zai: "text-sky-200 bg-sky-400/10 border-sky-300/20",
-  poolside: "text-cyan-200 bg-cyan-400/10 border-cyan-300/20",
+  cohere: "text-teal-200 bg-teal-400/10 border-teal-300/20",
 };
 
 const ProviderMark = ({

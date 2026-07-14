@@ -15,10 +15,11 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import WelcomeScreen from "./WelcomeScreen";
 import { useChatStoreStates } from "@/stores/chatStore";
 import { useHighlightLanguages } from "@/hooks/chat/useHighlightLanguages";
+import useStreamingContent from "@/hooks/chat/useStreamingContent";
 
 const ChatBox = () => {
   const { messages, status, error, isLoadingMessages, setMessages } =
@@ -41,7 +42,36 @@ const ChatBox = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState("");
 
-  const handleCopy = async (messageId: string, text: string) => {
+  // Compute the last assistant message's content so useStreamingContent
+  // can be called exactly once at the top level (Rules of Hooks forbid
+  // calling hooks inside .map). When there is no streaming assistant
+  // message, pass an empty string and isStreamingLocal is false so the
+  // hook is a no-op pass-through.
+  // Inline extraction of text content from the last message. We can't call
+  // getMessageContent here because it's declared later in the component and
+  // const arrow functions aren't hoisted — so we replicate its small logic.
+  const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
+  const lastIsStreamingAssistant =
+    isStreaming &&
+    lastMessage?.role === "assistant";
+  const lastMessageContent = lastMessage
+    ? typeof lastMessage.content === "string"
+      ? lastMessage.content
+      : Array.isArray(lastMessage.parts)
+        ? lastMessage.parts
+            .filter((p: any) => p.type === "text")
+            .map((p: any) => p.text)
+            .join("")
+        : ""
+    : "";
+
+  // Called once, unconditionally — keeps hook count stable across renders.
+  const displayStreamedContent = useStreamingContent(
+    lastMessageContent,
+    !!lastIsStreamingAssistant,
+  );
+
+  const handleCopy = useCallback(async (messageId: string, text: string) => {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedId(messageId);
@@ -49,7 +79,7 @@ const ChatBox = () => {
     } catch (copyError) {
       console.error("Failed to copy message:", copyError);
     }
-  };
+  }, []);
 
   const startEdit = (messageId: string, currentText: string) => {
     setEditingId(messageId);
@@ -174,6 +204,15 @@ const ChatBox = () => {
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4">
           {messages.map((message, index) => {
             const content = getMessageContent(message);
+
+            // Only the last assistant message while streaming uses the
+            // rAF-throttled content from the single top-level hook call.
+            // All other messages pass through the raw content directly.
+            const useStreamed =
+              message.role === "assistant" &&
+              lastIsStreamingAssistant &&
+              index === messages.length - 1;
+            const displayContent = useStreamed ? displayStreamedContent : content;
 
             if (message.role === "user") {
               const { fileNames, userRequest } = getUserDisplayContent(content);
@@ -306,6 +345,9 @@ const ChatBox = () => {
                 </div>
               );
             } else {
+              // displayContent is already computed above the if/else —
+              // for the streaming message it's the rAF-throttled value,
+              // for completed assistant messages it's the raw content.
               return (
                 <div
                   key={index}
@@ -323,12 +365,10 @@ const ChatBox = () => {
                   <div className="flex flex-col gap-1 flex-1 min-w-0">
                     <div className="text-gray-100">
                       <div className="prose prose-sm prose-invert max-w-none wrap-break-words">
-                        {/* Markdown Handling */}
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
                           rehypePlugins={[[rehypeHighlight, { lowlight }]]}
                           components={{
-                            // In here we are saying if you encounter these tags then apply the following styles to them
                             pre: ({ node: _node, ...props }) => (
                               <div className="overflow-auto my-2 rounded-lg bg-zinc-900 p-4">
                                 <pre {...props} />
@@ -397,23 +437,26 @@ const ChatBox = () => {
                             ),
                           }}
                         >
-                          {content}
+                          {displayContent}
                         </ReactMarkdown>
                       </div>
                     </div>
 
-                    {/* AI message actions + model name */}
                     <div className="mt-3 flex items-center gap-3">
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
                           onClick={() =>
-                            handleCopy(message.id ?? String(index), content)
+                            handleCopy(
+                              message.id ?? String(index),
+                              displayContent,
+                            )
                           }
                           className="rounded p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
                           title="Copy"
                         >
-                          {copiedId === (message.id ?? String(index)) ? (
+                          {copiedId ===
+                          (message.id ?? String(index)) ? (
                             <Check className="h-4 w-4" />
                           ) : (
                             <Copy className="h-4 w-4" />
