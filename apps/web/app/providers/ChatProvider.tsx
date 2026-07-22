@@ -43,12 +43,15 @@ const ChatProvider = ({ children }: ChatProviderProps) => {
     skipNextLoadRef.current = true;
   }, []);
 
+  // Keep a ref to the latest accessToken so the sendMessageWithThread
+  // wrapper below can inject it into every request, regardless of which
+  // transport instance the stale Chat is holding onto. The `transport` prop
+  // on useChat is only read on initial mount; later renders are ignored.
+  const accessTokenRef = useRef(accessToken);
+  accessTokenRef.current = accessToken;
+
   const transport = new DefaultChatTransport({
     api: chatApi || "/api/chat",
-    headers: () => ({
-      Authorization: `Bearer ${accessToken}`,
-      apikey: supabaseKey || "",
-    }),
   });
 
   const chat = useChat({
@@ -155,6 +158,10 @@ const ChatProvider = ({ children }: ChatProviderProps) => {
         (explicitBody?.threadId as string | undefined) ?? threadId;
       return originalSendMessage(message, {
         ...options,
+        headers: {
+          Authorization: `Bearer ${accessTokenRef.current}`,
+          apikey: supabaseKey || "",
+        },
         body: {
           ...explicitBody,
           threadId: resolvedThreadId,
