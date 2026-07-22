@@ -1,26 +1,9 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabase } from "../client/client";
 import { AuthCallback, OAuthProvider } from "../types/auth.sdk.types";
 
-// asserts tells TS that this function verifies the value at runtime. if it does not throw,
-// the value is safe to use as SupabaseClient. if assert is not used we will get a compile time error
-// as TS will think supabase can be null or undefined, but using assert tells TS to assume
-// that after the function returns successfully that check has passed. if function throws error then
-// the supabase client is not valid or not provided.
-function ensureClient(
-  supabase: SupabaseClient | null | undefined,
-): asserts supabase is SupabaseClient {
-  if (!supabase?.auth) {
-    throw new Error("Supabase client is required");
-  }
-}
-
 // Registers a new user using email/password credentials.
-const signUp = async (
-  supabase: SupabaseClient | null | undefined,
-  email: string,
-  password: string,
-) => {
-  ensureClient(supabase);
+const signUp = async (email: string, password: string) => {
+  const supabase = getSupabase();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -33,12 +16,8 @@ const signUp = async (
 };
 
 // Signs in an existing user using email/password credentials.
-const signIn = async (
-  supabase: SupabaseClient | null | undefined,
-  email: string,
-  password: string,
-) => {
-  ensureClient(supabase);
+const signIn = async (email: string, password: string) => {
+  const supabase = getSupabase();
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -51,8 +30,8 @@ const signIn = async (
 };
 
 // Signs out the currently authenticated user.
-const signOut = async (supabase: SupabaseClient | null | undefined) => {
-  ensureClient(supabase);
+const signOut = async () => {
+  const supabase = getSupabase();
   const { error } = await supabase.auth.signOut();
   if (error) {
     throw new Error(error.message);
@@ -60,17 +39,16 @@ const signOut = async (supabase: SupabaseClient | null | undefined) => {
 };
 
 // Logs out the current user - semantic alias for signOut used by client UIs.
-const logout = async (supabase: SupabaseClient | null | undefined) => {
-  return signOut(supabase);
+const logout = async () => {
+  return signOut();
 };
 
 // Starts OAuth sign-in flow for the given provider.
 const signInWithOAuth = async (
-  supabase: SupabaseClient | null | undefined,
   provider: OAuthProvider,
   redirectTo: string | null = null,
 ) => {
-  ensureClient(supabase);
+  const supabase = getSupabase();
   const options: { redirectTo?: string } = {};
 
   if (redirectTo) {
@@ -90,8 +68,8 @@ const signInWithOAuth = async (
 };
 
 // Retrieves the currently authenticated user from Supabase auth service.
-const getUser = async (supabase: SupabaseClient | null | undefined) => {
-  ensureClient(supabase);
+const getUser = async () => {
+  const supabase = getSupabase();
 
   const { data, error } = await supabase.auth.getUser();
 
@@ -109,11 +87,9 @@ const getUser = async (supabase: SupabaseClient | null | undefined) => {
 };
 
 // Resolves user and session from local session state without making a second user fetch request.
-const getUserFromSession = async (
-  supabase: SupabaseClient | null | undefined,
-) => {
+const getUserFromSession = async () => {
   try {
-    ensureClient(supabase);
+    const supabase = getSupabase();
 
     const { data: sessionResult, error: sessionError } =
       await supabase.auth.getSession();
@@ -154,11 +130,8 @@ const getUserFromSession = async (
 };
 
 // Subscribes to auth state changes and returns the active subscription.
-const onAuthStateChange = (
-  supabase: SupabaseClient | null | undefined,
-  callback: AuthCallback,
-) => {
-  ensureClient(supabase);
+const onAuthStateChange = (callback: AuthCallback) => {
+  const supabase = getSupabase();
   const {
     data: { subscription },
   } = supabase.auth.onAuthStateChange((event, session) => {

@@ -40,7 +40,6 @@ import {
   CardTitle as CardTitleBase,
 } from "@/components/ui/card";
 import useAuth from "@/hooks/auth/useAuth";
-import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 
 type TemplateItem = {
@@ -66,9 +65,6 @@ const CardHeader = CardHeaderBase as ComponentType<any>;
 const CardTitle = CardTitleBase as ComponentType<any>;
 
 const TemplateManager = () => {
-  // Lazy-create the browser client inside the component so it is not
-  // instantiated during static prerender when browser APIs are absent.
-  const supabaseClient = createClient();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [templates, setTemplates] = useState<TemplateItem[]>([]);
@@ -91,7 +87,7 @@ const TemplateManager = () => {
       setIsLoading(true);
       setError("");
 
-      const seedResult = await ensureDefaultTemplates(supabaseClient, userId);
+      const seedResult = await ensureDefaultTemplates(userId);
 
       if (!isMounted) {
         return;
@@ -104,7 +100,7 @@ const TemplateManager = () => {
         return;
       }
 
-      const result = await listTemplates(supabaseClient, userId);
+      const result = await listTemplates(userId);
 
       if (!isMounted) {
         return;
@@ -147,7 +143,7 @@ const TemplateManager = () => {
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
-    const result = await deleteTemplate(supabaseClient, templateId);
+    const result = await deleteTemplate(templateId);
 
     if (result.error) {
       setError(result.error);
@@ -168,7 +164,7 @@ const TemplateManager = () => {
       return;
     }
 
-    const result = await createTemplate(supabaseClient, {
+    const result = await createTemplate({
       profileId: userId,
       name: `${templateToDuplicate.name} (Copy)`,
       description: templateToDuplicate.description,

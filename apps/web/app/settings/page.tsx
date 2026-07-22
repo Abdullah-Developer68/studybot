@@ -8,12 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { logout } from "@studybot/supabase";
-import { createClient } from "@/utils/supabase/client";
 
 export default function SettingsPage() {
-  // Lazy-create the browser client inside the component so it is not
-  // instantiated during static prerender when browser APIs are absent.
-  const supabaseClient = createClient();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -27,7 +23,7 @@ export default function SettingsPage() {
   // Signs the user out via Supabase and redirects to the auth page
   const handleLogout = async () => {
     try {
-      await logout(supabaseClient);
+      await logout();
       router.push("/auth");
     } catch (error) {
       console.error("Logout failed:", error);

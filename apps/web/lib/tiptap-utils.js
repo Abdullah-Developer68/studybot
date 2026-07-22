@@ -7,7 +7,6 @@ import {
 import { cellAround, CellSelection } from "@tiptap/pm/tables";
 import { findParentNodeClosestToPos } from "@tiptap/react";
 import { uploadImage } from "@studybot/supabase";
-import { createClient } from "@/utils/supabase/client";
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -346,11 +345,7 @@ export const handleImageUpload = async (
   }
 
   try {
-    // Create the browser client lazily so it is not instantiated during
-    // static prerender when browser APIs are absent.
-    const supabaseClient = createClient();
     const result = await uploadImage(
-      supabaseClient,
       file,
       userId,
       null,

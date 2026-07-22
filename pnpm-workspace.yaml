@@ -21,6 +21,9 @@ overrides:
   follow-redirects: "1.16.0"
   postcss: "8.5.15"
   brace-expansion: "5.0.6"
+  # minimatch@3 (used by @eslint/config-array) needs the CJS 1.x API of
+  # brace-expansion; 1.1.12 keeps the same ReDoS security patch level.
+  "minimatch@3>brace-expansion": "1.1.12"
   tmp: "0.2.7"
   uuid: "11.1.1"
   "@xmldom/xmldom": "0.8.13"

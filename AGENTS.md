@@ -35,6 +35,15 @@ This repository is a Turborepo monorepo for StudyBot, an AI-assisted academic pr
 
 - Always write comments to explain the code that you write and use only // to write them. Do not use multiline comments syntax
 
+## Supabase SDK Client Pattern
+
+- The shared SDK owns the app-facing Supabase client. `packages/supabase/sdk/client/client.ts` holds a module-level singleton created by `initializeSupabase(options)`.
+- Each app calls `initializeSupabase()` exactly once at startup. Web does it at module scope of `apps/web/app/context/AuthContext.tsx` with static `NEXT_PUBLIC_*` env refs.
+- SDK methods (auth/chat/storage/templates) resolve the client internally via `getSupabase()`. Never pass a `SupabaseClient` into SDK functions.
+- Expo (later) will call `initializeSupabase()` with `storage: AsyncStorage` and `detectSessionInUrl: false`.
+- Use `setSupabaseClient()` to inject a custom client (tests, or an `@supabase/ssr` cookie client if SSR auth is ever added) and `resetSupabase()` to clear the registry.
+
+
 ## Editing Guidance
 
 - Make changes as small and localized as possible.

@@ -6,7 +6,6 @@ import type { AttachedFile, FormSubmitEvent } from "@studybot/types";
 import { useRef, useState } from "react";
 import { ArrowUpIcon, X, FileText, Loader2, Square, Plus } from "lucide-react";
 import useChatContext from "@/hooks/chat/useChatContext";
-import { createClient } from "@/utils/supabase/client";
 import { uploadDocument } from "@studybot/api-client";
 import {
   getSupportedExtensions,
@@ -39,9 +38,6 @@ const deriveTitle = (text: string): string => {
 };
 
 const Input = () => {
-  // Lazy-create the browser client inside the component so it is not
-  // instantiated during static prerender when browser APIs are absent.
-  const supabaseClient = createClient();
 
   const { sendMessage, status, stop, prepareForNewThread } = useChatContext();
   const selectedModelId = useModelSelectionStore(
@@ -172,7 +168,7 @@ const Input = () => {
       // instead of clearing it and re-fetching an empty thread from DB.
       prepareForNewThread();
 
-      const newThread = await createChatThread(supabaseClient, user.id, title);
+      const newThread = await createChatThread(user.id, title);
 
       if (!newThread) {
         setUploadError("Failed to create chat session. Please try again.");

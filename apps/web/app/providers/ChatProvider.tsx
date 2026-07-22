@@ -10,7 +10,6 @@ import {
   useCallback,
 } from "react";
 import ChatContext from "@/app/context/ChatContext";
-import { createClient } from "@/utils/supabase/client";
 import { fetchThreadWithMessages } from "@studybot/supabase";
 import useAuth from "@/hooks/auth/useAuth";
 import { useChatStoreStates } from "@/stores/chatStore";
@@ -104,9 +103,7 @@ const ChatProvider = ({ children }: ChatProviderProps) => {
       setIsLoadingMessages(true);
 
       try {
-        const supabaseClient = createClient();
         const { messages: dbMessages } = await fetchThreadWithMessages(
-          supabaseClient,
           threadId,
           user.id,
         );

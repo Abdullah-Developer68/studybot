@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
 import useAuth from "@/hooks/auth/useAuth";
 import { useChatStoreActions, useChatStoreStates } from "@/stores/chatStore";
 import {
@@ -17,7 +16,6 @@ import {
 // threads are created lazily when the user sends their first message.
 const useChatSessions = () => {
   const router = useRouter();
-  const supabaseClient = createClient();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { threads, activeThreadId, isLoading, error } = useChatStoreStates();
   const {
@@ -51,7 +49,7 @@ const useChatSessions = () => {
 
       setLoading(true);
       try {
-        const userThreads = await fetchUserThreads(supabaseClient, user.id);
+        const userThreads = await fetchUserThreads(user.id);
 
         // Just populate the sidebar list. No auto-creation, no auto-selection.
         // The user sees an empty chat interface and the first message they send
@@ -77,7 +75,6 @@ const useChatSessions = () => {
     setError,
     setLoading,
     setThreads,
-    supabaseClient,
     user?.id,
   ]);
 
@@ -92,11 +89,7 @@ const useChatSessions = () => {
       // When creating from the sidebar, derive a title from the user's
       // message if provided, otherwise fall back to a generic title.
       const threadTitle = title || "New Chat";
-      const newThread = await createChatThread(
-        supabaseClient,
-        user.id,
-        threadTitle,
-      );
+      const newThread = await createChatThread(user.id, threadTitle);
 
       if (!newThread) {
         throw new Error("Failed to create chat thread");
@@ -131,7 +124,7 @@ const useChatSessions = () => {
     if (!user?.id) return false;
 
     try {
-      const updated = await updateThreadTitle(supabaseClient, threadId, title);
+      const updated = await updateThreadTitle(threadId, title);
       if (!updated) return false;
 
       updateThreadTitleInStore(threadId, title);
@@ -151,7 +144,7 @@ const useChatSessions = () => {
     if (!user?.id) return false;
 
     try {
-      const success = await deleteThread(supabaseClient, threadId);
+      const success = await deleteThread(threadId);
       if (!success) return false;
 
       removeThread(threadId);

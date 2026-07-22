@@ -6,15 +6,11 @@ import { CloseIcon } from "@/components/tiptap-icons/close-icon";
 import "@/components/tiptap-node/image-upload-node/image-upload-node.scss";
 import { focusNextNode, isValidPosition } from "@/lib/tiptap-utils";
 import { resolveImageUrl } from "@studybot/supabase/storage";
-import { createClient } from "@/utils/supabase/client";
 
 /**
  * Custom hook for managing multiple file uploads with progress tracking and cancellation
  */
 function useFileUpload(options) {
-  // Lazy-create the browser client inside the hook so it is not
-  // instantiated during static prerender when browser APIs are absent.
-  const supabaseClient = createClient();
   const [fileItems, setFileItems] = useState([]);
 
   const uploadFile = async (file) => {
@@ -57,7 +53,6 @@ function useFileUpload(options) {
       );
 
       const { url, error } = await resolveImageUrl(
-        supabaseClient,
         uploadResult,
         {
           bucket: "images",

@@ -16,7 +16,6 @@ import {
 import { Input as InputBase } from "@/components/ui/input";
 import { Label as LabelBase } from "@/components/ui/label";
 import { signUp, signIn, signInWithOAuth } from "@studybot/supabase";
-import { createClient } from "@/utils/supabase/client";
 
 const Button: any = ButtonBase;
 const Card: any = CardBase;
@@ -30,9 +29,6 @@ const Input: any = InputBase;
 const Label: any = LabelBase;
 
 const Auth = () => {
-  // Lazy-create the browser client inside the component so it is not
-  // instantiated during static prerender when browser APIs are absent.
-  const supabaseClient = createClient();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,10 +46,10 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        await signIn(supabaseClient, email, password);
+        await signIn(email, password);
         router.push("/");
       } else {
-        await signUp(supabaseClient, email, password);
+        await signUp(email, password);
         setMessage("Check your email to confirm your account");
       }
     } catch (err: unknown) {
@@ -70,7 +66,7 @@ const Auth = () => {
     setError("");
 
     try {
-      await signInWithOAuth(supabaseClient, "google");
+      await signInWithOAuth("google");
       // OAuth will redirect automatically
     } catch (err: unknown) {
       setError(

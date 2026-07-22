@@ -1,24 +1,28 @@
 "use client";
 
-import {
-  createContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useEffect, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
-import { onAuthStateChange, getUserFromSession } from "@studybot/supabase";
-import { createClient } from "@/utils/supabase/client";
+import {
+  initializeSupabase,
+  onAuthStateChange,
+  getUserFromSession,
+} from "@studybot/supabase";
 import type { AuthContextValue } from "@/types/context.types";
+
+// Create the shared Supabase client once when this module loads. The
+// @studybot/supabase SDK resolves this singleton internally, so feature code
+// never creates or passes a client itself. Static NEXT_PUBLIC refs let
+// Next.js inline the values at build time; fallbacks keep static prerender
+// from crashing when env vars are not configured on the host.
+initializeSupabase({
+  url: process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54321",
+  publishableKey:
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || "placeholder",
+});
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Lazy-create the browser client inside the component so it is not
-  // instantiated during static prerender when browser APIs are absent.
-  const supabaseClient = useMemo(() => createClient(), []);
-
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const hydrateUser = async () => {
       try {
-        const result = await getUserFromSession(supabaseClient);
+        const result = await getUserFromSession();
 
         if (!isMounted) return;
 
@@ -59,24 +63,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Listen for auth state changes
-    const subscription = onAuthStateChange(
-      supabaseClient,
-      async (event, session) => {
-        if (event === "SIGNED_IN") {
-          setUser(session?.user ?? null);
-          setAccessToken(session?.access_token ?? null);
-        } else if (event === "SIGNED_OUT") {
-          setUser(null);
-          setAccessToken(null);
-        } else if (event === "TOKEN_REFRESHED") {
-          setUser(session?.user ?? null);
-          setAccessToken(session?.access_token ?? null);
-        } else if (event === "USER_UPDATED") {
-          setUser(session?.user ?? null);
-          setAccessToken(session?.access_token ?? null);
-        }
-      },
-    );
+    const subscription = onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN") {
+        setUser(session?.user ?? null);
+        setAccessToken(session?.access_token ?? null);
+      } else if (event === "SIGNED_OUT") {
+        setUser(null);
+        setAccessToken(null);
+      } else if (event === "TOKEN_REFRESHED") {
+        setUser(session?.user ?? null);
+        setAccessToken(session?.access_token ?? null);
+      } else if (event === "USER_UPDATED") {
+        setUser(session?.user ?? null);
+        setAccessToken(session?.access_token ?? null);
+      }
+    });
 
     // Cleanup subscription on unmount
     return () => {

@@ -20,6 +20,7 @@
     ".": "./sdk/supabase.methods.ts",
     "./auth": "./sdk/auth/index.ts",
     "./chat": "./sdk/chat/index.ts",
+    "./client": "./sdk/client/index.ts",
     "./storage": "./sdk/storage/index.ts",
     "./templates": "./sdk/templates/index.ts"
   },

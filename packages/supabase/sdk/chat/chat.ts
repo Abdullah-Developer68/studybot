@@ -1,11 +1,9 @@
-import { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabase } from "../client/client";
 import type { ChatThread, ChatMessage } from "../types/chat.sdk.types";
 
 // Makes sure the signed-in user has a profile row before we create a chat session.
-const ensureProfileExists = async (
-  supabase: SupabaseClient,
-  userId: string,
-) => {
+const ensureProfileExists = async (userId: string) => {
+  const supabase = getSupabase();
   const { data: userResult, error: userError } = await supabase.auth.getUser();
 
   if (userError) {
@@ -38,13 +36,13 @@ const ensureProfileExists = async (
 
 // Creates a new chat thread in the database.
 const createChatThread = async (
-  supabase: SupabaseClient,
   userId: string,
   title: string = "New Chat",
   model: string = "poolside/laguna-xs.2:free",
 ): Promise<ChatThread | null> => {
   try {
-    await ensureProfileExists(supabase, userId);
+    const supabase = getSupabase();
+    await ensureProfileExists(userId);
 
     const { data, error } = await supabase
       .from("chat_sessions")
@@ -77,10 +75,8 @@ const createChatThread = async (
 };
 
 // Fetches all threads for a given user from the database.
-const fetchUserThreads = async (
-  supabase: SupabaseClient,
-  userId: string,
-): Promise<ChatThread[]> => {
+const fetchUserThreads = async (userId: string): Promise<ChatThread[]> => {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("chat_sessions")
     .select()
@@ -98,10 +94,10 @@ const fetchUserThreads = async (
 
 // Fetches a thread with its messages from the database.
 const fetchThreadWithMessages = async (
-  supabase: SupabaseClient,
   threadId: string,
   userId: string,
 ): Promise<{ thread: ChatThread | null; messages: ChatMessage[] }> => {
+  const supabase = getSupabase();
   const { data: threadData, error: threadError } = await supabase
     .from("chat_sessions")
     .select()
@@ -135,10 +131,10 @@ const fetchThreadWithMessages = async (
 
 // Update thread title
 const updateThreadTitle = async (
-  supabase: SupabaseClient,
   threadId: string,
   title: string,
 ): Promise<ChatThread | null> => {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("chat_sessions")
     .update({ title, updated_at: new Date().toISOString() })
@@ -155,11 +151,9 @@ const updateThreadTitle = async (
 };
 
 // Archive thread (soft-delete — sets is_archived = true).
-const archiveThread = async (
-  client: SupabaseClient,
-  threadId: string,
-): Promise<boolean> => {
-  const { error } = await client
+const archiveThread = async (threadId: string): Promise<boolean> => {
+  const supabase = getSupabase();
+  const { error } = await supabase
     .from("chat_sessions")
     .update({ is_archived: true })
     .eq("session_id", threadId);
@@ -173,11 +167,9 @@ const archiveThread = async (
 };
 
 // Delete thread (hard-delete — removes the row; messages cascade via FK).
-const deleteThread = async (
-  client: SupabaseClient,
-  threadId: string,
-): Promise<boolean> => {
-  const { error } = await client
+const deleteThread = async (threadId: string): Promise<boolean> => {
+  const supabase = getSupabase();
+  const { error } = await supabase
     .from("chat_sessions")
     .delete()
     .eq("session_id", threadId);
