@@ -1,33 +1,15 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { InitializeSupabaseOptions } from "../types/client.sdk.types";
 
-// Minimal storage contract shared by both platforms: on web, omit storage so
-// supabase-js falls back to localStorage; on React Native, the Expo app
-// passes AsyncStorage here so sessions survive app restarts.
-export type SupabaseStorageAdapter = {
-  getItem: (key: string) => string | null | Promise<string | null>;
-  setItem: (key: string, value: string) => void | Promise<void>;
-  removeItem: (key: string) => void | Promise<void>;
-};
-
-export type InitializeSupabaseOptions = {
-  url: string;
-  publishableKey: string;
-  // Optional storage override — required on React Native (AsyncStorage).
-  storage?: SupabaseStorageAdapter;
-  // Must be false on native since there is no browser URL to parse OAuth
-  // redirects from. Keep the default (true) on web for OAuth to work.
-  detectSessionInUrl?: boolean;
-};
-
-// The registry keeps a creation factory plus the built instance. The factory
-// lets getSupabase() self-heal if a module somehow runs before the app's
-// initializeSupabase() call, so call ordering never breaks consumers.
+// The registry keeps both a client factory and the built instance. The factory
+// stores the createClient() recipe, while the instance caches the actual
+// SupabaseClient so callers reuse the same client until it is reset.
 let clientFactory: (() => SupabaseClient) | null = null;
 let clientInstance: SupabaseClient | null = null;
 
 // Called once by the host app at startup (web: root provider module, Expo:
-// app entry layout). Registers the creation config and eagerly builds the
-// client so misconfiguration fails fast at startup rather than on first use.
+// app entry layout). Registers the createClient() recipe and eagerly builds
+// the client so misconfiguration fails fast at startup rather than on first use.
 const initializeSupabase = (
   options: InitializeSupabaseOptions,
 ): SupabaseClient => {
