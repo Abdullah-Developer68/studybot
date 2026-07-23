@@ -2,6 +2,29 @@
 
 This repository is a Turborepo monorepo for StudyBot, an AI-assisted academic productivity platform. Use this file as the working guide for agents and contributors so changes stay aligned with the current architecture.
 
+## Project Scope
+
+The core of the application are these 3 modes:
+
+### Chat:
+
+-  Standard Chat interface for interacting with AI models.
+- Provides access to models of all provides such a Open AI, DeepSeek etc.
+- This uses RAG, so documents of all types (word, excel etc) can be used in a query.
+
+### Editor mode:
+
+- Generates assignments by taking input from the user.
+- Assignments are not detectable by LLM detectors.
+- It provides analytics about what portion of the text is LLM generated vs Human generated, and provides you with exact percentages 
+- After assignment is done, the content can be exported into any template that you have made.
+- It also provides a toggle to turnoff humanization of assignments for specific needs such as for coding assignments. This saves the user credits.
+
+### Templates:
+
+- Contains a web editor to make templates that can be used in editor mode when exporting assignments.
+- All created templates are stored and can be viewed or stored at any time.
+
 ## Project Shape
 
 - `apps/web` is the primary Next.js app.
@@ -15,7 +38,7 @@ This repository is a Turborepo monorepo for StudyBot, an AI-assisted academic pr
 - Next.js, React, TypeScript, Tailwind CSS, Shadcn UI, TipTap, CodeMirror, and Highlight.js on web.
 - Expo, React Native, and Expo Router on mobile.
 - Supabase for auth, database, storage, and edge functions.
-- AI SDK with OpenRouter and Vercel AI Gateway for model access.
+- Vercel AI SDK with OpenRouter and Vercel AI Gateway for model access.
 - Zustand for client state management where needed.
 - PostHog for analytics and Socket.io where real-time messaging is required.
 

@@ -1,8 +1,25 @@
-# StudyBot
+# StudyBot Scope
 
-StudyBot is a monorepo for an AI-assisted academic productivity platform. It combines document ingestion, structured writing workflows, template-driven generation, AI content analysis, and export tooling in a single system.
+The core of the application are these 3 modes:
 
-The repository is organized as a Turborepo workspace with a Next.js web application, an Expo mobile application, and shared packages for Supabase, utilities, assets, types, and API client code.
+### Chat:
+
+-  Standard Chat interface for interacting with AI models.
+- Provides access to models of all provides such a Open AI, DeepSeek etc.
+- This uses RAG, so documents of all types (word, excel etc) can be used in a query.
+
+### Editor mode:
+
+- Generates assignments by taking input from the user.
+- Assignments are not detectable by LLM detectors.
+- It provides analytics about what portion of the text is LLM generated vs Human generated, and provides you with exact percentages 
+- After assignment is done, the content can be exported into any template that you have made.
+- It also provides a toggle to turnoff humanization of assignments for specific needs such as for coding assignments. This saves the user credits.
+
+### Templates:
+
+- Contains a web editor to make templates that can be used in editor mode when exporting assignments.
+- All created templates are stored and can be viewed or stored at any time.
 
 ## Architecture Overview
 
