@@ -7,7 +7,7 @@ import { smoothStream, streamText } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { withSupabase } from "@supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { SupabaseContext } from "npm:@supabase/server";
+import type { SupabaseContext } from "@supabase/server";
 
 // CORS headers keep browser requests to this edge function working.
 // The browser will send a preflight OPTIONS request before the actual chat POST,
