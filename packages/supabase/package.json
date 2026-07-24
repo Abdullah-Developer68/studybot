@@ -26,10 +26,10 @@
     "./storage": "./sdk/storage/index.ts",
     "./templates": "./sdk/templates/index.ts"
   },
-  "dependencies": {
-    "supabase": "^2.84.4"
-  },
   "peerDependencies": {
     "@supabase/supabase-js": "*"
+  },
+  "devDependencies": {
+    "supabase": "^2.108.0"
   }
 }

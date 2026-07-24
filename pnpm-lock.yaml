@@ -270,8 +270,9 @@ importers:
       '@supabase/supabase-js':
         specifier: '*'
         version: 2.108.2
+    devDependencies:
       supabase:
-        specifier: ^2.84.4
+        specifier: ^2.108.0
         version: 2.108.0
 
   packages/types:
