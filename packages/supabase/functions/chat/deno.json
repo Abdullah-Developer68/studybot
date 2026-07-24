@@ -3,6 +3,9 @@
   "compilerOptions": {
     "lib": ["deno.window"]
   },
+  "lock": {
+    "path": "./deno.lock"
+  },
   "imports": {
     "ai": "npm:ai@6.0.3",
     "@/": "../",

@@ -3,6 +3,9 @@
   "compilerOptions": {
     "lib": ["deno.window"]
   },
+  "lock": {
+    "path": "./deno.lock"
+  },
   "imports": {
     "@/": "../",
     "@studybot/types": "../../../types/index.types.ts",
