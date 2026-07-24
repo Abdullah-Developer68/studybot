@@ -10,11 +10,13 @@
     "functions:serve:excel": "supabase functions serve parse-excel",
     "functions:serve:powerpoint": "supabase functions serve parse-powerpoint",
     "functions:serve:text": "supabase functions serve parse-text",
-    "functions:deploy:pdf": "supabase functions deploy parse-pdf --project-ref kmhsyvcjoctqyyaarjmu",
-    "functions:deploy:word": "supabase functions deploy parse-word --project-ref kmhsyvcjoctqyyaarjmu",
-    "functions:deploy:excel": "supabase functions deploy parse-excel --project-ref kmhsyvcjoctqyyaarjmu",
-    "functions:deploy:powerpoint": "supabase functions deploy parse-powerpoint --project-ref kmhsyvcjoctqyyaarjmu",
-    "functions:deploy:text": "supabase functions deploy parse-text --project-ref kmhsyvcjoctqyyaarjmu"
+    "functions:deploy": "bash scripts/deploy-functions.sh",
+    "functions:deploy:chat": "bash scripts/deploy-functions.sh chat",
+    "functions:deploy:pdf": "bash scripts/deploy-functions.sh parse-pdf",
+    "functions:deploy:word": "bash scripts/deploy-functions.sh parse-word",
+    "functions:deploy:excel": "bash scripts/deploy-functions.sh parse-excel",
+    "functions:deploy:powerpoint": "bash scripts/deploy-functions.sh parse-powerpoint",
+    "functions:deploy:text": "bash scripts/deploy-functions.sh parse-text"
   },
   "exports": {
     ".": "./sdk/supabase.methods.ts",

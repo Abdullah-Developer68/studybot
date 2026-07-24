@@ -1,11 +1,13 @@
 import type { ModelMessage } from "ai";
 import type {
-  IncomingMessage,
   AllowedRoles,
+  IncomingMessage,
 } from "@/types/chat.function.types.ts";
-import { streamText, smoothStream } from "ai";
+import { smoothStream, streamText } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { getSupabaseClient } from "@/_shared/supabaseClient.ts";
+import { withSupabase } from "@supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseContext } from "npm:@supabase/server";
 
 // CORS headers keep browser requests to this edge function working.
 // The browser will send a preflight OPTIONS request before the actual chat POST,
@@ -95,12 +97,11 @@ const normalizeMessages = (messages: IncomingMessage[]): ModelMessage[] => {
       continue;
     }
 
-    const content =
-      typeof message.text === "string"
-        ? message.text.trim()
-        : typeof message.content === "string"
-          ? message.content.trim()
-          : "";
+    const content = typeof message.text === "string"
+      ? message.text.trim()
+      : typeof message.content === "string"
+      ? message.content.trim()
+      : "";
     if (!content) {
       console.warn("Skipped message with empty content. Message:", message);
       continue;
@@ -114,7 +115,7 @@ const normalizeMessages = (messages: IncomingMessage[]): ModelMessage[] => {
 
 // Helper to store message in database
 const storeMessage = async (
-  supabase: ReturnType<typeof getSupabaseClient>,
+  supabase: SupabaseClient,
   sessionId: string,
   role: string,
   content: string,
@@ -143,7 +144,7 @@ const storeMessage = async (
 // never blocks or locks the response stream returned to the client.
 const persistAssistantReply = async (
   stream: ReadableStream<Uint8Array>,
-  supabase: ReturnType<typeof getSupabaseClient>,
+  supabase: SupabaseClient,
   threadId: string,
 ) => {
   const reader = stream.getReader();
@@ -195,144 +196,156 @@ const persistAssistantReply = async (
   }
 };
 
-Deno.serve(async (req: Request) => {
-  // Preflight requests must return immediately for browser clients.
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  // Only POST is supported because the chat client sends message payloads.
-  if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
-  }
-
-  try {
-    // The OpenRouter key is injected as a Supabase secret at deploy time.
-    const openRouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
-    if (!openRouterApiKey) {
-      return jsonResponse(
-        { error: "OPENROUTER_API_KEY is not configured" },
-        500,
-      );
+// withSupabase verifies the caller's session JWT (auth: "user") against the
+// project's JWKS before the handler runs, answers OPTIONS preflights before
+// the auth check, and returns a 401 automatically on missing or invalid
+// credentials. ctx.supabase arrives already scoped to the caller's RLS policies.
+export default {
+  fetch: withSupabase({ auth: "user" }, async (req: Request, ctx: SupabaseContext) => {
+    // Safety net only — the wrapper already answers preflights before auth.
+    if (req.method === "OPTIONS") {
+      return new Response("ok", { headers: corsHeaders });
     }
 
-    // Initialize Supabase client using shared helper (respects RLS with user's auth token)
-    const supabase = getSupabaseClient(req);
-
-    // useChat sends a JSON body containing the conversation history.
-    // We read the messages array, model, and threadId.
-    const body = (await req.json()) as {
-      messages?: IncomingMessage[];
-      model?: string;
-      threadId?: string;
-    };
-
-    const incomingMessages = body?.messages;
-    const threadId = body?.threadId;
-    const selectedModel = supportedModels.has(body?.model ?? "")
-      ? body.model!
-      : DEFAULT_MODEL;
-
-    // Validate required inputs
-    if (!Array.isArray(incomingMessages) || incomingMessages.length === 0) {
-      return jsonResponse({ error: "Messages are required" }, 400);
+    // Only POST is supported because the chat client sends message payloads.
+    if (req.method !== "POST") {
+      return jsonResponse({ error: "Method not allowed" }, 405);
     }
 
-    if (!threadId) {
-      return jsonResponse({ error: "threadId is required" }, 400);
-    }
-
-    console.log(
-      "Processing",
-      incomingMessages.length,
-      "incoming messages for thread:",
-      threadId,
-    );
-
-    // Convert the loose client payload into the exact message format the AI SDK expects.
-    const transformedMessages = normalizeMessages(incomingMessages);
-
-    if (transformedMessages.length === 0) {
-      console.error(
-        "No messages survived normalization. Raw input:",
-        incomingMessages,
-      );
-      return jsonResponse(
-        { error: "Messages must contain non-empty content" },
-        400,
-      );
-    }
-
-    // Store the user's message (the last message in the array)
-    const lastMessage = transformedMessages[transformedMessages.length - 1];
-    if (lastMessage.role === "user") {
-      console.log("Type of LastMessage.content:", typeof lastMessage.content);
-      // Removed the usage of await so TTFT can be improved.
-      storeMessage(
-        supabase,
-        threadId,
-        "user",
-        String(lastMessage.content),
-      ).catch((error) => {
-        console.error(
-          "Failed to store user message, but continuing with AI response:",
-          error,
+    try {
+      // The OpenRouter key is injected as a Supabase secret at deploy time.
+      const openRouterApiKey = Deno.env.get("OPENROUTER_API_KEY");
+      if (!openRouterApiKey) {
+        return jsonResponse(
+          { error: "OPENROUTER_API_KEY is not configured" },
+          500,
         );
+      }
+
+      // RLS-scoped client for the verified user, provided by withSupabase.
+      const supabase = ctx.supabase;
+
+      // Verified identity from the JWT — no extra auth round-trip needed.
+      console.log("Authenticated user:", ctx.userClaims?.id);
+
+      // useChat sends a JSON body containing the conversation history.
+      // We read the messages array, model, and threadId.
+      const body = (await req.json()) as {
+        messages?: IncomingMessage[];
+        model?: string;
+        threadId?: string;
+      };
+
+      const incomingMessages = body?.messages;
+      const threadId = body?.threadId;
+      const selectedModel = supportedModels.has(body?.model ?? "")
+        ? body.model!
+        : DEFAULT_MODEL;
+
+      // Validate required inputs
+      if (!Array.isArray(incomingMessages) || incomingMessages.length === 0) {
+        return jsonResponse({ error: "Messages are required" }, 400);
+      }
+
+      if (!threadId) {
+        return jsonResponse({ error: "threadId is required" }, 400);
+      }
+
+      console.log(
+        "Processing",
+        incomingMessages.length,
+        "incoming messages for thread:",
+        threadId,
+      );
+
+      // Convert the loose client payload into the exact message format the AI SDK expects.
+      const transformedMessages = normalizeMessages(incomingMessages);
+
+      if (transformedMessages.length === 0) {
+        console.error(
+          "No messages survived normalization. Raw input:",
+          incomingMessages,
+        );
+        return jsonResponse(
+          { error: "Messages must contain non-empty content" },
+          400,
+        );
+      }
+
+      // Store the user's message (the last message in the array)
+      const lastMessage = transformedMessages[transformedMessages.length - 1];
+      if (lastMessage.role === "user") {
+        console.log("Type of LastMessage.content:", typeof lastMessage.content);
+        // Removed the usage of await so TTFT can be improved.
+        storeMessage(
+          supabase,
+          threadId,
+          "user",
+          String(lastMessage.content),
+        ).catch((error) => {
+          console.error(
+            "Failed to store user message, but continuing with AI response:",
+            error,
+          );
+        });
+      }
+
+      const openrouter = createOpenRouter({
+        apiKey: openRouterApiKey,
       });
+
+      // streamText returns an AI SDK stream response that can be forwarded to the client.
+      // This is what gives you token-by-token streaming instead of waiting for a full response.
+      const result = streamText({
+        model: openrouter(selectedModel),
+        messages: transformedMessages,
+        experimental_transform: smoothStream(),
+      });
+
+      const streamResponse = result.toUIMessageStreamResponse();
+
+      // Rebuild headers so the streaming response still includes CORS metadata.
+      // Without this, the browser could block the streamed response even though the server succeeded.
+      const headers = new Headers(streamResponse.headers);
+
+      Object.entries(corsHeaders).forEach(([key, value]) => {
+        headers.set(key, value);
+      });
+
+      // Tee the response body so the client gets one branch (streamed live)
+      // and the other branch is consumed in the background to persist the
+      // assistant's reply. tee() locks streamResponse.body but returns two
+      // independent branches, so we return bodyForClient — not the locked
+      // original — and never await the storage work before responding.
+      // The previous implementation accessed result.text, which shares the
+      // same underlying stream as toUIMessageStreamResponse() and locks it,
+      // causing a "ReadableStream is locked or disturbed" TypeError on every
+      // request. Teeing the already-created response body avoids that entirely.
+      const streamBody = streamResponse.body;
+      if (!streamBody) {
+        return jsonResponse({ error: "Failed to create stream" }, 500);
+      }
+
+      const [bodyForClient, bodyForStorage] = streamBody.tee();
+
+      // Fire-and-forget: persist the assistant reply after the stream finishes.
+      persistAssistantReply(bodyForStorage, supabase, threadId).catch(
+        (error) => {
+          console.error("Failed to persist assistant message:", error);
+        },
+      );
+
+      return new Response(bodyForClient, {
+        status: streamResponse.status,
+        statusText: streamResponse.statusText,
+        headers,
+      });
+    } catch (error: unknown) {
+      const message = error instanceof Error
+        ? error.message
+        : "Internal Server Error";
+      console.error("Chat function error:", message);
+      return jsonResponse({ error: message }, 500);
     }
-
-    const openrouter = createOpenRouter({
-      apiKey: openRouterApiKey,
-    });
-
-    // streamText returns an AI SDK stream response that can be forwarded to the client.
-    // This is what gives you token-by-token streaming instead of waiting for a full response.
-    const result = streamText({
-      model: openrouter(selectedModel),
-      messages: transformedMessages,
-      experimental_transform: smoothStream(),
-    });
-
-    const streamResponse = result.toUIMessageStreamResponse();
-
-    // Rebuild headers so the streaming response still includes CORS metadata.
-    // Without this, the browser could block the streamed response even though the server succeeded.
-    const headers = new Headers(streamResponse.headers);
-
-    Object.entries(corsHeaders).forEach(([key, value]) => {
-      headers.set(key, value);
-    });
-
-    // Tee the response body so the client gets one branch (streamed live)
-    // and the other branch is consumed in the background to persist the
-    // assistant's reply. tee() locks streamResponse.body but returns two
-    // independent branches, so we return bodyForClient — not the locked
-    // original — and never await the storage work before responding.
-    // The previous implementation accessed result.text, which shares the
-    // same underlying stream as toUIMessageStreamResponse() and locks it,
-    // causing a "ReadableStream is locked or disturbed" TypeError on every
-    // request. Teeing the already-created response body avoids that entirely.
-    const streamBody = streamResponse.body;
-    if (!streamBody) {
-      return jsonResponse({ error: "Failed to create stream" }, 500);
-    }
-
-    const [bodyForClient, bodyForStorage] = streamBody.tee();
-
-    // Fire-and-forget: persist the assistant reply after the stream finishes.
-    persistAssistantReply(bodyForStorage, supabase, threadId).catch((error) => {
-      console.error("Failed to persist assistant message:", error);
-    });
-
-    return new Response(bodyForClient, {
-      status: streamResponse.status,
-      statusText: streamResponse.statusText,
-      headers,
-    });
-  } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "Internal Server Error";
-    console.error("Chat function error:", message);
-    return jsonResponse({ error: message }, 500);
-  }
-});
+  }),
+};

@@ -394,3 +394,27 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 # declarative_schema_path = "./declarative"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+# Edge Function auth modes (enforced in-function by `withSupabase` from
+# @supabase/server — see each function's deno.json and index.ts).
+# `chat` keeps the platform default verify_jwt = true: it only accepts user
+# JWTs (auth: "user"), so the gateway and the in-function JWKS check give
+# defense-in-depth.
+# The parse-* functions accept either a user JWT or the publishable key on the
+# apikey header (auth: ["user", "publishable"]). Their platform JWT check is
+# disabled so apikey-only callers can reach the function — credentials are
+# still verified inside every function by withSupabase before the handler runs.
+[functions.parse-pdf]
+verify_jwt = false
+
+[functions.parse-word]
+verify_jwt = false
+
+[functions.parse-excel]
+verify_jwt = false
+
+[functions.parse-powerpoint]
+verify_jwt = false
+
+[functions.parse-text]
+verify_jwt = false

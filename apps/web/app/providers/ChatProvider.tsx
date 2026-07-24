@@ -25,7 +25,7 @@ type ChatProviderProps = {
 
 // Provides access to the context
 const ChatProvider = ({ children }: ChatProviderProps) => {
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   // Read activeThreadId from the store — set by the layout when the URL
   // param changes, or by Input when creating a new thread from a message.
   const { activeThreadId: threadId } = useChatStoreStates();
@@ -46,7 +46,10 @@ const ChatProvider = ({ children }: ChatProviderProps) => {
   const transport = new DefaultChatTransport({
     api: chatApi || "/api/chat",
     headers: {
-      Authorization: `Bearer ${supabaseKey || ""}`,
+      // The chat edge function uses auth: "user", so Authorization must carry
+      // the session access token. The publishable key goes on the apikey
+      // header only — sending it as the bearer token fails the JWT check.
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       apikey: supabaseKey || "",
     },
   });

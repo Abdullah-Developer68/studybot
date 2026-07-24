@@ -85,10 +85,34 @@ The core of the application are these 3 modes:
 
 - All Edge Functions are located in `packages/supabase/functions/`.
 - The `_shared/` folder (prefixed with underscore) contains reusable helpers that get bundled into each function but are not deployed as standalone functions.
-- Use `getSupabaseClient(req)` for user-authenticated operations (respects RLS).
-- Use `getAdminClient()` only for admin tasks that bypass RLS.
-- Import the `deno.json` alias `@supabase/supabase-js` for clean imports.
-- Frontend calls Edge Functions via `supabase.functions.invoke()`, which automatically sends the user's auth token in the request headers.
+- Every function uses the module-worker entry point `export default { fetch: withSupabase({ auth }, handler) }` from `@supabase/server` (aliased in each function's `deno.json`). Do not use bare `Deno.serve()` for new functions.
+- Declare the auth mode per function via the `auth` option:
+  - `auth: "user"` for signed-in user calls — requires the session access token as `Authorization: Bearer <jwt>` (e.g. `chat`).
+  - `auth: ["user", "publishable"]` to accept users via JWT and other callers via the publishable key on the `apikey` header (e.g. the `parse-*` functions). Modes are tried in order; `ctx.authMode` tells you which matched. Note: a request carrying a malformed/expired JWT is rejected immediately and never falls through to `publishable`.
+  - `auth: "secret"` for service-to-service calls (secret key on `apikey`), `auth: "secret:<name>"` to pin one named key.
+  - `auth: "none"` only for public endpoints or signed webhooks — the handler must verify the provider signature itself.
+- Use `ctx.supabase` for queries that must respect RLS (scoped to the caller) and `ctx.supabaseAdmin` for privileged work (bypasses RLS). `ctx.userClaims` / `ctx.jwtClaims` carry the verified JWT identity with no extra network call. Never hand-roll clients from `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` — the legacy `_shared/supabaseClient.ts` helpers were removed.
+- `withSupabase` answers CORS preflights and adds CORS headers before the auth check, so OPTIONS requests never fail auth. Keep the existing `corsHeaders` blocks on responses.
+- Platform gateway checks live in `packages/supabase/config.toml`: `chat` keeps the default `verify_jwt = true` (defense-in-depth on top of the in-function JWKS check); the `parse-*` functions set `verify_jwt = false` so apikey-only callers reach the function (credentials are still verified inside by `withSupabase`). The SDK reads auto-provisioned env (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEYS`, `SUPABASE_SECRET_KEYS`, `SUPABASE_JWKS`) — zero config on the platform and in local CLI.
+- Frontend calls Edge Functions with plain HTTP (axios / AI SDK transport) against `${supabaseUrl}/functions/v1/<name>`: always send the publishable key on `apikey`, and send the session access token on `Authorization: Bearer` for functions using `auth: "user"`. Never send the publishable key as the bearer token — it is not a JWT and will be rejected.
+
+## Deploying Edge Functions
+
+- The hosted project ref is stored as `PROJ_REF` in `packages/supabase/.env.local` (git-ignored — never hardcode it in the repo, scripts, or docs).
+- Deploy every function: `pnpm --filter @studybot/supabase functions:deploy`.
+- Deploy one function: `pnpm --filter @studybot/supabase functions:deploy:chat` (also `:pdf`, `:word`, `:excel`, `:powerpoint`, `:text`).
+- Both run `bash packages/supabase/scripts/deploy-functions.sh [name...]`, which reads `PROJ_REF` from the env file and executes `supabase functions deploy <name> --project-ref "$PROJ_REF"` with the workspace-local Supabase CLI. Run it whenever asked to deploy serverless functions.
+- Create a new function locally from `packages/supabase`: `supabase functions new <name>`, then add it to `package.json` deploy scripts if it should be deployable on its own.
+- Invoke a deployed function (the `PROJ_REF` value comes from the env file):
+
+  ```bash
+  curl -L -X POST "https://${PROJ_REF}.supabase.co/functions/v1/<name>" \
+    -H "apikey: <publishable key>" \
+    -H "Authorization: Bearer <user session access token>" \
+    --data '{"name":"Functions"}'
+  ```
+
+- Deploys require an authenticated CLI: run `supabase login` once, export `SUPABASE_ACCESS_TOKEN` in the environment, or add `SUPABASE_ACCESS_TOKEN = <token>` to `packages/supabase/.env.local` (the script picks it up automatically). Create tokens at https://supabase.com/dashboard/account/tokens.
 
 ## Notes for Supabase and Env Work
 

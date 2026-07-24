@@ -1,13 +1,13 @@
 {
   "nodeModulesDir": "auto",
   "compilerOptions": {
-    "lib": ["deno.window"],
-    "types": ["https://deno.land/std@0.224.0/types.d.ts"]
+    "lib": ["deno.window"]
   },
   "imports": {
     "ai": "npm:ai@6.0.3",
     "@/": "../",
     "@openrouter/ai-sdk-provider": "npm:@openrouter/ai-sdk-provider@2.0.0",
-    "@supabase/supabase-js": "npm:@supabase/supabase-js@2.97.0"
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2.97.0",
+    "@supabase/server": "npm:@supabase/server@1.4.0"
   }
 }

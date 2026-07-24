@@ -5,6 +5,7 @@
     "strict": true
   },
   "imports": {
-    "@supabase/supabase-js": "npm:@supabase/supabase-js@2.97.0"
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2.97.0",
+    "@supabase/server": "npm:@supabase/server@1.4.0"
   }
 }
