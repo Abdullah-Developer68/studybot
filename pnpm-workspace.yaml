@@ -13,6 +13,7 @@ allowBuilds:
   '@parcel/watcher': true
   es5-ext: true
   sharp: true
+  supabase: true
   tesseract.js: true
   unrs-resolver: true
 
