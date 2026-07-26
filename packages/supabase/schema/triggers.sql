@@ -1,5 +1,5 @@
 -- ============================================
--- 8. PROFILE BOOTSTRAP ON SIGNUP
+-- PROFILE BOOTSTRAP ON SIGNUP
 -- ============================================
 
 -- Backfill profiles for any existing auth users that do not yet have a profile row.

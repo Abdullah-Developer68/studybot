@@ -16,7 +16,13 @@
     "functions:deploy:word": "bash scripts/deploy-functions.sh parse-word",
     "functions:deploy:excel": "bash scripts/deploy-functions.sh parse-excel",
     "functions:deploy:powerpoint": "bash scripts/deploy-functions.sh parse-powerpoint",
-    "functions:deploy:text": "bash scripts/deploy-functions.sh parse-text"
+    "functions:deploy:text": "bash scripts/deploy-functions.sh parse-text",
+    "db:apply-schema": "bash scripts/apply-schema.sh",
+    "db:diff": "supabase db diff --linked",
+    "db:diff:local": "supabase db diff",
+    "db:diff:file": "bash scripts/apply-schema.sh",
+    "db:reset": "supabase db reset",
+    "db:push": "supabase db push --linked"
   },
   "exports": {
     ".": "./sdk/supabase.methods.ts",
