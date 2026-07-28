@@ -59,25 +59,28 @@ export function getShikiVersion(): number {
 
 // Kicks off highlighter creation exactly once and always returns the same
 // promise, so concurrent callers share a single WASM/theme load.
-export function ensureShikiHighlighter(): Promise<Highlighter> {
-  if (highlighter) return Promise.resolve(highlighter);
+export async function ensureShikiHighlighter(): Promise<Highlighter> {
+  if (highlighter) return highlighter;
   if (!highlighterPromise) {
-    highlighterPromise = createHighlighter({
-      themes: [SHIKI_THEME],
-      langs: [],
-    })
-      .then((h) => {
+    // An IIFE is used so highlighterPromise is assigned synchronously —
+    // concurrent callers see the cached promise before the first await.
+    highlighterPromise = (async () => {
+      try {
+        const h = await createHighlighter({
+          themes: [SHIKI_THEME],
+          langs: [],
+        });
         highlighter = h;
         notifyShikiListeners();
         return h;
-      })
-      .catch((error) => {
+      } catch (error) {
         // Reset so the next code block mount retries creation, and log so
         // a broken WASM load is visible instead of silently unhighlighted.
         highlighterPromise = null;
         console.error("Failed to initialize the Shiki highlighter:", error);
         throw error;
-      });
+      }
+    })();
   }
   return highlighterPromise;
 }
