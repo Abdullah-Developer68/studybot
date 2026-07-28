@@ -6,6 +6,11 @@ type CodeRendererProps = ComponentPropsWithoutRef<"code"> & {
   node?: unknown;
 };
 
+// props for the custom `pre` renderer in the AI chat markdown (Shiki highlighting)
+type PreRendererProps = ComponentPropsWithoutRef<"pre"> & {
+  node?: unknown;
+};
+
 type ChatThread = {
   session_id: string;
   profile_id: string;
@@ -25,4 +30,4 @@ type ChatMessage = {
   created_at: string;
 };
 
-export type { ChatThread, ChatMessage, CodeRendererProps };
+export type { ChatThread, ChatMessage, CodeRendererProps, PreRendererProps };

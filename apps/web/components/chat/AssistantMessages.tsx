@@ -9,8 +9,8 @@ import { assets } from "@studybot/assets/assets";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import rehypeHighlight from "rehype-highlight";
 import type { CodeRendererProps } from "@studybot/types";
+import ShikiPre from "./ShikiPre";
 
 // Renders a single assistant message. Uses useStreamingContent to bypass
 // React batching for the streaming message so text appears word-by-word at
@@ -22,7 +22,6 @@ const AssistantMessage = ({
   messagesLength,
   isStreaming,
   activeModelName,
-  lowlight,
   copiedId,
   onCopy,
 }: {
@@ -31,7 +30,6 @@ const AssistantMessage = ({
   messagesLength: number;
   isStreaming: boolean;
   activeModelName: string;
-  lowlight: any;
   copiedId: string | null;
   onCopy: (id: string, text: string) => void;
 }) => {
@@ -68,13 +66,9 @@ const AssistantMessage = ({
           <div className="prose prose-sm prose-invert max-w-none wrap-break-words">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
-              rehypePlugins={[[rehypeHighlight, { lowlight }]]}
               components={{
-                pre: ({ node: _node, ...props }) => (
-                  <div className="overflow-auto my-2 rounded-lg bg-zinc-900 p-4">
-                    <pre {...props} />
-                  </div>
-                ),
+                // ShikiPre highlights fenced code blocks with Shiki.
+                pre: ShikiPre,
                 code: ({
                   node: _node,
                   ...props

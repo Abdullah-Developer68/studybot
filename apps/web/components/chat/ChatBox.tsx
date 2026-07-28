@@ -13,20 +13,16 @@ import Image from "next/image";
 import { assets } from "@studybot/assets/assets";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import rehypeHighlight from "rehype-highlight";
-import "highlight.js/styles/github-dark.css";
 import { useState } from "react";
 import WelcomeScreen from "./WelcomeScreen";
 import { useChatStoreStates } from "@/stores/chatStore";
-import { useHighlightLanguages } from "@/hooks/chat/useHighlightLanguages";
 import AssistantMessage from "./AssistantMessages";
+import ShikiPre from "./ShikiPre";
 
 const ChatBox = () => {
   const { messages, status, error, isLoadingMessages, setMessages } =
     useChatContext();
   const { threads, activeThreadId } = useChatStoreStates();
-  // Lazy-loads highlight.js language grammars based on code blocks in messages
-  const { lowlight } = useHighlightLanguages(messages, status);
   // submitted = waiting for the first token; streaming = response is arriving.
   const isSubmitted = status === "submitted";
   const isStreaming = status === "streaming";
@@ -231,14 +227,10 @@ const ChatBox = () => {
                           <div className="prose prose-sm prose-invert max-w-none wrap-break-words">
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
-                              rehypePlugins={[[rehypeHighlight, { lowlight }]]}
                               components={{
                                 // `node` is an object representing a markdown element in the parsed tree.
-                                pre: ({ node: _node, ...props }) => (
-                                  <div className="overflow-auto my-2 rounded-lg bg-zinc-900 p-4">
-                                    <pre {...props} />
-                                  </div>
-                                ),
+                                // ShikiPre highlights fenced code blocks with Shiki.
+                                pre: ShikiPre,
                                 code: ({
                                   node: _node,
                                   ...props
@@ -315,7 +307,6 @@ const ChatBox = () => {
                   index={index}
                   isStreaming={isStreaming}
                   activeModelName={activeModelName}
-                  lowlight={index !== messages.length - 1}
                   copiedId={copiedId}
                   onCopy={() => setCopiedId(message.id ?? String(index))}
                 />

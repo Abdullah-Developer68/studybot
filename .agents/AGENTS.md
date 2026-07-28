@@ -35,7 +35,7 @@ The core of the application are these 3 modes:
 
 ## Current Stack
 
-- Next.js, React, TypeScript, Tailwind CSS, Shadcn UI, TipTap, CodeMirror, and Highlight.js on web.
+- Next.js, React, TypeScript, Tailwind CSS, Shadcn UI, TipTap, CodeMirror, Highlight.js (TipTap editor code blocks only), and Shiki (chat markdown syntax highlighting) on web.
 - Expo, React Native, and Expo Router on mobile.
 - Supabase for auth, database, storage, and edge functions.
 - Vercel AI SDK with OpenRouter and Vercel AI Gateway for model access.
