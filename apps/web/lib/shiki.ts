@@ -33,7 +33,7 @@ const PLAIN_LANGUAGES = new Set(["text", "txt", "plain", "plaintext"]);
 
 // Due to React compiler Parent (ReactMarkdown) is memoized, so props don't change,
 // and the child has no internal state change to trigger a re-render. The useSyncExternalStore hook directly
-// triggers a re-render on the child component when the grammar/highlighter finishes 
+// triggers a re-render on the child component when the grammar/highlighter finishes
 // loading, bypassing the parent entirely.
 const listeners = new Set<() => void>();
 let shikiVersion = 0;
@@ -75,7 +75,7 @@ export async function ensureShikiHighlighter(): Promise<Highlighter> {
     notifyShikiListeners();
     return h;
   } catch (error) {
-    // Reset so the next code block mount retries creation, and log so
+    // Reset so the next code block mount retries creation, and log, so
     // a broken WASM load is visible instead of silently unhighlighted.
     highlighterPromise = null;
     console.error("Failed to initialize the Shiki highlighter:", error);
@@ -105,8 +105,13 @@ export function loadShikiLanguage(lang: string): Promise<void> {
   const existing = languagePromises.get(lang);
   if (existing) return existing;
 
-  const promise = ensureShikiHighlighter()
-    .then(async (h) => {
+  // Invoke an async routine and cache its promise synchronously, before the
+  // first await resolves, so concurrent callers share a single grammar fetch.
+  // This can not passed to languagePromises.set() as it accepts a Promise<void>.
+  // We can first call the function (await promise) get the resolved object and pass this, but
+  const promise = (async () => {
+    try {
+      const h = await ensureShikiHighlighter();
       // Re-check: another caller may have loaded it while we awaited.
       if (loadedLanguages.has(lang)) return;
       try {
@@ -119,15 +124,14 @@ export function loadShikiLanguage(lang: string): Promise<void> {
         // render; the block still renders, just without highlighting.
         failedLanguages.add(lang);
       }
-    })
-    .catch(() => {
+    } catch {
       // Highlighter creation itself failed (already logged above) — leave
       // the language unmarked so a later retry can still succeed.
-    })
-    .finally(() => {
+    } finally {
       languagePromises.delete(lang);
       notifyShikiListeners();
-    });
+    }
+  })();
 
   languagePromises.set(lang, promise);
   return promise;
