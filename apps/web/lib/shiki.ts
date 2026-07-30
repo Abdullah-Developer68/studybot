@@ -105,11 +105,7 @@ export function loadShikiLanguage(lang: string): Promise<void> {
   const existing = languagePromises.get(lang);
   if (existing) return existing;
 
-  // Invoke an async routine and cache its promise synchronously, before the
-  // first await resolves, so concurrent callers share a single grammar fetch.
-  // This can not passed to languagePromises.set() as it accepts a Promise<void>.
-  // We can first call the function (await promise) get the resolved object and pass this, but
-  const promise = (async () => {
+  const loadGrammar = async () => {
     try {
       const h = await ensureShikiHighlighter();
       // Re-check: another caller may have loaded it while we awaited.
@@ -125,14 +121,19 @@ export function loadShikiLanguage(lang: string): Promise<void> {
         failedLanguages.add(lang);
       }
     } catch {
-      // Highlighter creation itself failed (already logged above) — leave
+     // Highlighter creation itself failed (already logged above) — leave
       // the language unmarked so a later retry can still succeed.
     } finally {
       languagePromises.delete(lang);
       notifyShikiListeners();
     }
-  })();
+  };
 
-  languagePromises.set(lang, promise);
-  return promise;
+  // Call WITHOUT await: returns the pending promise synchronously so we can
+  // cache it before the first await resolves. This gets passed to languagePromises.set() and
+  // concurrent callers share the same promise instead of triggering multiple fetches.
+  //IIFE can also be used to create a promise that is immediately invoked and returned, allowing for the caching of the promise before any await statements are resolved. This ensures that concurrent calls to loadShikiLanguage for the same language will share the same promise, preventing multiple fetches of the same grammar.
+  const grammarPromise = loadGrammar();
+  languagePromises.set(lang, grammarPromise);
+  return grammarPromise;
 }
