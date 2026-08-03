@@ -17,6 +17,15 @@ allowBuilds:
   tesseract.js: true
   unrs-resolver: true
 
+peerDependencyRules:
+  allowedVersions:
+    # @openrouter/ai-sdk-provider pins peer ai@6.0.3 exactly, but web uses
+    # ai@6.0.212 to match the copy @ai-sdk/react bundles (two copies of ai
+    # produce incompatible UIMessage types). The provider is only used by the
+    # Deno chat edge function, which pins its own npm:ai@6.0.3, so the newer
+    # web copy is safe.
+    ai: "6"
+
 overrides:
   axios: "1.16.1"
   follow-redirects: "1.16.0"

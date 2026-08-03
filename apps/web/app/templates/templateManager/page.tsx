@@ -178,11 +178,11 @@ const TemplateManager = () => {
       return;
     }
 
-    if (result.template) {
-      setTemplates((currentTemplates) => [
-        result.template,
-        ...currentTemplates,
-      ]);
+    // Capture into a local const — TypeScript does not preserve property
+    // narrowing (result.template) inside the setState callback.
+    const newTemplate = result.template;
+    if (newTemplate) {
+      setTemplates((currentTemplates) => [newTemplate, ...currentTemplates]);
     }
   };
 

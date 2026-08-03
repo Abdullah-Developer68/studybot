@@ -1,5 +1,6 @@
 "use client";
 import useChatContext from "@/hooks/chat/useChatContext";
+import { isTextUIPart, type UIMessage } from "ai";
 import type { CodeRendererProps } from "@studybot/types";
 import {
   FileText,
@@ -18,6 +19,10 @@ import WelcomeScreen from "./WelcomeScreen";
 import { useChatStoreStates } from "@/stores/chatStore";
 import AssistantMessage from "./AssistantMessages";
 import ShikiPre from "./ShikiPre";
+
+// Messages rendered here come from useChat (UIMessage), but the edit flow
+// below stuffs a plain `content` string onto user messages.
+type RenderableMessage = UIMessage & { content?: string };
 
 const ChatBox = () => {
   const { messages, status, error, isLoadingMessages, setMessages } =
@@ -109,15 +114,17 @@ const ChatBox = () => {
   }
 
   // Helper function to extract text content from a message
-  const getMessageContent = (message) => {
+  const getMessageContent = (message: RenderableMessage) => {
     // User messages have content as a string
     if (typeof message.content === "string") {
       return message.content;
     }
     // Assistant messages have parts array instead of content
     if (Array.isArray(message.parts)) {
+      // isTextUIPart is the AI SDK's type guard, so .text is accessible
+      // on the filtered parts.
       return message.parts
-        .filter((part) => part.type === "text")
+        .filter(isTextUIPart)
         .map((part) => part.text)
         .join("");
     }
@@ -125,7 +132,7 @@ const ChatBox = () => {
   };
 
   // Helper function to extract user-visible content (hide document content)
-  const getUserDisplayContent = (content) => {
+  const getUserDisplayContent = (content: string) => {
     // Check if message contains multiple documents (separated by ---)
     const multiDocPattern =
       /^((?:\[Document: .+?\]\n\n[\s\S]*?(?:\n\n---\n\n)?)+)\[User Request\]: ([\s\S]*)$/;

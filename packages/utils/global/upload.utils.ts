@@ -5,6 +5,7 @@ import {
 } from "./file-utils";
 import {
   UploadedFileDataSchema,
+  type AttachedFile,
   type ParseFileArgs,
   type UploadFilesWithProgressArgs,
   type UploadedFileData,
@@ -86,13 +87,15 @@ const parseFile = async ({ file, invokeEdgeFunction }: ParseFileArgs) => {
 };
 
 // Convert the upload response into the app-level attached file shape.
-const mapUploadedFile = (file: File, data: UploadedFileData) => {
+const mapUploadedFile = (file: File, data: UploadedFileData): AttachedFile => {
   return {
     name: file.name,
     type: file.type,
     size: file.size,
-    extractedText: data.extractedText,
-    wasTruncated: data.wasTruncated,
+    // UploadedFileData fields are optional because parser functions may omit
+    // them — coerce to the complete AttachedFile shape chat state expects.
+    extractedText: data.extractedText ?? "",
+    wasTruncated: data.wasTruncated ?? false,
   };
 };
 

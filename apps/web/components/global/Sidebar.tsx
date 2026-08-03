@@ -24,6 +24,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { assets } from "@studybot/assets";
 import { Fragment, useState, useRef, useEffect, useCallback } from "react";
+// Aliased so it doesn't shadow the DOM MouseEvent used by the resize handlers.
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -485,7 +487,7 @@ const Sidebar = () => {
                               <DropdownMenuItem
                                 inset
                                 className="cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800"
-                                onClick={(e) => {
+                                onClick={(e: ReactMouseEvent) => {
                                   e.stopPropagation();
                                   // Share conversation — UI placeholder.
                                   // Full sharing flow to be implemented later.
@@ -498,7 +500,7 @@ const Sidebar = () => {
                               <DropdownMenuItem
                                 inset
                                 className="cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800"
-                                onClick={(e) => {
+                                onClick={(e: ReactMouseEvent) => {
                                   e.stopPropagation();
                                   startRename(thread.session_id, thread.title);
                                 }}
@@ -509,7 +511,7 @@ const Sidebar = () => {
                               <DropdownMenuItem
                                 inset
                                 className="cursor-pointer text-red-400 hover:bg-zinc-800 hover:text-red-300 focus:bg-zinc-800 focus:text-red-300"
-                                onClick={(e) => {
+                                onClick={(e: ReactMouseEvent) => {
                                   e.stopPropagation();
                                   handleDelete(thread.session_id);
                                 }}

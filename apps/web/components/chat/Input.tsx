@@ -187,9 +187,10 @@ const Input = () => {
     // Pass the resolved threadId explicitly so sendMessageWithThread
     // doesn't rely on the store's closure value (which may be stale
     // because setActiveThread hasn't triggered a re-render yet).
+    // AI SDK v6 sendMessage implies the "user" role, so only the text and
+    // request body are passed — no role field exists on the payload type.
     sendMessage(
       {
-        role: "user",
         text: messageForAI,
       },
       {
@@ -291,7 +292,9 @@ const Input = () => {
               : "Ask, Search or Chat..."
           }
           value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+            setPrompt(e.target.value)
+          }
           disabled={isLoading}
         />
         <InputGroupAddon align="block-end" className="">
