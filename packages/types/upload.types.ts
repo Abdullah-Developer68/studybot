@@ -1,46 +1,70 @@
+import { z } from "zod";
+
+// Small subset of data we keep from a parser response.
+const UploadedFileDataSchema = z.object({
+  extractedText: z.string().optional(),
+  wasTruncated: z.boolean().optional(),
+});
+
 // Final parsed document data returned by an upload parser.
-export interface UploadResponse {
-  success: boolean;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  extractedText: string;
-  characterCount: number;
-  wasTruncated: boolean;
-  message: string;
-}
+const UploadResponseSchema = z.object({
+  success: z.boolean(),
+  fileName: z.string(),
+  fileType: z.string(),
+  fileSize: z.number(),
+  extractedText: z.string(),
+  characterCount: z.number(),
+  wasTruncated: z.boolean(),
+  message: z.string(),
+});
 
 // File info stored in chat state after upload parsing.
-export interface AttachedFile {
-  name: string;
-  type: string;
-  size: number;
-  extractedText: string;
-  wasTruncated: boolean;
-}
+const AttachedFileSchema = z.object({
+  name: z.string(),
+  type: z.string(),
+  size: z.number(),
+  extractedText: z.string(),
+  wasTruncated: z.boolean(),
+});
 
 // Result from validating a file before upload.
-export interface FileValidationResult {
+const FileValidationResultSchema = z.object({
+  valid: z.boolean(),
+  error: z.string().nullable(),
+});
+
+// Standard response shape from a parser edge function.
+const EdgeFunctionResponseSchema = z.object({
+  data: UploadedFileDataSchema.optional(),
+  error: z
+    .object({
+      message: z.string().optional(),
+    })
+    .nullish(),
+});
+
+// Types below are inferred from the schemas so compile-time types and runtime
+// validation can never drift apart.
+type UploadResponse = z.infer<typeof UploadResponseSchema>;
+type AttachedFile = z.infer<typeof AttachedFileSchema>;
+
+// Hand-written (not inferred) on purpose: consumers compile with
+// strictNullChecks off, where zod infers `.nullable()` object fields as
+// optional, which would weaken `error` from required to optional. The schema
+// above validates the same contract at runtime.
+type FileValidationResult = {
   valid: boolean;
   error: string | null;
-}
+};
+
+type EdgeFunctionResponse = z.infer<typeof EdgeFunctionResponseSchema>;
+type UploadedFileData = z.infer<typeof UploadedFileDataSchema>;
 
 // Tracks progress for each file during a batch upload.
 export type UploadProgressMap = Record<string, number>;
 
 // Callback for a single file's upload progress.
 export type UploadProgressCallback = (progress: number) => void;
-
-// Standard response shape from a parser edge function.
-export interface EdgeFunctionResponse {
-  data?: {
-    extractedText?: string;
-    wasTruncated?: boolean;
-  };
-  error?: {
-    message?: string;
-  } | null;
-}
 
 // Transport-agnostic edge function invoker.
 export type InvokeEdgeFunction = (
@@ -52,12 +76,6 @@ export type InvokeEdgeFunction = (
 export interface ParseFileArgs {
   file: File;
   invokeEdgeFunction: InvokeEdgeFunction;
-}
-
-// Small subset of data we keep from a parser response.
-export interface UploadedFileData {
-  extractedText?: string;
-  wasTruncated?: boolean;
 }
 
 // Optional auth info for calling Supabase edge functions.
@@ -81,3 +99,18 @@ export interface UploadFilesWithProgressArgs {
     fileProgress: Record<string, number>,
   ) => void;
 }
+
+export {
+  UploadResponseSchema,
+  AttachedFileSchema,
+  FileValidationResultSchema,
+  EdgeFunctionResponseSchema,
+  UploadedFileDataSchema,
+};
+export type {
+  UploadResponse,
+  AttachedFile,
+  FileValidationResult,
+  EdgeFunctionResponse,
+  UploadedFileData,
+};

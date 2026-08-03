@@ -1,8 +1,12 @@
 // -------------------  Types ---------------------
-import type { UploadProgressCallback, UploadResponse } from "@studybot/types";
+import {
+  UploadResponseSchema,
+  type UploadProgressCallback,
+} from "@studybot/types";
 import type { SupabaseRequestOptions } from "@studybot/utils/client/api.client.utils";
 
 import axios from "axios";
+import { z } from "zod";
 import { MAX_TEXT_LENGTH } from "@studybot/utils/global/file-utils";
 import { getParserFunctionByFileName } from "@studybot/utils/global/upload.utils";
 import {
@@ -16,6 +20,14 @@ import {
 const api = axios.create({
   baseURL: "http://localhost:3000/api/",
   withCredentials: true,
+});
+
+// Response shape of the parse-* edge functions: { text } on success,
+// { error } on failure.
+const ParserFunctionResponseSchema = z.object({
+  text: z.string().optional(),
+  error: z.string().optional(),
+  message: z.string().optional(),
 });
 
 // ------------------------ APIS --------------------------
@@ -65,11 +77,7 @@ const uploadDocument = async (
   const endpoint = `${supabaseUrl}/functions/v1/${functionName}`;
 
   try {
-    const response = await axios.post<{
-      text?: string;
-      error?: string;
-      message?: string;
-    }>(endpoint, formData, {
+    const response = await axios.post<unknown>(endpoint, formData, {
       headers: buildSupabaseHeaders(publishableKey, options),
       onUploadProgress:
         typeof onProgress === "function"
@@ -83,7 +91,13 @@ const uploadDocument = async (
           : undefined,
     });
 
-    const data = response.data;
+    // Axios hands us untyped JSON — validate it with zod before reading fields.
+    const parsedResponse = ParserFunctionResponseSchema.safeParse(response.data);
+    if (!parsedResponse.success) {
+      throw new Error("Parser service returned an unexpected response");
+    }
+
+    const data = parsedResponse.data;
 
     if (data.error) {
       throw new Error(data.error);
@@ -111,7 +125,9 @@ const uploadDocument = async (
       onProgress(100);
     }
 
-    return {
+    // Parse the payload we hand back so the return value is guaranteed to
+    // satisfy UploadResponse at runtime, not just by cast.
+    return UploadResponseSchema.parse({
       success: true,
       fileName: file.name,
       fileType: file.type || "unknown",
@@ -120,7 +136,7 @@ const uploadDocument = async (
       characterCount: extractedText.length,
       wasTruncated,
       message: `Successfully extracted text from ${file.name}`,
-    } as UploadResponse;
+    });
   } catch (error: unknown) {
     throw new Error(
       getErrorMessage(

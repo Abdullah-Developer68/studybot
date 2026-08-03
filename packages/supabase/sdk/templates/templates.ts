@@ -1,17 +1,20 @@
 import { getSupabase } from "../client/client";
-import type {
-  TemplateContent,
-  TemplateDatabaseRow,
-  TemplateInput,
-  TemplateInsertRow,
-  TemplateResult,
-  TemplateSummaryRow,
-  TemplateUpdateInput,
-  TemplateUpdateRow,
-  TemplateView,
-  TemplatesResult,
-  SeedResult,
-  PlainObject,
+import {
+  TemplateContentSchema,
+  TemplateDatabaseRowSchema,
+  TemplateSummaryRowSchema,
+  TemplateTagsSchema,
+  type TemplateContent,
+  type TemplateInput,
+  type TemplateInsertRow,
+  type TemplateResult,
+  type TemplateSummaryRow,
+  type TemplateUpdateInput,
+  type TemplateUpdateRow,
+  type TemplateView,
+  type TemplatesResult,
+  type SeedResult,
+  type PlainObject,
 } from "../types/templates.sdk.types";
 const DEFAULT_TEMPLATE_SEED_NAME = "__studybot_defaults_seed_v1__";
 const DEFAULT_TEMPLATE_SEED_CATEGORY = "__system__";
@@ -140,63 +143,91 @@ const DEFAULT_TEMPLATES: Array<{
   },
 ];
 
-function isPlainObject(value: unknown): value is PlainObject {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
-
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
 const normalizeTags = (tags: unknown): string[] => {
-  if (!Array.isArray(tags)) {
+  // Anything that is not a string array collapses to no tags.
+  const result = TemplateTagsSchema.safeParse(tags);
+  if (!result.success) {
     return [];
   }
 
-  return tags
-    .filter((tag): tag is string => typeof tag === "string")
-    .map((tag) => tag.trim())
-    .filter(Boolean);
+  return result.data.map((tag) => tag.trim()).filter(Boolean);
 };
 
 const normalizeTemplateContent = (content: unknown): TemplateContent => {
-  if (!isPlainObject(content)) {
-    throw new Error("Template content must be a JSON object");
+  // Zod enforces the ProseMirror doc contract ({ type: "doc", content: [...] })
+  // and preserves unknown node/attr keys via the loose object schema.
+  const result = TemplateContentSchema.safeParse(content);
+  if (!result.success) {
+    throw new Error(
+      result.error.issues[0]?.message ?? "Template content is invalid",
+    );
   }
 
-  if (content.type !== "doc") {
-    throw new Error("Template content root type must be 'doc'");
-  }
-
-  if (!Array.isArray(content.content)) {
-    throw new Error("Template content must include a content array");
-  }
-
-  return content as TemplateContent;
+  return result.data;
 };
 
-const isSeedMarkerRow = (row: TemplateSummaryRow | null | undefined): boolean =>
+// Structural check so it works for both summary rows and mapped template views.
+const isSeedMarkerRow = (
+  row: { name: string; category: string | null } | null | undefined,
+): boolean =>
   row?.name === DEFAULT_TEMPLATE_SEED_NAME &&
   row?.category === DEFAULT_TEMPLATE_SEED_CATEGORY;
 
-const mapTemplateRow = (
-  row: TemplateDatabaseRow | null | undefined,
-): TemplateView | null => {
+// Validates summary rows from PostgREST one by one, dropping rows that don't
+// match the schema instead of failing the whole batch.
+const parseTemplateSummaryRows = (rows: unknown): TemplateSummaryRow[] => {
+  if (!Array.isArray(rows)) {
+    return [];
+  }
+  const parsed: TemplateSummaryRow[] = [];
+  for (const row of rows) {
+    const result = TemplateSummaryRowSchema.safeParse(row);
+    if (result.success) {
+      // Build the row field by field: schema output marks nullable fields
+      // optional when strictNullChecks is off, while TemplateSummaryRow
+      // requires them.
+      parsed.push({
+        template_id: result.data.template_id,
+        name: result.data.name,
+        category: result.data.category ?? null,
+      });
+    }
+  }
+  return parsed;
+};
+
+// Rows come from PostgREST as untyped JSON — validate before trusting them.
+// Invalid rows log and map to null so callers keep their existing fallbacks.
+const mapTemplateRow = (row: unknown): TemplateView | null => {
   if (!row) {
     return null;
   }
 
+  const result = TemplateDatabaseRowSchema.safeParse(row);
+  if (!result.success) {
+    console.error("Invalid template row:", result.error.issues);
+    return null;
+  }
+
+  const parsedRow = result.data;
   return {
-    templateId: row.template_id,
-    profileId: row.profile_id,
-    name: row.name,
-    description: row.description,
-    category: row.category,
-    tags: row.tags ?? [],
-    content: row.content,
-    isPublic: row.is_public,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    templateId: parsedRow.template_id,
+    profileId: parsedRow.profile_id,
+    name: parsedRow.name,
+    // "?? null" keeps the required-nullable TemplateView contract satisfied
+    // even though schema output marks nullable fields optional when
+    // strictNullChecks is off.
+    description: parsedRow.description ?? null,
+    category: parsedRow.category ?? null,
+    tags: parsedRow.tags ?? [],
+    content: parsedRow.content,
+    isPublic: parsedRow.is_public,
+    createdAt: parsedRow.created_at,
+    updatedAt: parsedRow.updated_at,
   };
 };
 
@@ -238,7 +269,7 @@ const ensureDefaultTemplates = async (
       return { seeded: false, error: fetchError.message };
     }
 
-    const rows = (existingRows ?? []) as TemplateSummaryRow[];
+    const rows = parseTemplateSummaryRows(existingRows);
 
     if (rows.some(isSeedMarkerRow)) {
       return { seeded: false, error: null };
@@ -318,10 +349,10 @@ const listTemplates = async (
     }
 
     return {
-      templates: ((data ?? []) as TemplateDatabaseRow[])
-        .filter((row) => !isSeedMarkerRow(row))
+      templates: (Array.isArray(data) ? data : [])
         .map(mapTemplateRow)
-        .filter((template): template is TemplateView => template !== null),
+        .filter((template): template is TemplateView => template !== null)
+        .filter((template) => !isSeedMarkerRow(template)),
       error: null,
     };
   } catch (error: unknown) {
@@ -353,7 +384,7 @@ const getTemplateById = async (
     }
 
     return {
-      template: mapTemplateRow(data as TemplateDatabaseRow | null),
+      template: mapTemplateRow(data),
       error: null,
     };
   } catch (error: unknown) {
@@ -418,7 +449,7 @@ const createTemplate = async (
     }
 
     return {
-      template: mapTemplateRow(data as TemplateDatabaseRow | null),
+      template: mapTemplateRow(data),
       error: null,
     };
   } catch (error: unknown) {
@@ -491,7 +522,7 @@ const updateTemplate = async (
     }
 
     return {
-      template: mapTemplateRow(data as TemplateDatabaseRow | null),
+      template: mapTemplateRow(data),
       error: null,
     };
   } catch (error: unknown) {

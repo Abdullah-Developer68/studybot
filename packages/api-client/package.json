@@ -14,6 +14,7 @@
   "dependencies": {
     "@studybot/types": "workspace:*",
     "@studybot/utils": "workspace:*",
-    "axios": "catalog:"
+    "axios": "catalog:",
+    "zod": "^4.4.3"
   }
 }

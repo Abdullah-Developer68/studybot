@@ -3,10 +3,11 @@ import {
   validateFileExtension,
   validateFileSize,
 } from "./file-utils";
-import type {
-  ParseFileArgs,
-  UploadFilesWithProgressArgs,
-  UploadedFileData,
+import {
+  UploadedFileDataSchema,
+  type ParseFileArgs,
+  type UploadFilesWithProgressArgs,
+  type UploadedFileData,
 } from "@studybot/types";
 
 // Map file extensions to the dedicated Supabase edge function that parses them.
@@ -73,8 +74,15 @@ const parseFile = async ({ file, invokeEdgeFunction }: ParseFileArgs) => {
     throw new Error(error.message || "Failed to parse document");
   }
 
+  // Parser edge functions return untyped JSON — validate the payload with
+  // zod before handing it to callers so malformed responses fail loudly here.
+  const parsedData = UploadedFileDataSchema.safeParse(data ?? {});
+  if (!parsedData.success) {
+    throw new Error("Parser returned an unexpected response shape");
+  }
+
   // Return both the parsed payload and the function that handled it.
-  return { data, parserFunction };
+  return { data: parsedData.data, parserFunction };
 };
 
 // Convert the upload response into the app-level attached file shape.

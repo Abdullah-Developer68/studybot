@@ -35,6 +35,9 @@
   "peerDependencies": {
     "@supabase/supabase-js": "*"
   },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
   "devDependencies": {
   }
 }

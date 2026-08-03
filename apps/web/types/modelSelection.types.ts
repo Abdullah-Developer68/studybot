@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 type ModelSelectionActions = {
   openMenu: () => void;
   closeMenu: () => void;
@@ -14,28 +16,39 @@ type ModelSelectionStoreTypes = {
   actions: ModelSelectionActions;
 };
 
-type ModelProviderId =
-  | "openai"
-  | "anthropic"
-  | "google"
-  | "meta"
-  | "deepseek"
-  | "zai"
-  | "cohere";
+// Providers the model selection menu can list.
+const ModelProviderIdSchema = z.enum([
+  "openai",
+  "anthropic",
+  "google",
+  "meta",
+  "deepseek",
+  "zai",
+  "cohere",
+]);
 
-type ModelCapability = "vision" | "reasoning" | "tools" | "image";
+// Capability badges shown on a model option.
+const ModelCapabilitySchema = z.enum(["vision", "reasoning", "tools", "image"]);
 
-type ModelOption = {
-  id: string;
-  label: string;
-  provider: ModelProviderId;
-  providerLabel: string;
-  description: string;
-  priceLabel: string;
-  highlighted?: boolean;
-  capabilities: ModelCapability[];
-};
+// A single selectable model in the menu.
+const ModelOptionSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  provider: ModelProviderIdSchema,
+  providerLabel: z.string(),
+  description: z.string(),
+  priceLabel: z.string(),
+  highlighted: z.boolean().optional(),
+  capabilities: z.array(ModelCapabilitySchema),
+});
 
+// Types are inferred from the schemas so compile-time types and runtime
+// validation can never drift apart.
+type ModelProviderId = z.infer<typeof ModelProviderIdSchema>;
+type ModelCapability = z.infer<typeof ModelCapabilitySchema>;
+type ModelOption = z.infer<typeof ModelOptionSchema>;
+
+export { ModelProviderIdSchema, ModelCapabilitySchema, ModelOptionSchema };
 export type {
   ModelProviderId,
   ModelCapability,

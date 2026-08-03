@@ -4,6 +4,12 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@supabase/supabase-js':
+      specifier: ^2.97.0
+      version: 2.108.2
+
 overrides:
   axios: 1.16.1
   follow-redirects: 1.16.0
@@ -245,13 +251,6 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
-  packages:
-
-    dependencies:
-      zod:
-        specifier: ^4.4.3
-        version: 4.4.3
-
   packages/api-client:
     dependencies:
       '@studybot/types':
@@ -263,6 +262,9 @@ importers:
       axios:
         specifier: 1.16.1
         version: 1.16.1
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
 
   packages/assets: {}
 
@@ -271,12 +273,18 @@ importers:
       '@supabase/supabase-js':
         specifier: '*'
         version: 2.108.2
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
 
   packages/types:
     dependencies:
       react:
         specifier: '*'
         version: 19.2.3
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@types/react':
         specifier: '*'

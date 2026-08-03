@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { z } from "zod";
 import type { ModelSelectionStoreTypes } from "../types/modelSelection.types";
 
 const DEFAULT_MODEL_ID = "cohere/north-mini-code:free";
@@ -18,6 +19,12 @@ const MODEL_IDS = [
   DEFAULT_MODEL_ID,
 ] as const;
 
+// Schema for the persisted slice of the store (see partialize below).
+// z.enum(MODEL_IDS) rejects any model id outside the current list.
+const PersistedModelSelectionSchema = z.object({
+  selectedModelId: z.enum(MODEL_IDS),
+});
+
 export const useModelSelectionStore = create<ModelSelectionStoreTypes>()(
   persist(
     (set) => ({
@@ -35,19 +42,15 @@ export const useModelSelectionStore = create<ModelSelectionStoreTypes>()(
     {
       name: "modelSelection",
       version: 2,
-      // Drop any persisted model id that no longer exists in the current
-      // model list (e.g. the retired "z-ai/glm-4.5-air:free") so the store
-      // falls back to DEFAULT_MODEL_ID instead of sending a dead slug.
+      // Persisted localStorage state is untrusted: validate it with zod so a
+      // stale/retired model id (e.g. "z-ai/glm-4.5-air:free") makes the whole
+      // slice fall back to defaults instead of sending a dead slug.
       merge: (persisted, current) => {
-        const merged = { ...current, ...(persisted as Partial<typeof current>) };
-        const validModelIds = new Set<string>(MODEL_IDS);
-        if (
-          merged.selectedModelId &&
-          !validModelIds.has(merged.selectedModelId)
-        ) {
-          merged.selectedModelId = DEFAULT_MODEL_ID;
+        const parsed = PersistedModelSelectionSchema.safeParse(persisted);
+        if (!parsed.success) {
+          return current;
         }
-        return merged;
+        return { ...current, selectedModelId: parsed.data.selectedModelId };
       },
       partialize: (state) => ({ selectedModelId: state.selectedModelId }),
     },

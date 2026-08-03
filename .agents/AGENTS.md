@@ -52,6 +52,14 @@ The core of the application are these 3 modes:
 
 - Supabase functions and sdk folders have types directories in their repective roots. Define types there and import them and use them in funcitons and sdk. Use "@:" "../" alias in import object in deno.json of both sdk and functions of supabase and import types using @ alias
 
+## Zod & Runtime Validation
+
+- Zod schemas are the source of truth for data shapes that cross a runtime boundary (DB rows, edge-function request/response bodies, parser payloads, persisted localStorage state). The schema lives in the same types file where the type used to live, and the TS type is inferred with `z.infer` so existing `import type` sites keep working unchanged.
+- Exception: object types with required nullable fields (e.g. `category: string | null`) are hand-written next to their schema, because the web app compiles with `strictNullChecks` off and zod infers `.nullable()` fields as optional there, which would weaken the contract. Keep schema and type in sync when fields change.
+- Validate untrusted data with `schema.safeParse()` at the boundary (edge-function handlers, SDK methods reading PostgREST rows, API-client responses, zustand `persist` merge) instead of `as` casts. Preserve the caller's existing failure behavior (400 responses, `null`/`[]` fallbacks) when validation fails.
+- `@studybot/types` is now a runtime package (it exports schema values, not only types), so its `default` export condition in `packages/types/package.json` must stay intact.
+- When a Deno edge function imports zod-bearing modules, add `"zod": "npm:zod@^4.4.3"` to that function's `deno.json` imports.
+
 - For client-side Next.js code, use static `process.env.NEXT_PUBLIC_*` references rather than dynamic env lookup.
 
 - The web chat path currently points to `/api/chat`; the Supabase chat edge function exists separately and should only be wired in deliberately.

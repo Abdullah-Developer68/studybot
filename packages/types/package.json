@@ -6,8 +6,12 @@
   "types": "./index.types.ts",
   "exports": {
     ".": {
-      "types": "./index.types.ts"
+      "types": "./index.types.ts",
+      "default": "./index.types.ts"
     }
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
   },
   "peerDependencies": {
     "react": "*"

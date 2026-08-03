@@ -1,7 +1,8 @@
 import type { ModelMessage } from "ai";
-import type {
-  AllowedRoles,
-  IncomingMessage,
+import {
+  ChatRequestBodySchema,
+  type AllowedRoles,
+  type IncomingMessage,
 } from "@/types/chat.function.types.ts";
 import { smoothStream, streamText } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
@@ -229,27 +230,27 @@ export default {
       console.log("Authenticated user:", ctx.userClaims?.id);
 
       // useChat sends a JSON body containing the conversation history.
-      // We read the messages array, model, and threadId.
-      const body = (await req.json()) as {
-        messages?: IncomingMessage[];
-        model?: string;
-        threadId?: string;
-      };
+      // The body is untrusted input, so validate it against the zod schema
+      // instead of casting — malformed payloads get a 400 with a useful
+      // message, and required fields (messages, threadId) are enforced by
+      // the schema itself.
+      const parsedBody = ChatRequestBodySchema.safeParse(await req.json());
+      if (!parsedBody.success) {
+        return jsonResponse(
+          {
+            error: parsedBody.error.issues[0]?.message ??
+              "Invalid request body",
+          },
+          400,
+        );
+      }
 
-      const incomingMessages = body?.messages;
-      const threadId = body?.threadId;
-      const selectedModel = supportedModels.has(body?.model ?? "")
+      const body = parsedBody.data;
+      const incomingMessages = body.messages;
+      const threadId = body.threadId;
+      const selectedModel = supportedModels.has(body.model ?? "")
         ? body.model!
         : DEFAULT_MODEL;
-
-      // Validate required inputs
-      if (!Array.isArray(incomingMessages) || incomingMessages.length === 0) {
-        return jsonResponse({ error: "Messages are required" }, 400);
-      }
-
-      if (!threadId) {
-        return jsonResponse({ error: "threadId is required" }, 400);
-      }
 
       console.log(
         "Processing",

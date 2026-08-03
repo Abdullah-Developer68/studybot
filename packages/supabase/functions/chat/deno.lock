@@ -1,14 +1,15 @@
 {
   "version": "5",
   "specifiers": {
-    "npm:@openrouter/ai-sdk-provider@2.0.0": "2.0.0_ai@6.0.3__zod@4.3.6_zod@4.3.6",
+    "npm:@openrouter/ai-sdk-provider@2.0.0": "2.0.0_ai@6.0.3__zod@4.4.3_zod@4.4.3",
     "npm:@supabase/server@*": "1.4.0_@supabase+supabase-js@2.97.0",
     "npm:@supabase/server@1.4.0": "1.4.0_@supabase+supabase-js@2.97.0",
     "npm:@supabase/supabase-js@2.97.0": "2.97.0",
-    "npm:ai@6.0.3": "6.0.3_zod@4.3.6"
+    "npm:ai@6.0.3": "6.0.3_zod@4.4.3",
+    "npm:zod@^4.4.3": "4.4.3"
   },
   "npm": {
-    "@ai-sdk/gateway@3.0.2_zod@4.3.6": {
+    "@ai-sdk/gateway@3.0.2_zod@4.4.3": {
       "integrity": "sha512-giJEg9ob45htbu3iautK+2kvplY2JnTj7ir4wZzYSQWvqGatWfBBfDuNCU5wSJt9BCGjymM5ZS9ziD42JGCZBw==",
       "dependencies": [
         "@ai-sdk/provider",
@@ -17,7 +18,7 @@
         "zod"
       ]
     },
-    "@ai-sdk/provider-utils@4.0.1_zod@4.3.6": {
+    "@ai-sdk/provider-utils@4.0.1_zod@4.4.3": {
       "integrity": "sha512-de2v8gH9zj47tRI38oSxhQIewmNc+OZjYIOOaMoVWKL65ERSav2PYYZHPSPCrfOeLMkv+Dyh8Y0QGwkO29wMWQ==",
       "dependencies": [
         "@ai-sdk/provider",
@@ -32,7 +33,7 @@
         "json-schema"
       ]
     },
-    "@openrouter/ai-sdk-provider@2.0.0_ai@6.0.3__zod@4.3.6_zod@4.3.6": {
+    "@openrouter/ai-sdk-provider@2.0.0_ai@6.0.3__zod@4.4.3_zod@4.4.3": {
       "integrity": "sha512-2SkpzegsxnF5ro7+v9fAY5ph7oxxSCeK2buVkd7Wn4ALMZKTCeibZYP0sgyVqn3dGbZ2rKwSPap4GSjZeJBP5w==",
       "dependencies": [
         "@openrouter/sdk",
@@ -121,7 +122,7 @@
     "@vercel/oidc@3.0.5": {
       "integrity": "sha512-fnYhv671l+eTTp48gB4zEsTW/YtRgRPnkI2nT7x6qw5rkI1Lq2hTmQIpHPgyThI0znLK+vX2n9XxKdXZ7BUbbw=="
     },
-    "ai@6.0.3_zod@4.3.6": {
+    "ai@6.0.3_zod@4.4.3": {
       "integrity": "sha512-OOo+/C+sEyscoLnbY3w42vjQDICioVNyS+F+ogwq6O5RJL/vgWGuiLzFwuP7oHTeni/MkmX8tIge48GTdaV7QQ==",
       "dependencies": [
         "@ai-sdk/gateway",
@@ -152,8 +153,8 @@
     "ws@8.21.1": {
       "integrity": "sha512-+0NTnW77fFN/DjQi6k/Sq/Yvk4Sgajw7urW8V+asjXnRgDs9gyGkdb7EzgfhA4goXsRIZKE28fzIXBHEzhuiWw=="
     },
-    "zod@4.3.6": {
-      "integrity": "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="
+    "zod@4.4.3": {
+      "integrity": "sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ=="
     }
   },
   "workspace": {
@@ -161,7 +162,8 @@
       "npm:@openrouter/ai-sdk-provider@2.0.0",
       "npm:@supabase/server@1.4.0",
       "npm:@supabase/supabase-js@2.97.0",
-      "npm:ai@6.0.3"
+      "npm:ai@6.0.3",
+      "npm:zod@^4.4.3"
     ]
   }
 }

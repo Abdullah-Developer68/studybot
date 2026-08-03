@@ -1,5 +1,59 @@
 import { getSupabase } from "../client/client";
-import type { ChatThread, ChatMessage } from "../types/chat.sdk.types";
+import {
+  ChatMessageSchema,
+  ChatThreadSchema,
+  type ChatThread,
+  type ChatMessage,
+} from "../types/chat.sdk.types";
+
+// PostgREST rows arrive as untyped JSON — validate them against the zod
+// schemas instead of casting. Helpers return the callers' existing failure
+// values (null / []) so behavior on bad data stays graceful.
+
+const parseChatThread = (row: unknown): ChatThread | null => {
+  const result = ChatThreadSchema.safeParse(row);
+  if (!result.success) {
+    console.error("Invalid chat thread row:", result.error.issues);
+    return null;
+  }
+  return result.data;
+};
+
+const parseChatThreads = (rows: unknown): ChatThread[] => {
+  if (!Array.isArray(rows)) {
+    console.error("Invalid chat thread rows: expected an array");
+    return [];
+  }
+  // Drop individual bad rows instead of failing the whole list.
+  const parsed: ChatThread[] = [];
+  for (const row of rows) {
+    const result = ChatThreadSchema.safeParse(row);
+    if (result.success) {
+      parsed.push(result.data);
+    } else {
+      console.error("Invalid chat thread row:", result.error.issues);
+    }
+  }
+  return parsed;
+};
+
+const parseChatMessages = (rows: unknown): ChatMessage[] => {
+  if (!Array.isArray(rows)) {
+    console.error("Invalid chat message rows: expected an array");
+    return [];
+  }
+  // Drop individual bad rows instead of failing the whole list.
+  const parsed: ChatMessage[] = [];
+  for (const row of rows) {
+    const result = ChatMessageSchema.safeParse(row);
+    if (result.success) {
+      parsed.push(result.data);
+    } else {
+      console.error("Invalid chat message row:", result.error.issues);
+    }
+  }
+  return parsed;
+};
 
 // Makes sure the signed-in user has a profile row before we create a chat session.
 const ensureProfileExists = async (userId: string) => {
@@ -65,7 +119,7 @@ const createChatThread = async (
       return null;
     }
 
-    return data as ChatThread;
+    return parseChatThread(data);
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to create thread";
@@ -89,7 +143,7 @@ const fetchUserThreads = async (userId: string): Promise<ChatThread[]> => {
     return [];
   }
 
-  return data as ChatThread[];
+  return parseChatThreads(data);
 };
 
 // Fetches a thread with its messages from the database.
@@ -120,12 +174,12 @@ const fetchThreadWithMessages = async (
 
   if (messageError) {
     console.error("Failed to fetch messages:", messageError);
-    return { thread: threadData as ChatThread, messages: [] };
+    return { thread: parseChatThread(threadData), messages: [] };
   }
 
   return {
-    thread: threadData as ChatThread,
-    messages: messageData as ChatMessage[],
+    thread: parseChatThread(threadData),
+    messages: parseChatMessages(messageData),
   };
 };
 
@@ -147,7 +201,7 @@ const updateThreadTitle = async (
     return null;
   }
 
-  return data as ChatThread;
+  return parseChatThread(data);
 };
 
 // Archive thread (soft-delete — sets is_archived = true).

@@ -1,7 +1,7 @@
 {
   "extends": "../../packages/typescript-config/nextjs.json",
   "compilerOptions": {
-    "strict": false,
+    "strict": true,
     "paths": {
       "@/*": ["./*"],
       "@lib/*": ["./lib/*"],
