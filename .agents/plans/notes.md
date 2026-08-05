@@ -125,11 +125,23 @@
 | 2026-08-05 | Phase 1 schema changes are pushed directly to the hosted project (no local Supabase instance, Docker down) | `db diff` requires a local shadow Postgres container (Docker down); `supabase migration new` + `pnpm db:push` are Docker-free; project already linked (global CLI v2.109.1) |
 | 2026-08-05 | Phase 0 spike runs as plain `deno run` scripts; pgvector round-trip moved to Phase 1 | `supabase functions serve` needs Docker (down); Deno 2.9.4 is installed; the spike proves loaders/splitter/embeddings without any server |
 | 2026-08-05 | Hosted DB verification via `psql` (not Studio) | User choice; most automatable; user provides the DB connection string/password (also needed if `db push` prompts) |
+| 2026-08-05 | PDFs: PDFLoader + `pdfjs` option (pdfjs-dist legacy) | community v1 does not bundle pdf-parse; pdfjs-dist works in Deno and yields per-page Documents with `loc.pageNumber`; unpdf fallback unnecessary |
+| 2026-08-05 | TextLoader + BaseDocumentLoader come from `@langchain/classic` | v1 package layout: community exports fs/pdf, fs/docx, fs/pptx but NOT fs/text; classic holds text/base/buffer |
 
 ## 6. Findings log (filled during implementation)
 
-- (Phase 0 spike results: pending)
-- (Phase 1 migration results: pending)
+- (Phase 0 spike results: GO - 2026-08-05)
+  - Splitter: 31,931 chars -> 24 chunks (1500/150); metadata `{source,page,loc,chunkIndex,totalChunks}` preserved/enriched; overlap verified
+  - Loaders (all 8 extensions produce Documents): txt/md via TextLoader (`@langchain/classic`); xlsx+xls via custom loader (one Document per sheet, `--- Sheet: name ---` body, `{source,sheet}` metadata); docx via mammoth; **legacy .doc via word-extractor** (real OLE2 file); pptx via officeparser; pdf via PDFLoader + `pdfjs` option (pdfjs-dist 6.1.200) -> 9 per-page Documents with `loc.pageNumber`
+  - PDF default backend (pdf-parse) is NOT bundled in community v1 and was skipped on purpose; unpdf fallback not needed
+  - Embeddings: `@google/genai` embedContent, `gemini-embedding-001`, `outputDimensionality: 768` -> 768-dim vectors; taskType RETRIEVAL_DOCUMENT/RETRIEVAL_QUERY both work; L2-normalize + dot = cosine; semantic ranking sanity PASS (cat query -> cat doc 0.6356 top; physics query -> physics doc 0.7168 top)
+  - Pinned versions: @langchain/core 1.2.4, community 1.1.29, classic 1.0.40, textsplitters 1.0.1, @google/genai 2.15.0, pdfjs-dist 6.1.200, mammoth 1.12.0, word-extractor 1.0.4, officeparser 7.5.1, xlsx 0.18.5, unpdf 1.4.0
+- (Phase 1 results: DONE - 2026-08-05)
+  - `schema/documents.sql` (+session_id, +chunk_count, +idx_documents_session_id), `schema/document_chunks.sql` (vector 1536->768), `config.toml` schema_paths registration - all edited
+  - Hand-written migration `20260805183212_rag_document_chunks.sql` pushed via `supabase db push --linked` (no Docker needed). Had to `supabase migration repair --linked --status applied 20260726113218` first (old assignments migration was already applied remotely but unrecorded)
+  - Fixed a corrupted `SUPABASE_ACCESS_TOKEN` line in `.env.local` (GOOGLE_API_KEY had been pasted onto the same line)
+  - Hosted verification via PostgREST: new columns 200, document_chunks 200, RPC accepts vector(768) -> 200 []; anon callers get [] (RLS working)
+  - pgvector ordering round-trip deferred to Phase 5 end-to-end (needs an authenticated user JWT; psql is not installed locally)
 - (Phase 2 ingestion results: pending)
 - (Phase 3 retrieval results: pending)
 - (Phase 4 client results: pending)

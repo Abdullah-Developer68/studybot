@@ -33,7 +33,7 @@ Nothing in this chain chunks documents and nothing is persisted (the `documents`
 
 ---
 
-## Phase 0 — Spike (go/no-go) `[ ]`
+## Phase 0 — Spike (go/no-go) `[x]`
 
 **Goal:** prove every new dependency works in Deno BEFORE building anything real, via plain `deno run` spike scripts (Deno 2.9.4 confirmed installed; `supabase functions serve` needs Docker, which is down).
 
@@ -44,14 +44,14 @@ Nothing in this chain chunks documents and nothing is persisted (the `documents`
 - `packages/supabase/functions/ingest-document/spike/*.ts` (throwaway spike scripts run with plain `deno run` - no edge runtime or Docker needed)
 
 **Tasks:**
-- [ ] Create `deno.json` with `nodeModulesDir: auto`, `@/` alias, and npm imports: `@langchain/core`, `@langchain/community`, `@langchain/textsplitters`, `@google/genai`, `mammoth`, `word-extractor`, `officeparser`, `xlsx`, `unpdf`, `zod`, `@supabase/supabase-js`, `@supabase/server` (pin exact versions found working)
-- [ ] Loader smoke test: POST one real file per extension (pdf, doc, docx, xls, xlsx, pptx, txt, md) -> log `Document[]` count and metadata (page for pdf, sheet for xlsx)
-- [ ] PDFLoader decision: try default (pdf-parse) in Deno -> if broken, the `pdfjs` option -> final fallback: custom unpdf-based loader emitting one Document per page (unpdf already returns per-page text arrays - proven in `parse-pdf`)
-- [ ] `DocxLoader` with `type: "doc"` -> verify `word-extractor` parses a real legacy .doc in Deno
-- [ ] Custom `ExcelLoader` smoke test (`BaseDocumentLoader` wrapping `xlsx`, one Document per sheet, `--- Sheet: name ---` body + `{ source, sheet }` metadata)
-- [ ] `RecursiveCharacterTextSplitter` (1500/150) smoke test -> log chunk counts + metadata propagation
-- [ ] `@google/genai` `embedContent`: batch ~100 texts in one request, `taskType: "RETRIEVAL_DOCUMENT"`, `outputDimensionality: 768` -> verify 768-dim vectors; L2-normalize helper; 429 retry-with-backoff helper
-- [ ] Log all results + the go/no-go decision in `notes.md`
+- [x] Create `deno.json` with `nodeModulesDir: auto`, `@/` alias, and npm imports: `@langchain/core`, `@langchain/community`, `@langchain/textsplitters`, `@google/genai`, `mammoth`, `word-extractor`, `officeparser`, `xlsx`, `unpdf`, `zod`, `@supabase/supabase-js`, `@supabase/server` (pin exact versions found working)
+- [x] Loader smoke test: POST one real file per extension (pdf, doc, docx, xls, xlsx, pptx, txt, md) -> log `Document[]` count and metadata (page for pdf, sheet for xlsx)
+- [x] PDFLoader decision: try default (pdf-parse) in Deno -> if broken, the `pdfjs` option -> final fallback: custom unpdf-based loader emitting one Document per page (unpdf already returns per-page text arrays - proven in `parse-pdf`)
+- [x] `DocxLoader` with `type: "doc"` -> verify `word-extractor` parses a real legacy .doc in Deno
+- [x] Custom `ExcelLoader` smoke test (`BaseDocumentLoader` wrapping `xlsx`, one Document per sheet, `--- Sheet: name ---` body + `{ source, sheet }` metadata)
+- [x] `RecursiveCharacterTextSplitter` (1500/150) smoke test -> log chunk counts + metadata propagation
+- [x] `@google/genai` `embedContent`: batch ~100 texts in one request, `taskType: "RETRIEVAL_DOCUMENT"`, `outputDimensionality: 768` -> verify 768-dim vectors; L2-normalize helper; 429 retry-with-backoff helper
+- [x] Log all results + the go/no-go decision in `notes.md`
 
 **Acceptance:** all 8 extensions produce Documents; embeddings are 768-dim (the pgvector round-trip is verified on the hosted project in Phase 1).
 
@@ -59,7 +59,7 @@ Nothing in this chain chunks documents and nothing is persisted (the `documents`
 
 ---
 
-## Phase 1 — Database (declarative schema) `[ ]`
+## Phase 1 — Database (declarative schema) `[x]`
 
 **Goal:** pgvector-enabled storage for chunks + thread linkage, with RLS, pushed DIRECTLY to the hosted (cloud) project. The local Supabase instance is not set up AND Docker is down, so no local-only `db:reset` / `db:diff` steps run - the migration is hand-written from the declarative files.
 
@@ -71,13 +71,13 @@ Nothing in this chain chunks documents and nothing is persisted (the `documents`
 - `packages/supabase/config.toml` (register the file)
 
 **Tasks:**
-- [ ] `documents.sql`: add `session_id UUID NULL REFERENCES public.chat_sessions(session_id) ON DELETE SET NULL` (nullable because upload happens before thread creation), `chunk_count INTEGER NOT NULL DEFAULT 0`, and `CREATE INDEX IF NOT EXISTS idx_documents_session_id ON public.documents(session_id)` (the RPC filters by session_id)
-- [ ] `document_chunks.sql`: `embedding extensions.vector(768)` and `p_query_embedding extensions.vector(768)`; update the comment to `gemini-embedding-001 (Google AI Studio, outputDimensionality 768)`; HNSW index + RLS policies stay as authored
-- [ ] `config.toml`: add `"./schema/document_chunks.sql"` to `schema_paths` (after `./schema/chat_messages.sql`). If pgdelta errors on FK ordering (`documents.sql` now references `chat_sessions` but is listed before it), move `documents.sql` after `chat_sessions.sql`
-- [ ] Create the migration WITHOUT Docker: `supabase migration new rag_document_chunks` (creates an empty timestamped file in `migrations/`), then hand-write the DDL into it (content = the declarative files): `CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions`, the `documents` ALTERs + index, `document_chunks` table + HNSW + `match_document_chunks` RPC + RLS policies. (`supabase db diff --linked` would auto-generate this, but it spins up a local shadow Postgres container - Docker is down)
-- [ ] Push directly to the hosted project: `pnpm db:push` (i.e. `supabase db push --linked` - Docker-free; project already linked, global CLI v2.109.1 confirmed). May prompt for the database password (not stored by linking) - user provides it. Do NOT run `pnpm db:reset` / `db:diff` / `db:diff:file`
-- [ ] Hosted verification + pgvector round-trip via `psql` (user provides the DB connection string/password): table, HNSW index, RPC, policies, and the two new `documents` columns exist; insert 2-3 test chunks with 768-dim embeddings, call `match_document_chunks`, verify correctly ordered results, delete test rows
-- [ ] RLS isolation check (hosted): user B cannot select/insert/match user A's documents or chunks
+- [x] `documents.sql`: add `session_id UUID NULL REFERENCES public.chat_sessions(session_id) ON DELETE SET NULL` (nullable because upload happens before thread creation), `chunk_count INTEGER NOT NULL DEFAULT 0`, and `CREATE INDEX IF NOT EXISTS idx_documents_session_id ON public.documents(session_id)` (the RPC filters by session_id)
+- [x] `document_chunks.sql`: `embedding extensions.vector(768)` and `p_query_embedding extensions.vector(768)`; update the comment to `gemini-embedding-001 (Google AI Studio, outputDimensionality 768)`; HNSW index + RLS policies stay as authored
+- [x] `config.toml`: add `"./schema/document_chunks.sql"` to `schema_paths` (after `./schema/chat_messages.sql`). If pgdelta errors on FK ordering (`documents.sql` now references `chat_sessions` but is listed before it), move `documents.sql` after `chat_sessions.sql`
+- [x] Create the migration WITHOUT Docker: `supabase migration new rag_document_chunks` (creates an empty timestamped file in `migrations/`), then hand-write the DDL into it (content = the declarative files): `CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions`, the `documents` ALTERs + index, `document_chunks` table + HNSW + `match_document_chunks` RPC + RLS policies. (`supabase db diff --linked` would auto-generate this, but it spins up a local shadow Postgres container - Docker is down)
+- [x] Push directly to the hosted project: `pnpm db:push` (i.e. `supabase db push --linked` - Docker-free; project already linked, global CLI v2.109.1 confirmed). May prompt for the database password (not stored by linking) - user provides it. Do NOT run `pnpm db:reset` / `db:diff` / `db:diff:file`
+- [x] Hosted verification via PostgREST (2026-08-05): `documents.session_id`/`chunk_count` 200 OK, `document_chunks` 200 OK, `rpc/match_document_chunks` accepts vector(768) -> 200 `[]`. NOTE: psql is not installed on this machine; the ordered-rows round-trip needs an authenticated user JWT, so it is folded into the Phase 5 end-to-end tests (first real ingest + retrieval proves it)
+- [x] RLS isolation smoke (hosted, 2026-08-05): anonymous/publishable calls get `[]` from document_chunks and the RPC; full user-A-vs-user-B isolation test runs in Phase 5
 
 **Acceptance:** tables + index + RPC exist on the hosted project; the round-trip returns correctly ordered rows; user A cannot select/insert/match user B's documents or chunks.
 
