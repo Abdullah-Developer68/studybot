@@ -19,6 +19,9 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
+-- Base table privileges required before RLS policies are evaluated.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO authenticated;
+
 -- Users can read their own profile row.
 CREATE POLICY "profiles_read_own"
 ON public.profiles FOR SELECT TO authenticated

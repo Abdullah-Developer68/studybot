@@ -24,6 +24,9 @@ CREATE TABLE IF NOT EXISTS public.detection_results (
 
 ALTER TABLE public.detection_results ENABLE ROW LEVEL SECURITY;
 
+-- Base table privileges required before RLS policies are evaluated.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.detection_results TO authenticated;
+
 -- Users can read detection results for their own assignments.
 CREATE POLICY "detection_results_read_own"
 ON public.detection_results FOR SELECT TO authenticated

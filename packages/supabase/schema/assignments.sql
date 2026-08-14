@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS public.assignments (
 
 ALTER TABLE public.assignments ENABLE ROW LEVEL SECURITY;
 
+-- Base table privileges required before RLS policies are evaluated.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.assignments TO authenticated;
+
 -- Users can read their own assignments.
 CREATE POLICY "assignments_read_own"
 ON public.assignments FOR SELECT TO authenticated

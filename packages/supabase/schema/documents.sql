@@ -21,6 +21,9 @@ CREATE TABLE IF NOT EXISTS public.documents (
 
 ALTER TABLE public.documents ENABLE ROW LEVEL SECURITY;
 
+-- Base table privileges required before RLS policies are evaluated.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.documents TO authenticated;
+
 -- Users can read their own documents.
 CREATE POLICY "documents_read_own"
 ON public.documents FOR SELECT TO authenticated

@@ -22,6 +22,9 @@ CREATE TABLE IF NOT EXISTS public.templates (
 
 ALTER TABLE public.templates ENABLE ROW LEVEL SECURITY;
 
+-- Base table privileges required before RLS policies are evaluated.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.templates TO authenticated;
+
 -- 1) Owners can read their own templates.
 CREATE POLICY "templates_select_own"
 ON public.templates FOR SELECT TO authenticated

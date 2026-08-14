@@ -26,6 +26,9 @@ ON public.chat_sessions(profile_id, is_archived, updated_at DESC);
 
 ALTER TABLE public.chat_sessions ENABLE ROW LEVEL SECURITY;
 
+-- Base table privileges required before RLS policies are evaluated.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.chat_sessions TO authenticated;
+
 -- Users can read their own chat sessions.
 CREATE POLICY "chat_sessions_read_own"
 ON public.chat_sessions FOR SELECT TO authenticated

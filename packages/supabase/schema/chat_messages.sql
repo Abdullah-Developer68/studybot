@@ -30,6 +30,9 @@ ON public.chat_messages(created_at DESC);
 
 ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
 
+-- Base table privileges required before RLS policies are evaluated.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.chat_messages TO authenticated;
+
 -- Users can read messages from their own sessions.
 CREATE POLICY "chat_messages_read_own"
 ON public.chat_messages FOR SELECT TO authenticated
