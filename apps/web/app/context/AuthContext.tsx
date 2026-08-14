@@ -9,16 +9,23 @@ import {
 } from "@studybot/supabase";
 import type { AuthContextValue } from "@/types/context.types";
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabasePublishableKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
+
 // Create the shared Supabase client once when this module loads. The
 // @studybot/supabase SDK resolves this singleton internally, so feature code
 // never creates or passes a client itself. Static NEXT_PUBLIC refs let
 // Next.js inline the values at build time; fallbacks keep static prerender
 // from crashing when env vars are not configured on the host.
-initializeSupabase({
-  url: process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54321",
-  publishableKey:
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || "placeholder",
-});
+if (supabaseUrl && supabasePublishableKey) {
+  initializeSupabase({
+    url: supabaseUrl,
+    publishableKey: supabasePublishableKey,
+  });
+} else {
+  console.warn("Supabase environment variables are not configured.");
+}
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
