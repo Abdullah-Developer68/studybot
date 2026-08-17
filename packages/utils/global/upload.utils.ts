@@ -1,101 +1,24 @@
 import {
-  getExtension,
-  validateFileExtension,
-  validateFileSize,
-} from "./file-utils";
-import {
-  UploadedFileDataSchema,
   type AttachedFile,
-  type ParseFileArgs,
   type UploadFilesWithProgressArgs,
-  type UploadedFileData,
+  type UploadResponse,
 } from "@studybot/types";
-
-// Map file extensions to the dedicated Supabase edge function that parses them.
-const extensionToParserFunction: Record<string, string> = {
-  pdf: "parse-pdf",
-  doc: "parse-word",
-  docx: "parse-word",
-  xls: "parse-excel",
-  xlsx: "parse-excel",
-  ppt: "parse-powerpoint",
-  pptx: "parse-powerpoint",
-  txt: "parse-text",
-  md: "parse-text",
-};
 
 // Build a stable key so each file can be tracked independently during upload.
 const buildUploadFileKey = (file: File) => {
   return `${file.name}-${file.size}-${file.lastModified ?? 0}`;
 };
 
-// Resolve the parser function name from the uploaded file name.
-const getParserFunctionByFileName = (fileName: string) => {
-  const extension = getExtension(fileName);
-  return extensionToParserFunction[extension] ?? null;
-};
-
-// Send a file to the matching edge function and return the parsed response.
-const parseFile = async ({ file, invokeEdgeFunction }: ParseFileArgs) => {
-  if (!file || !(file instanceof File)) {
-    throw new Error("File is required");
-  }
-
-  // Require a caller-provided function so this utility stays transport-agnostic.
-  if (typeof invokeEdgeFunction !== "function") {
-    throw new Error("invokeEdgeFunction must be a function");
-  }
-
-  // Run centralized file-size and extension validation from file-utils.
-  validateFileSize(file.size);
-  validateFileExtension(file.name);
-
-  // Determine the parser to call from the file extension.
-  const extension = getExtension(file.name);
-  const parserFunction = getParserFunctionByFileName(file.name);
-
-  // Fail fast when a parser route for this valid extension is not configured.
-  if (!parserFunction) {
-    throw new Error(
-      `No parser function configured for extension: .${extension}`,
-    );
-  }
-
-  // Wrap the file in multipart form data because the edge functions expect an upload.
-  const formData = new FormData();
-  formData.append("file", file);
-
-  // Call the parser edge function chosen for this file type.
-  const { data, error } = await invokeEdgeFunction(parserFunction, {
-    body: formData,
-  });
-
-  // Surface edge function errors to the caller.
-  if (error) {
-    throw new Error(error.message || "Failed to parse document");
-  }
-
-  // Parser edge functions return untyped JSON — validate the payload with
-  // zod before handing it to callers so malformed responses fail loudly here.
-  const parsedData = UploadedFileDataSchema.safeParse(data ?? {});
-  if (!parsedData.success) {
-    throw new Error("Parser returned an unexpected response shape");
-  }
-
-  // Return both the parsed payload and the function that handled it.
-  return { data: parsedData.data, parserFunction };
-};
-
-// Convert the upload response into the app-level attached file shape.
-const mapUploadedFile = (file: File, data: UploadedFileData): AttachedFile => {
+// Convert the ingest response into the app-level attached file shape. The
+// documentId is what the chat request uses as an attachment to link the file to
+// a thread and enable RAG retrieval.
+const mapUploadedFile = (file: File, data: UploadResponse): AttachedFile => {
   return {
     name: file.name,
     type: file.type,
     size: file.size,
-    // UploadedFileData fields are optional because parser functions may omit
-    // them — coerce to the complete AttachedFile shape chat state expects.
-    extractedText: data.extractedText ?? "",
-    wasTruncated: data.wasTruncated ?? false,
+    documentId: data.documentId,
+    chunkCount: data.chunkCount,
   };
 };
 
@@ -153,10 +76,5 @@ const uploadFilesWithProgress = ({
   return Promise.all(uploadPromises);
 };
 
-export {
-  buildUploadFileKey,
-  getParserFunctionByFileName,
-  mapUploadedFile,
-  parseFile,
-  uploadFilesWithProgress,
-};
+export { buildUploadFileKey, mapUploadedFile, uploadFilesWithProgress };
+

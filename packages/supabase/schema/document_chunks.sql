@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS public.document_chunks (
   chunk_index INTEGER NOT NULL,
   content TEXT NOT NULL,
   metadata JSONB DEFAULT '{}'::jsonb, -- { source, page?/sheet?, chunkIndex, totalChunks }
-  embedding extensions.vector(1536), -- openai/text-embedding-3-small (via OpenRouter)
+  embedding extensions.vector(768), -- gemini-embedding-001 (Google AI Studio, outputDimensionality 768)
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -32,7 +32,7 @@ ON public.document_chunks USING hnsw (embedding extensions.vector_cosine_ops);
 -- d.profile_id = auth.uid() guard preserving per-user isolation.
 CREATE OR REPLACE FUNCTION public.match_document_chunks(
   p_session_id UUID,
-  p_query_embedding extensions.vector(1536),
+  p_query_embedding extensions.vector(768),
   p_match_count INT DEFAULT 8
 )
 RETURNS TABLE (

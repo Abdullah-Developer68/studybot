@@ -12,8 +12,15 @@ CREATE TABLE IF NOT EXISTS public.documents (
   storage_path TEXT, -- Supabase Storage path
   extracted_text TEXT, -- parsed content
   was_truncated BOOLEAN DEFAULT false,
+  -- Nullable: files are uploaded BEFORE a thread exists, so a document may start
+  -- unlinked and only get a session_id once its first chat message arrives.
+  session_id UUID REFERENCES public.chat_sessions(session_id) ON DELETE SET NULL, -- RAG thread linkage
+  chunk_count INTEGER NOT NULL DEFAULT 0, -- number of embedding chunks ingested
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- The match_document_chunks RPC filters by session_id, so index it.
+CREATE INDEX IF NOT EXISTS idx_documents_session_id ON public.documents(session_id);
 
 -- ============================================
 -- RLS Policies

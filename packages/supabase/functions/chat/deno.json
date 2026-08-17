@@ -13,6 +13,7 @@
     "@openrouter/ai-sdk-provider": "npm:@openrouter/ai-sdk-provider@2.0.0",
     "@supabase/supabase-js": "npm:@supabase/supabase-js@2.97.0",
     "@supabase/server": "npm:@supabase/server@1.4.0",
+    "@google/genai": "npm:@google/genai@2.15.0",
     "zod": "npm:zod@^4.4.3"
   }
 }

@@ -70,6 +70,7 @@ schema_paths = [
   "./schema/assignments.sql",
   "./schema/chat_sessions.sql",
   "./schema/chat_messages.sql",
+  "./schema/document_chunks.sql",
   "./schema/detection_results.sql",
   "./schema/triggers.sql"
 ]

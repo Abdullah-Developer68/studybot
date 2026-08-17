@@ -7,8 +7,6 @@ import type { SupabaseRequestOptions } from "@studybot/utils/client/api.client.u
 
 import axios from "axios";
 import { z } from "zod";
-import { MAX_TEXT_LENGTH } from "@studybot/utils/global/file-utils";
-import { getParserFunctionByFileName } from "@studybot/utils/global/upload.utils";
 import {
   buildSupabaseHeaders,
   getErrorMessage,
@@ -22,12 +20,16 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Response shape of the parse-* edge functions: { text } on success,
-// { error } on failure.
-const ParserFunctionResponseSchema = z.object({
-  text: z.string().optional(),
-  error: z.string().optional(),
-  message: z.string().optional(),
+// Response shape returned by the ingest-document edge function: the parsed file
+// plus ingestion metadata. The client maps it onto UploadResponse below.
+const IngestResponsePayloadSchema = z.object({
+  documentId: z.string(),
+  name: z.string(),
+  type: z.string(),
+  size: z.number(),
+  chunkCount: z.number(),
+  characterCount: z.number(),
+  preview: z.string(),
 });
 
 // ------------------------ APIS --------------------------
@@ -58,11 +60,6 @@ const uploadDocument = async (
     throw new Error("File is required");
   }
 
-  const functionName = getParserFunctionByFileName(file.name);
-  if (!functionName) {
-    throw new Error(`Unsupported file type for ${file.name}`);
-  }
-
   const formData = new FormData();
   formData.append("file", file);
 
@@ -74,7 +71,7 @@ const uploadDocument = async (
   const supabaseUrl = getSupabaseUrl();
   const publishableKey = getSupabasePublishableKey();
 
-  const endpoint = `${supabaseUrl}/functions/v1/${functionName}`;
+  const endpoint = `${supabaseUrl}/functions/v1/ingest-document`;
 
   try {
     const response = await axios.post<unknown>(endpoint, formData, {
@@ -92,56 +89,35 @@ const uploadDocument = async (
     });
 
     // Axios hands us untyped JSON — validate it with zod before reading fields.
-    const parsedResponse = ParserFunctionResponseSchema.safeParse(response.data);
+    const parsedResponse = IngestResponsePayloadSchema.safeParse(response.data);
     if (!parsedResponse.success) {
-      throw new Error("Parser service returned an unexpected response");
+      throw new Error("Ingest service returned an unexpected response");
     }
 
     const data = parsedResponse.data;
-
-    if (data.error) {
-      throw new Error(data.error);
-    }
-
-    const rawText = String(data.text || "").trim();
-
-    if (!rawText) {
-      throw new Error(
-        "The document appears to be empty or contains no extractable text.",
-      );
-    }
-
-    let extractedText = rawText;
-    let wasTruncated = false;
-
-    if (extractedText.length > MAX_TEXT_LENGTH) {
-      extractedText =
-        extractedText.substring(0, MAX_TEXT_LENGTH) +
-        `\n\n[Document truncated - showing first ${MAX_TEXT_LENGTH} characters of ${extractedText.length} total]`;
-      wasTruncated = true;
-    }
 
     if (typeof onProgress === "function") {
       onProgress(100);
     }
 
-    // Parse the payload we hand back so the return value is guaranteed to
-    // satisfy UploadResponse at runtime, not just by cast.
+    // Map the ingest payload onto UploadResponse, adding the fields the schema
+    // requires and the UI expects (guaranteed at runtime by .parse()).
     return UploadResponseSchema.parse({
       success: true,
-      fileName: file.name,
-      fileType: file.type || "unknown",
-      fileSize: file.size,
-      extractedText,
-      characterCount: extractedText.length,
-      wasTruncated,
-      message: `Successfully extracted text from ${file.name}`,
+      documentId: data.documentId,
+      fileName: data.name,
+      fileType: data.type,
+      fileSize: data.size,
+      chunkCount: data.chunkCount,
+      characterCount: data.characterCount,
+      preview: data.preview,
+      message: `Successfully indexed ${file.name} (${data.chunkCount} chunks)`,
     });
   } catch (error: unknown) {
     throw new Error(
       getErrorMessage(
         error,
-        `Unable to reach document parser service at ${endpoint}. Check internet connection, Supabase function deployment, and CORS configuration.`,
+        `Unable to reach document ingest service at ${endpoint}. Check internet connection, Supabase function deployment, and CORS configuration.`,
       ),
     );
   }
