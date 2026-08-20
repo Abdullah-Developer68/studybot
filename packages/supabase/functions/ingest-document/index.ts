@@ -368,7 +368,12 @@ export default {
             .delete()
             .eq("document_id", insertedDocumentId);
         }
-        const message = error instanceof Error ? error.message : "Unknown error";
+        const message =
+          error instanceof Error
+            ? error.message
+            : typeof error === "string"
+              ? error
+              : JSON.stringify(error) || "Unknown error";
         console.error("ingest-document error:", message);
         return jsonResponse({ error: message }, 500);
       }

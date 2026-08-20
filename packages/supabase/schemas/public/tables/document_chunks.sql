@@ -16,6 +16,8 @@ create index "idx_document_chunks_document_id"
 create index "idx_document_chunks_embedding"
   on "public"."document_chunks" using hnsw (embedding extensions.vector_cosine_ops);
 
+grant select, insert, delete on table "public"."document_chunks" to "authenticated";
+
 alter table "public"."document_chunks"
   enable row level security;
 
