@@ -80,7 +80,7 @@ const normalizeMessages = (messages: IncomingMessage[]): ModelMessage[] => {
       continue;
     }
 
-    // TODD: Tools will be supported later.
+    // TODO: Tools will be supported later.
     if (message.role === "tool") {
       console.warn(
         "Skipped message with role 'tool' since tools are not supported in this example",

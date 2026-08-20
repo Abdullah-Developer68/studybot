@@ -44,25 +44,25 @@ type FileValidationResult = {
 };
 
 // Tracks progress for each file during a batch upload.
-export type UploadProgressMap = Record<string, number>;
+type UploadProgressMap = Record<string, number>;
 
 // Callback for a single file's upload progress.
-export type UploadProgressCallback = (progress: number) => void;
+type UploadProgressCallback = (progress: number) => void;
 
 // Optional auth info for calling Supabase edge functions.
-export interface SupabaseFunctionAuthOptions {
+interface SupabaseFunctionAuthOptions {
   accessToken?: string;
 }
 
 // Upload function expected by the batch helper.
-export type UploadDocumentFn = (
+type UploadDocumentFn = (
   file: File,
   onProgress?: (percent: number) => void,
   options?: SupabaseFunctionAuthOptions,
 ) => Promise<UploadResponse>;
 
 // Inputs for the batch upload helper.
-export interface UploadFilesWithProgressArgs {
+interface UploadFilesWithProgressArgs {
   files: File[];
   uploadDocument: UploadDocumentFn;
   onOverallProgress?: (
@@ -76,5 +76,16 @@ export {
   AttachedFileSchema,
   FileValidationResultSchema,
 };
-export type { UploadResponse, AttachedFile, FileValidationResult };
+export type {
+  UploadResponse,
+  AttachedFile,
+  FileValidationResult,
+  UploadProgressMap,
+  UploadProgressCallback,
+  UploadDocumentFn,
+};
+export type {
+  SupabaseFunctionAuthOptions,
+  UploadFilesWithProgressArgs,
+};
 
