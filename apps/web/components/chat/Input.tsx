@@ -118,23 +118,6 @@ const Input = () => {
     setUploadError(null);
   };
 
-  const buildMessageForAI = (userPrompt: string) => {
-    let messageForAI = userPrompt;
-
-    if (attachedFiles.length > 0) {
-      const documentsContent = attachedFiles
-        .map(
-          (file: AttachedFile) =>
-            `[Document: ${file.name}]\n\n${file.extractedText}`,
-        )
-        .join("\n\n---\n\n");
-
-      messageForAI = `${documentsContent}\n\n[User Request]: ${userPrompt}`;
-    }
-
-    return messageForAI;
-  };
-
   const handleSubmit = async (e: FormSubmitEvent) => {
     e.preventDefault();
 
@@ -147,7 +130,6 @@ const Input = () => {
     }
 
     const userPrompt = prompt.trim() || "Please summarize these documents.";
-    const messageForAI = buildMessageForAI(userPrompt);
 
     let targetThreadId: string | null = activeThreadId;
 
@@ -189,18 +171,22 @@ const Input = () => {
     // because setActiveThread hasn't triggered a re-render yet).
     // AI SDK v6 sendMessage implies the "user" role, so only the text and
     // request body are passed — no role field exists on the payload type.
+    // The message text is the user's prompt ONLY: the document content is not
+    // embedded here. RAG retrieves relevant chunks server-side, and
+    // `body.attachments` carries the document_ids so the chat function can
+    // link them to this thread and scope retrieval by session.
     sendMessage(
       {
-        text: messageForAI,
+        text: userPrompt,
       },
       {
         body: {
           model: selectedModelId,
           threadId: targetThreadId,
           attachments: attachedFiles.map((file) => ({
+            document_id: file.documentId,
             name: file.name,
             type: file.type,
-            wasTruncated: file.wasTruncated,
           })),
         },
       },
@@ -225,12 +211,12 @@ const Input = () => {
                 <span className="text-blue-200 truncate" title={file.name}>
                   {file.name}
                 </span>
-                {file.wasTruncated && (
+                {file.chunkCount != null && (
                   <span
-                    className="text-yellow-400 text-[10px]"
-                    title="Content was truncated"
+                    className="text-blue-400/70 text-[10px]"
+                    title="Number of indexed chunks"
                   >
-                    !
+                    {file.chunkCount} chunks
                   </span>
                 )}
                 <button

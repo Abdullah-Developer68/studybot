@@ -1,0 +1,21 @@
+{
+  "formatVersion": 1,
+  "redactSecrets": true,
+  "scope": "database",
+  "profile": "supabase",
+  "defaultOwner": "postgres",
+  "files": [
+    "_cluster/extensions/pgcrypto.sql",
+    "_cluster/extensions/uuid-ossp.sql",
+    "public/default_privileges.sql",
+    "public/functions/handle_new_user.sql",
+    "public/schema.sql",
+    "public/tables/assignments.sql",
+    "public/tables/chat_messages.sql",
+    "public/tables/chat_sessions.sql",
+    "public/tables/detection_results.sql",
+    "public/tables/documents.sql",
+    "public/tables/profiles.sql",
+    "public/tables/templates.sql"
+  ]
+}

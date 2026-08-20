@@ -1,6 +1,5 @@
 // Capitalize variables tells that they are constants and should not be changed.
 const MAX_FILE_SIZE_MB = 10;
-const MAX_TEXT_LENGTH = 50000;
 
 const getSupportedExtensions = () => {
   return [
@@ -10,7 +9,6 @@ const getSupportedExtensions = () => {
     ".xlsx",
     ".xls",
     ".pptx",
-    ".ppt",
     ".md",
     ".txt",
   ];
@@ -73,7 +71,6 @@ const validateFileExtension = (fileName: string): boolean => {
 
 export {
   MAX_FILE_SIZE_MB,
-  MAX_TEXT_LENGTH,
   getExtension,
   getSupportedExtensions,
   validateFile,

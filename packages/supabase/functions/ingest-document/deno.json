@@ -1,0 +1,34 @@
+{
+  "nodeModulesDir": "auto",
+  "compilerOptions": {
+    "lib": [
+      "deno.window"
+    ]
+  },
+  "lock": {
+    "path": "./deno.lock"
+  },
+  "imports": {
+    "@/": "../",
+    "@studybot/types": "../../../types/index.types.ts",
+    "@studybot/types/": "../../../types/",
+    "@studybot/utils/server/": "../../../utils/server/",
+    "@studybot/utils/global/": "../../../utils/global/",
+    "@studybot/utils/": "../../../utils/",
+    "@langchain/core": "npm:@langchain/core@1.2.4",
+    "@langchain/community": "npm:@langchain/community@1.1.29",
+    "@langchain/classic": "npm:@langchain/classic@1.0.40",
+    "@langchain/textsplitters": "npm:@langchain/textsplitters@1.0.1",
+    "@google/genai": "npm:@google/genai@2.15.0",
+    "unpdf": "npm:unpdf@1.4.0",
+    "mammoth": "npm:mammoth@1.12.0",
+    "word-extractor": "npm:word-extractor@1.0.4",
+    "officeparser": "npm:officeparser@7.5.1",
+    "xlsx": "npm:xlsx@0.18.5",
+
+    "fflate": "npm:fflate@0.8.2",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2.97.0",
+    "@supabase/server": "npm:@supabase/server@1.4.0",
+    "zod": "npm:zod@^4.4.3"
+  }
+}
