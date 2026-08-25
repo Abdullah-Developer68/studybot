@@ -4,6 +4,7 @@ import {
   type AllowedRoles,
   type Attachment,
   type IncomingMessage,
+  type RetrievedChunk,
 } from "@/types/chat.function.types.ts";
 import { smoothStream, streamText } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
@@ -216,15 +217,6 @@ const EMBED_MODEL = "gemini-embedding-001";
 const EMBED_DIMENSIONS = 768; // must match the vector(768) column / ingest function
 const MATCH_COUNT = 8;
 const MAX_CONTEXT_CHUNKS = 8;
-
-// Shape of one row returned by the match_document_chunks RPC.
-type RetrievedChunk = {
-  content: string;
-  metadata?: { source?: string; page?: number; sheet?: string; chunkIndex?: number } | null;
-  similarity: number;
-  document_name: string;
-  document_id: string;
-};
 
 // Google requires manual L2 normalization below 3072 dims. Normalizing the query
 // puts it in the same normalized space as the stored document vectors, so the

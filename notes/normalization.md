@@ -1,0 +1,2 @@
+- Think of each embedding as an arrow pointing in some direction — the direction encodes the meaning, the length is just "volume".
+- Normalization = shrinking/stretching every arrow to exactly length 1, keeping its direction. It's like making everyone speak at the same volume before comparing what they said. Without it, a "loud" vector (long) looks more similar to everything than a "quiet" one (short), even if their meanings are equally close. After normalizing, similarity comparisons depend purely on direction (meaning), which is what you actually want.
