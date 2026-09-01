@@ -6,16 +6,16 @@ set -euo pipefail
 # ============================================
 #
 # HOW IT WORKS:
-#   config.toml → [db.migrations].schema_paths points to ./schema/*.sql
-#   These files describe the DESIRED database state (DDL only).
-#   The Supabase CLI diffs the desired state against the local DB
-#   and generates migration files automatically.
+#   The DESIRED database state is declarative SQL (DDL only) in ./schemas/
+#   The pg-delta diff engine ([experimental.pgdelta] in config.toml) compares
+#   that desired state against the local DB and generates migration files
+#   automatically. There is no [db.migrations].schema_paths entry.
 #
 #   seed.sql (configured in [db.seed]) runs AFTER migrations
 #   during db reset — it's for dev/test data, not schema.
 #
 # WORKFLOW:
-#   1. Edit schema files in ./schema/
+#   1. Edit schema files in ./schemas/
 #   2. Run:  pnpm db:diff:file my_change
 #      This generates a migration file in ./migrations/
 #   3. Run:  pnpm db:reset
@@ -35,13 +35,14 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
 cd "$PROJECT_DIR"
 
-echo "==> Generating migration diff from schema/ files..."
-echo "    Desired state: ./schema/*.sql"
+echo "==> Generating migration diff from schemas/ files..."
+echo "    Desired state: ./schemas/*.sql (via pg-delta)"
 echo "    Migration name: $MIGRATION_NAME"
 echo ""
 
-# supabase db diff compares the desired schema (from schema_paths)
-# against the local database and generates migration files.
+# supabase db diff uses the pg-delta engine to compare the declarative
+# desired state (./schemas/) against the local database and generates
+# migration files.
 supabase db diff --local --file "$MIGRATION_NAME"
 
 echo ""

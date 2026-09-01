@@ -29,7 +29,7 @@ const navItems = [
 
 const Navbar = () => {
   const pathname = usePathname();
-  const { createThread, isLoading } = useChatSessions();
+  const { createThread, status } = useChatSessions();
 
   const handleNewChat = async () => {
     await createThread("New Chat");
@@ -56,7 +56,7 @@ const Navbar = () => {
                 size="icon"
                 className="h-9 w-9 cursor-pointer text-zinc-400 hover:text-white"
                 onClick={handleNewChat}
-                disabled={isLoading}
+                disabled={status === "loading"}
               >
                 <Plus className="h-5 w-5" />
               </Button>

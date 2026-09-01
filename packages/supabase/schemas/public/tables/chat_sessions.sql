@@ -2,7 +2,7 @@ create table "public"."chat_sessions" (
   "session_id"  uuid                     not null default gen_random_uuid(),
   "profile_id"  uuid                     not null,
   "title"       text                     not null default 'New Chat'::text,
-  "model"       text                     default 'gemini-2.0-flash'::text,
+  "model"       text                     default 'cohere/north-mini-code:free'::text,
   "is_archived" boolean                  default false,
   "created_at"  timestamp with time zone not null default now(),
   "updated_at"  timestamp with time zone not null default now(),

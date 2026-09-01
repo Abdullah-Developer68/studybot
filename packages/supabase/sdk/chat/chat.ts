@@ -92,7 +92,7 @@ const ensureProfileExists = async (userId: string) => {
 const createChatThread = async (
   userId: string,
   title: string = "New Chat",
-  model: string = "poolside/laguna-xs.2:free",
+  model: string = "cohere/north-mini-code:free",
 ): Promise<ChatThread | null> => {
   try {
     const supabase = getSupabase();
@@ -204,6 +204,25 @@ const updateThreadTitle = async (
   return parseChatThread(data);
 };
 
+// Fetches just a thread's title. Used by the client to pick up titles that
+// were auto-generated server-side by the chat edge function. RLS scopes the
+// read to the signed-in owner, so no userId parameter is needed.
+const fetchThreadTitle = async (threadId: string): Promise<string | null> => {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from("chat_sessions")
+    .select("title")
+    .eq("session_id", threadId)
+    .single();
+
+  if (error) {
+    console.error("Failed to fetch thread title:", error);
+    return null;
+  }
+
+  return typeof data?.title === "string" ? data.title : null;
+};
+
 // Archive thread (soft-delete — sets is_archived = true).
 const archiveThread = async (threadId: string): Promise<boolean> => {
   const supabase = getSupabase();
@@ -240,6 +259,7 @@ export {
   createChatThread,
   fetchUserThreads,
   fetchThreadWithMessages,
+  fetchThreadTitle,
   updateThreadTitle,
   archiveThread,
   deleteThread,

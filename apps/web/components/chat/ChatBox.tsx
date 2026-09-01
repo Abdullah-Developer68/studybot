@@ -17,7 +17,7 @@ import remarkGfm from "remark-gfm";
 import { useState } from "react";
 import WelcomeScreen from "./WelcomeScreen";
 import { useChatStoreStates } from "@/stores/chatStore";
-import AssistantMessage from "./AssistantMessages";
+import AssistantMessage, { TypingDots } from "./AssistantMessages";
 import ShikiPre from "./ShikiPre";
 
 // Messages rendered here come from useChat (UIMessage), but the edit flow
@@ -172,12 +172,34 @@ const ChatBox = () => {
     );
   }
 
+  // The typing bubble covers the window before any response text exists:
+  // request sent but no assistant message yet, or the assistant message is
+  // still empty. The moment text starts streaming, the bubble disappears.
+  const lastMessage = messages[messages.length - 1];
+  const isAwaitingResponse =
+    (isSubmitted || isStreaming) &&
+    (!lastMessage ||
+      lastMessage.role === "user" ||
+      (lastMessage.role === "assistant" &&
+        getMessageContent(lastMessage).trim() === ""));
+
   return (
     <>
       <div className="h-full w-full overflow-y-auto pb-28 md:pb-44 pt-4 md:pt-16">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4">
           {messages.map((message, index) => {
             const content = getMessageContent(message);
+
+            // An assistant message with no text yet is covered by the
+            // typing bubble below — don't render an empty row for it.
+            if (
+              message.role === "assistant" &&
+              isStreaming &&
+              index === messages.length - 1 &&
+              content.trim() === ""
+            ) {
+              return null;
+            }
 
             if (message.role === "user") {
               const { fileNames, userRequest } = getUserDisplayContent(content);
@@ -195,7 +217,7 @@ const ChatBox = () => {
                           value={editDraft}
                           onChange={(e) => setEditDraft(e.target.value)}
                           onKeyDown={handleEditKeyDown}
-                          className="min-h-20 w-full resize-y rounded-2xl rounded-tr-sm border border-zinc-600 bg-gray-700 p-3 text-sm text-white outline-none focus:border-zinc-400"
+                          className="min-h-20 w-full resize-y rounded-2xl rounded-tr-sm border border-zinc-600 bg-gray-800 p-3 text-sm text-white outline-none focus:border-zinc-400"
                         />
                         <div className="flex items-center justify-end gap-2">
                           <button
@@ -216,7 +238,7 @@ const ChatBox = () => {
                       </div>
                     ) : (
                       <>
-                        <div className="bg-gray-700 text-white rounded-2xl rounded-tr-sm p-3">
+                        <div className="bg-gray-800 text-white rounded-2xl rounded-tr-sm p-3">
                           {/* Show file attachment indicator(s) */}
                           {fileNames.length > 0 && (
                             <div className="flex flex-wrap items-center gap-2 mb-2 pb-2 border-b border-gray-600 text-sm text-blue-300">
@@ -305,21 +327,31 @@ const ChatBox = () => {
                   </div>
                 </div>
               );
-            } else {
-              return (
-                <AssistantMessage
-                  key={index}
-                  message={message}
-                  messagesLength={messages.length}
-                  index={index}
-                  isStreaming={isStreaming}
-                  activeModelName={activeModelName}
-                  copiedId={copiedId}
-                  onCopy={() => setCopiedId(message.id ?? String(index))}
-                />
-              );
-            }
-          })}
+              } else {
+                return (
+                  <AssistantMessage
+                    key={index}
+                    message={message}
+                    messagesLength={messages.length}
+                    index={index}
+                    isStreaming={isStreaming}
+                    activeModelName={activeModelName}
+                    copiedId={copiedId}
+                    onCopy={(id, text) => handleCopy(id, text)}
+                  />
+                );
+              }
+            })}
+
+          {/* Typing bubble: bouncing dots while waiting for the response.
+              Vanishes as soon as the first response text appears. */}
+          {isAwaitingResponse && (
+            <div className="flex justify-start">
+              <div className="rounded-2xl rounded-bl-sm bg-gray-800 px-5 py-4">
+                <TypingDots />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>

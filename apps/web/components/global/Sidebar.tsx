@@ -13,6 +13,7 @@ import {
   MessageSquare,
   PencilLine,
   FileText,
+  Search,
   Settings,
   MoreHorizontal,
   Share2,
@@ -20,15 +21,24 @@ import {
   Trash2,
   Check,
   X,
+  Loader2,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { assets } from "@studybot/assets";
-import { Fragment, useState, useRef, useEffect, useCallback } from "react";
+import {
+  Fragment,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useSyncExternalStore,
+} from "react";
 // Aliased so it doesn't shadow the DOM MouseEvent used by the resize handlers.
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import Image from "next/image";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,15 +47,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import useChatSessions from "@/hooks/chat/useChatSessions";
-
-// Sidebar width constants
-const MIN_SIDEBAR_WIDTH = 56;
-const MAX_SIDEBAR_WIDTH = 400;
-const DEFAULT_SIDEBAR_WIDTH = 240;
-// Below this width the sidebar switches to compact icon-only layout
-const COMPACT_BREAKPOINT = 120;
-// localStorage key for persisting the user's preferred sidebar width
-const STORAGE_KEY = "sidebarWidth";
+import { useChatStore } from "@/stores/chatStore";
+import {
+  MIN_SIDEBAR_WIDTH,
+  DEFAULT_SIDEBAR_WIDTH,
+  COMPACT_BREAKPOINT,
+  persistSidebarWidth,
+  subscribeToSidebarWidth,
+  getSidebarClientSnapshot,
+  getSidebarServerSnapshot,
+} from "@/utils/sidebar.utils";
 
 const navItems = [
   { icon: MessageSquare, label: "Chat", href: "/chat" },
@@ -53,58 +64,53 @@ const navItems = [
   { icon: FileText, label: "Templates", href: "/templates" },
 ];
 
-// Helper to read the persisted width from localStorage (safe for SSR)
-const getPersistedWidth = (): number => {
-  if (typeof window === "undefined") return DEFAULT_SIDEBAR_WIDTH;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = Number(raw);
-      if (!isNaN(parsed)) {
-        return Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, parsed));
-      }
-    }
-  } catch {
-    // localStorage unavailable (e.g. private browsing), fall back to default
+// Fuzzy match: every query character must appear somewhere in the title,
+// in order but not necessarily adjacent (case-insensitive). This keeps
+// matching forgiving — e.g. "pytut" finds "Python Tutorial" — without
+// pulling in a full fuzzy-search dependency.
+const fuzzyMatch = (title: string, query: string): boolean => {
+  if (!query) return true;
+  const lowerTitle = title.toLowerCase();
+  let searchFrom = 0;
+  for (const char of query) {
+    searchFrom = lowerTitle.indexOf(char, searchFrom);
+    if (searchFrom === -1) return false;
+    searchFrom += 1;
   }
-  return DEFAULT_SIDEBAR_WIDTH;
+  return true;
 };
 
 const Sidebar = () => {
   const pathname = usePathname();
 
-  // Sidebar width is managed locally and persisted to localStorage so it
-  // survives page reloads without needing Zustand for this concern.
-  const [sidebarWidth, setSidebarWidthRaw] = useState(DEFAULT_SIDEBAR_WIDTH);
+  // Sidebar width is synced with localStorage via useSyncExternalStore to avoid
+  // cascading renders and SSR hydration mismatches.
+  const sidebarWidth = useSyncExternalStore(
+    subscribeToSidebarWidth,
+    getSidebarClientSnapshot,
+    getSidebarServerSnapshot,
+  );
 
-  // Hydrate from localStorage on mount (avoids SSR hydration mismatch)
-  useEffect(() => {
-    setSidebarWidthRaw(getPersistedWidth());
-  }, []);
-
-  // Wrapper that clamps the value and persists to localStorage
+  // Wrapper that clamps the value, persists to localStorage, and notifies subscribers
   const setSidebarWidth = useCallback((width: number) => {
-    const clamped = Math.min(
-      MAX_SIDEBAR_WIDTH,
-      Math.max(MIN_SIDEBAR_WIDTH, width),
-    );
-    setSidebarWidthRaw(clamped);
-    try {
-      localStorage.setItem(STORAGE_KEY, String(clamped));
-    } catch {
-      // Silently ignore storage errors
-    }
+    persistSidebarWidth(width);
   }, []);
 
   const {
     threads,
     activeThreadId,
-    isLoading,
+    status,
     createThread,
     switchThread,
     renameThread,
     deleteThread,
   } = useChatSessions();
+
+  // Thread whose AI title is currently being generated — its row gets a
+  // blurred title plus a spinner on the right until the title lands.
+  const titleGeneratingThreadId = useChatStore(
+    (state) => state.titleGeneratingThreadId,
+  );
 
   const isCompact = sidebarWidth < COMPACT_BREAKPOINT;
 
@@ -158,6 +164,14 @@ const Sidebar = () => {
   const handleNewChat = async () => {
     await createThread("New Chat");
   };
+
+  // Search query for filtering the thread list by title (client-side only —
+  // the full thread list is already in the Zustand store).
+  const [searchQuery, setSearchQuery] = useState("");
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const visibleThreads = normalizedQuery
+    ? threads.filter((thread) => fuzzyMatch(thread.title, normalizedQuery))
+    : threads;
 
   const handleSwitchThread = (threadId: string) => {
     switchThread(threadId);
@@ -236,10 +250,13 @@ const Sidebar = () => {
           // toggle button stacked below to avoid any vertical shift of the logo.
           <div className="mb-5 flex flex-col items-center gap-2 px-2">
             <div className="flex h-10 items-center justify-center">
-              <img
-                src={assets.nerdbot.src}
+              <Image
+                src={assets.nerdbot}
                 alt="Studybot"
-                className="h-8 w-8 shrink-0"
+                width={32}
+                height={32}
+                className="h-8 w-8 shrink-0 object-contain"
+                priority
               />
             </div>
             <Button
@@ -254,10 +271,13 @@ const Sidebar = () => {
         ) : (
           // Expanded header: title + toggle button to collapse
           <div className="mb-5 flex h-10 items-center justify-between px-3">
-            <img
-              src={assets.nerdbot.src}
+            <Image
+              src={assets.nerdbot}
               alt="Studybot"
-              className="h-8 w-auto"
+              width={32}
+              height={32}
+              className="h-8 w-auto object-contain"
+              priority
             />
             <Button
               variant="ghost"
@@ -283,7 +303,7 @@ const Sidebar = () => {
                     size="icon"
                     className="h-9 w-9 shrink-0 cursor-pointer text-zinc-400 hover:text-white"
                     onClick={handleNewChat}
-                    disabled={isLoading}
+                    disabled={status === "loading"}
                   >
                     <Plus className="h-5 w-5" />
                   </Button>
@@ -387,17 +407,29 @@ const Sidebar = () => {
             {/* Divider */}
             <div className="mx-3 my-2 border-t border-zinc-800" />
 
-            {/* New Chat full button */}
+            {/* Search field with the New Chat button embedded on the right */}
             <div className="px-2 pb-2">
-              <Button
-                variant="default"
-                size="default"
-                className="w-full cursor-pointer bg-white text-zinc-900 hover:bg-zinc-100"
-                onClick={handleNewChat}
-                disabled={isLoading}
-              >
-                New Chat
-              </Button>
+              <div className="relative flex items-center">
+                {/* Magnifier icon overlaid inside the input */}
+                <Search className="pointer-events-none absolute left-2 h-4 w-4 shrink-0 text-zinc-500" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search chats..."
+                  className="h-9 w-full min-w-0 rounded-md border border-zinc-800 bg-zinc-900 pl-8 pr-9 text-sm text-zinc-200 outline-none placeholder:text-zinc-600 focus:border-zinc-600"
+                />
+                {/* Square plus button creates a new chat immediately */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0.5 h-7 w-7 cursor-pointer text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                  onClick={handleNewChat}
+                  disabled={status === "loading"}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             {/* Recent label */}
@@ -411,10 +443,20 @@ const Sidebar = () => {
                 <div className="rounded-md border border-dashed border-zinc-800 px-3 py-3 text-sm text-zinc-500">
                   No chat sessions yet.
                 </div>
+              ) : visibleThreads.length === 0 ? (
+                // Threads exist but none match the current search query.
+                <div className="rounded-md border border-dashed border-zinc-800 px-3 py-3 text-sm text-zinc-500">
+                  No matching chats.
+                </div>
               ) : (
-                threads.map((thread) => {
+                visibleThreads.map((thread) => {
                   const isActive = activeThreadId === thread.session_id;
                   const isEditing = editingThreadId === thread.session_id;
+                  // While the AI-generated title is being fetched for a new
+                  // thread, blur the placeholder title and show a spinner
+                  // where the settings menu would be.
+                  const isGeneratingTitle =
+                    titleGeneratingThreadId === thread.session_id;
 
                   return (
                     <div
@@ -460,67 +502,82 @@ const Sidebar = () => {
                               handleSwitchThread(thread.session_id)
                             }
                           >
-                            <span className="block truncate text-sm text-zinc-300 group-hover:text-white">
+                            <span
+                              className={cn(
+                                "block truncate text-sm text-zinc-300 group-hover:text-white",
+                                isGeneratingTitle &&
+                                  "pointer-events-none select-none blur-sm",
+                              )}
+                            >
                               {thread.title}
                             </span>
                           </button>
 
-                          {/* Three-dot settings dropdown */}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button
-                                type="button"
-                                className={cn(
-                                  "shrink-0 rounded p-1 text-zinc-500 opacity-0 hover:bg-zinc-700 hover:text-white group-hover:opacity-100",
-                                  "data-[state=open]:opacity-100 data-[state=open]:bg-zinc-700 data-[state=open]:text-white",
-                                )}
-                                onClick={(e) => e.stopPropagation()}
+                          {/* Spinner while the AI-generated title is loading,
+                              hiding the settings menu for that row */}
+                          {isGeneratingTitle ? (
+                            <Loader2
+                              className="mr-0.5 h-4 w-4 shrink-0 animate-spin text-zinc-500"
+                              aria-label="Generating title"
+                            />
+                          ) : (
+                            // Three-dot settings dropdown
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button
+                                  type="button"
+                                  className={cn(
+                                    "shrink-0 rounded p-1 text-zinc-500 opacity-0 hover:bg-zinc-700 hover:text-white group-hover:opacity-100",
+                                    "data-[state=open]:opacity-100 data-[state=open]:bg-zinc-700 data-[state=open]:text-white",
+                                  )}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                align="end"
+                                side="bottom"
+                                className="w-44 border-zinc-700 bg-zinc-900 text-zinc-200"
                               >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                              align="end"
-                              side="bottom"
-                              className="w-44 border-zinc-700 bg-zinc-900 text-zinc-200"
-                            >
-                              <DropdownMenuItem
-                                inset
-                                className="cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800"
-                                onClick={(e: ReactMouseEvent) => {
-                                  e.stopPropagation();
-                                  // Share conversation — UI placeholder.
-                                  // Full sharing flow to be implemented later.
-                                }}
-                              >
-                                <Share2 className="h-4 w-4" />
-                                Share
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator className="bg-zinc-700" />
-                              <DropdownMenuItem
-                                inset
-                                className="cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800"
-                                onClick={(e: ReactMouseEvent) => {
-                                  e.stopPropagation();
-                                  startRename(thread.session_id, thread.title);
-                                }}
-                              >
-                                <Pencil className="h-4 w-4" />
-                                Rename
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                inset
-                                className="cursor-pointer text-red-400 hover:bg-zinc-800 hover:text-red-300 focus:bg-zinc-800 focus:text-red-300"
-                                onClick={(e: ReactMouseEvent) => {
-                                  e.stopPropagation();
-                                  handleDelete(thread.session_id);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                <DropdownMenuItem
+                                  inset
+                                  className="cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800"
+                                  onClick={(e: ReactMouseEvent) => {
+                                    e.stopPropagation();
+                                    // Share conversation — UI placeholder.
+                                    // Full sharing flow to be implemented later.
+                                  }}
+                                >
+                                  <Share2 className="h-4 w-4" />
+                                  Share
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="bg-zinc-700" />
+                                <DropdownMenuItem
+                                  inset
+                                  className="cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800"
+                                  onClick={(e: ReactMouseEvent) => {
+                                    e.stopPropagation();
+                                    startRename(thread.session_id, thread.title);
+                                  }}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  Rename
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  inset
+                                  className="cursor-pointer text-red-400 hover:bg-zinc-800 hover:text-red-300 focus:bg-zinc-800 focus:text-red-300"
+                                  onClick={(e: ReactMouseEvent) => {
+                                    e.stopPropagation();
+                                    handleDelete(thread.session_id);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
                         </>
                       )}
                     </div>

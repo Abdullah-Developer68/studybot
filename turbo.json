@@ -1,6 +1,6 @@
 {
   "$schema": "https://v2-10-3.turborepo.dev/schema.json",
-  "globalEnv": ["AI_GATEWAY_API_KEY", "OPENROUTER_API_KEY"],
+  "globalEnv": ["OPENROUTER_API_KEY"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
