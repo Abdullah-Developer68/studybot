@@ -31,6 +31,7 @@ import {
   useRef,
   useEffect,
   useCallback,
+  useMemo,
   useSyncExternalStore,
 } from "react";
 // Aliased so it doesn't shadow the DOM MouseEvent used by the resize handlers.
@@ -57,28 +58,13 @@ import {
   getSidebarClientSnapshot,
   getSidebarServerSnapshot,
 } from "@/utils/sidebar.utils";
+import { fuzzySearch } from "@/utils/search.utils";
 
 const navItems = [
   { icon: MessageSquare, label: "Chat", href: "/chat" },
   { icon: PencilLine, label: "Editor", href: "/editor" },
   { icon: FileText, label: "Templates", href: "/templates" },
 ];
-
-// Fuzzy match: every query character must appear somewhere in the title,
-// in order but not necessarily adjacent (case-insensitive). This keeps
-// matching forgiving — e.g. "pytut" finds "Python Tutorial" — without
-// pulling in a full fuzzy-search dependency.
-const fuzzyMatch = (title: string, query: string): boolean => {
-  if (!query) return true;
-  const lowerTitle = title.toLowerCase();
-  let searchFrom = 0;
-  for (const char of query) {
-    searchFrom = lowerTitle.indexOf(char, searchFrom);
-    if (searchFrom === -1) return false;
-    searchFrom += 1;
-  }
-  return true;
-};
 
 const Sidebar = () => {
   const pathname = usePathname();
@@ -168,10 +154,12 @@ const Sidebar = () => {
   // Search query for filtering the thread list by title (client-side only —
   // the full thread list is already in the Zustand store).
   const [searchQuery, setSearchQuery] = useState("");
-  const normalizedQuery = searchQuery.trim().toLowerCase();
-  const visibleThreads = normalizedQuery
-    ? threads.filter((thread) => fuzzyMatch(thread.title, normalizedQuery))
-    : threads;
+
+  // Memoize fuzzy-filtered threads using Fuse.js utility
+  const visibleThreads = useMemo(
+    () => fuzzySearch(threads, searchQuery, ["title"]),
+    [threads, searchQuery],
+  );
 
   const handleSwitchThread = (threadId: string) => {
     switchThread(threadId);

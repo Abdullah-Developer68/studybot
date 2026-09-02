@@ -140,14 +140,16 @@ The core of the application are these 3 modes:
 
 ### Env switching (local vs hosted)
 
-- The web app targets the local stack or the hosted project purely through `NEXT_PUBLIC_SUPABASE_URL` plus its key in `apps/web/.env.local` — no other config changes are needed.
+- For local development: `.env.local` is used (`http://127.0.0.1:54321` and local keys in `apps/web/.env.local` and `packages/supabase/.env.local`).
+- For hosted cloud: `.env` is used (`https://${PROJ_REF}.supabase.co` and cloud keys in `apps/web/.env` and `packages/supabase/.env`).
+- Next.js automatically gives precedence to `.env.local` during local development, while hosted/production environments use `.env`.
 
 ### Hosted deployment
 
-- The hosted project ref is stored as `PROJ_REF` in `packages/supabase/.env.local` (git-ignored — never hardcode it in the repo, scripts, or docs).
+- The hosted project ref and credentials are stored in `packages/supabase/.env` (`PROJ_REF = zjpqftkiyzthudeadxdc` and `SUPABASE_ACCESS_TOKEN = <token>`, git-ignored — never hardcode it in the repo, scripts, or docs).
 - Deploy every function: `pnpm --filter @studybot/supabase functions:deploy`.
 - Deploy one function: `pnpm --filter @studybot/supabase functions:deploy:chat` (also `:pdf`, `:word`, `:excel`, `:powerpoint`, `:text`, `:ingest`).
-- Both run `bash packages/supabase/scripts/deploy-functions.sh [name...]`, which reads `PROJ_REF` from the env file and executes `supabase functions deploy <name> --project-ref "$PROJ_REF"` with the workspace-local Supabase CLI. Run it whenever asked to deploy serverless functions.
+- Both run `bash packages/supabase/scripts/deploy-functions.sh [name...]`, which reads `PROJ_REF` from the hosted `.env` file and executes `supabase functions deploy <name> --project-ref "$PROJ_REF"` with the workspace-local Supabase CLI. Run it whenever asked to deploy serverless functions.
 - Create a new function locally from `packages/supabase`: `supabase functions new <name>`, then add it to `package.json` deploy scripts if it should be deployable on its own.
 - Invoke a deployed function (the `PROJ_REF` value comes from the env file):
 
@@ -158,7 +160,7 @@ The core of the application are these 3 modes:
     --data '{"name":"Functions"}'
   ```
 
-- Deploys require an authenticated CLI: run `supabase login` once, export `SUPABASE_ACCESS_TOKEN` in the environment, or add `SUPABASE_ACCESS_TOKEN = <token>` to `packages/supabase/.env.local` (the script picks it up automatically). Create tokens at https://supabase.com/dashboard/account/tokens.
+- Deploys require an authenticated CLI: run `supabase login` once, export `SUPABASE_ACCESS_TOKEN` in the environment, or add `SUPABASE_ACCESS_TOKEN = <token>` to `packages/supabase/.env` (the script picks it up automatically). Create tokens at https://supabase.com/dashboard/account/tokens.
 
 ## Notes for Supabase and Env Work
 
