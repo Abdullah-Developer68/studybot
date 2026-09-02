@@ -49,7 +49,7 @@ The core of the application are these 3 modes:
 
 - If a type is shared or used within a single codebase (e.g. web or app), keep it in that codebase's own types directory, such as `apps/web/types`.
 
-- Supabase functions and SDK folders have `types` directories in their respective roots. Define types there and import them in functions and SDK. Use `"@:": "../"` alias in the import object in `deno.json` of both SDK and functions of Supabase, importing types via `@` alias.
+- Supabase SDK has a `types` directory in its root (`packages/supabase/sdk/types`). Supabase Edge Functions keep shared types and utils in `packages/supabase/functions/_shared/types/` and `_shared/utils/` (so Supabase CLI does not treat them as deployable functions). Use `"@/": "../_shared/"` alias in the import object in `deno.json` of edge functions, importing types via `@/types/...` or relative `../_shared/types/...`.
 
 - Always write comments to explain the code that you write and use only `//` to write them. Do not use multiline comments syntax (`/* */`).
 

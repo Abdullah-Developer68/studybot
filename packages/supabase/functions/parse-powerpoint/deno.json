@@ -7,12 +7,7 @@
     "path": "./deno.lock"
   },
   "imports": {
-    "@/": "../",
-    "@studybot/types": "../../../types/index.types.ts",
-    "@studybot/types/": "../../../types/",
-    "@studybot/utils/server/": "../../../utils/server/",
-    "@studybot/utils/global/": "../../../utils/global/",
-    "@studybot/utils/": "../../../utils/",
+    "@/": "../_shared/",
     "officeparser": "npm:officeparser@6.0.4",
     "@supabase/supabase-js": "npm:@supabase/supabase-js@2.97.0",
     "@supabase/server": "npm:@supabase/server@1.4.0"

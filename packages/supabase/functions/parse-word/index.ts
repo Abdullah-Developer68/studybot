@@ -4,7 +4,7 @@ import { Buffer } from "node:buffer";
 import {
   getExtension,
   validateFileSize,
-} from "@studybot/utils/global/file-utils.ts";
+} from "@/utils/file-utils.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

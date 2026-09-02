@@ -13,7 +13,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   getExtension,
   validateFileSize,
-} from "@studybot/utils/global/file-utils.ts";
+} from "@/utils/file-utils.ts";
 import { IngestDocumentResponseSchema } from "@/types/ingest-document.types.ts";
 
 // CORS headers keep browser uploads (which send a preflight) working.

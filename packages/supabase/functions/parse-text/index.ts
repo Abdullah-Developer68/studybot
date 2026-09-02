@@ -2,7 +2,7 @@ import { withSupabase } from "@supabase/server";
 import {
   getExtension,
   validateFileSize,
-} from "@studybot/utils/global/file-utils.ts";
+} from "@/utils/file-utils.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
