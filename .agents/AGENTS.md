@@ -51,6 +51,8 @@ The core of the application are these 3 modes:
 
 - Supabase SDK has a `types` directory in its root (`packages/supabase/sdk/types`). Supabase Edge Functions keep shared types and utils in `packages/supabase/functions/_shared/types/` and `_shared/utils/` (so Supabase CLI does not treat them as deployable functions). Use `"@/": "../_shared/"` alias in the import object in `deno.json` of edge functions, importing types via `@/types/...` or relative `../_shared/types/...`.
 
+- When you need to create a migration file do not do it yourself. Use supabase cli to do it.
+
 - Always write comments to explain the code that you write and use only `//` to write them. Do not use multiline comments syntax (`/* */`).
 
 ## Web Chat Architecture & Streaming

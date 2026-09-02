@@ -33,8 +33,4 @@ create policy "detection_results_read_own" on "public"."detection_results"
    from public.assignments
   where (assignments.profile_id = auth.uid()))));
 
-grant maintain, references, trigger, truncate on table "public"."detection_results" to "anon";
-
-grant delete, insert, maintain, references, select, trigger, truncate, update on table "public"."detection_results" to "authenticated", "postgres";
-
-grant maintain, references, trigger, truncate on table "public"."detection_results" to "service_role";
+grant delete, insert, maintain, references, select, trigger, truncate, update on table "public"."detection_results" to "authenticated", "postgres", "service_role";

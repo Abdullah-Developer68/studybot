@@ -38,8 +38,4 @@ create policy "chat_sessions_update_own" on "public"."chat_sessions"
   using ((profile_id = auth.uid()))
   with check ((profile_id = auth.uid()));
 
-grant maintain, references, trigger, truncate on table "public"."chat_sessions" to "anon";
-
-grant delete, insert, maintain, references, select, trigger, truncate, update on table "public"."chat_sessions" to "authenticated", "postgres";
-
-grant maintain, references, trigger, truncate on table "public"."chat_sessions" to "service_role";
+grant delete, insert, maintain, references, select, trigger, truncate, update on table "public"."chat_sessions" to "authenticated", "postgres", "service_role";

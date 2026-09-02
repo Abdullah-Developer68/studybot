@@ -38,8 +38,4 @@ create policy "templates_update_own" on "public"."templates"
   using ((profile_id = auth.uid()))
   with check (((profile_id = auth.uid()) AND (is_public = false)));
 
-grant maintain, references, trigger, truncate on table "public"."templates" to "anon";
-
-grant delete, insert, maintain, references, select, trigger, truncate, update on table "public"."templates" to "authenticated", "postgres";
-
-grant maintain, references, trigger, truncate on table "public"."templates" to "service_role";
+grant delete, insert, maintain, references, select, trigger, truncate, update on table "public"."templates" to "authenticated", "postgres", "service_role";
