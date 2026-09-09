@@ -43,8 +43,4 @@ create policy "documents_update_own" on "public"."documents"
   using ((profile_id = auth.uid()))
   with check ((profile_id = auth.uid()));
 
-grant maintain, references, trigger, truncate on table "public"."documents" to "anon";
-
-grant delete, insert, maintain, references, select, trigger, truncate, update on table "public"."documents" to "authenticated", "postgres";
-
-grant maintain, references, trigger, truncate on table "public"."documents" to "service_role";
+grant delete, insert, maintain, references, select, trigger, truncate, update on table "public"."documents" to "authenticated", "postgres", "service_role";

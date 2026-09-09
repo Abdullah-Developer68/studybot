@@ -5,12 +5,24 @@ import {
   Pencil,
   RefreshCw,
 } from "lucide-react";
-import { assets } from "@studybot/assets/assets";
-import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { CodeRendererProps } from "@studybot/types";
 import ShikiPre from "./ShikiPre";
+
+// Three bouncing dots shown while the AI reply is pending. Rendered inside
+// a chat bubble by ChatBox and disappears as soon as response text arrives.
+const TypingDots = ({ className = "" }: { className?: string }) => (
+  <div className={`flex items-center justify-center gap-1.5 ${className}`}>
+    {[0, 1, 2].map((dotIndex) => (
+      <span
+        key={dotIndex}
+        className="typing-dot h-2.5 w-2.5 rounded-full bg-zinc-300"
+        style={{ animationDelay: `${dotIndex * 0.15}s` }}
+      />
+    ))}
+  </div>
+);
 
 // Renders a single assistant message. Uses useStreamingContent to bypass
 // React batching for the streaming message so text appears word-by-word at
@@ -35,6 +47,9 @@ const AssistantMessage = ({
 }) => {
   // Only the last message while streaming benefits from rAF-throttled updates.
   const isLastAndStreaming = isStreaming && index === messagesLength - 1;
+  // The response is only considered complete when generation has ended for
+  // this message — action buttons stay hidden until then.
+  const isComplete = !isLastAndStreaming;
   const rawContent =
     typeof message.content === "string"
       ? message.content
@@ -52,15 +67,6 @@ const AssistantMessage = ({
 
   return (
     <div className="flex justify-start items-start gap-2">
-      <div className="shrink-0 w-8 h-8 overflow-hidden rounded-full bg-gray-700">
-        <Image
-          src={assets.openAiLogo}
-          alt="AI"
-          width={32}
-          height={32}
-          className="h-full w-full object-contain invert"
-        />
-      </div>
       <div className="flex flex-col gap-1 flex-1 min-w-0">
         <div className="text-gray-100">
           <div className="prose prose-sm prose-invert max-w-none wrap-break-words">
@@ -137,46 +143,50 @@ const AssistantMessage = ({
           </div>
         </div>
 
-        <div className="mt-3 flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() =>
-                onCopy(message.id ?? String(index), content)
-              }
-              className="rounded p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
-              title="Copy"
-            >
-              {copiedId === (message.id ?? String(index)) ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-            </button>
-            <button
-              type="button"
-              className="rounded p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
-              title="Edit"
-            >
-              <Pencil className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              className="rounded p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
-              title="Regenerate"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
+        {/* Actions appear only after the entire response has completed. */}
+        {isComplete && (
+          <div className="mt-3 flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() =>
+                  onCopy(message.id ?? String(index), content)
+                }
+                className="rounded p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
+                title="Copy"
+              >
+                {copiedId === (message.id ?? String(index)) ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </button>
+              <button
+                type="button"
+                className="rounded p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
+                title="Edit"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                className="rounded p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
+                title="Regenerate"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </button>
+            </div>
+            {activeModelName && (
+              <span className="text-xs text-zinc-500">
+                {activeModelName}
+              </span>
+            )}
           </div>
-          {activeModelName && (
-            <span className="text-xs text-zinc-500">
-              {activeModelName}
-            </span>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
 };
 
+export { TypingDots };
 export default AssistantMessage;

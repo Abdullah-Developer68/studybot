@@ -382,6 +382,27 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+[functions.chat]
+verify_jwt = true
+
+[functions.ingest-document]
+verify_jwt = false
+
+[functions.parse-excel]
+verify_jwt = false
+
+[functions.parse-pdf]
+verify_jwt = false
+
+[functions.parse-powerpoint]
+verify_jwt = false
+
+[functions.parse-text]
+verify_jwt = false
+
+[functions.parse-word]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

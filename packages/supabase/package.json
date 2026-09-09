@@ -5,6 +5,7 @@
   "type": "module",
   "main": "./sdk/supabase.methods.ts",
   "scripts": {
+    "functions:serve:chat": "supabase functions serve chat",
     "functions:serve:pdf": "supabase functions serve parse-pdf",
     "functions:serve:word": "supabase functions serve parse-word",
     "functions:serve:excel": "supabase functions serve parse-excel",

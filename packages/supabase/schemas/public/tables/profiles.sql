@@ -36,8 +36,4 @@ create policy "profiles_update_own" on "public"."profiles"
   using ((profile_id = auth.uid()))
   with check ((profile_id = auth.uid()));
 
-grant maintain, references, trigger, truncate on table "public"."profiles" to "anon";
-
-grant delete, insert, maintain, references, select, trigger, truncate, update on table "public"."profiles" to "authenticated", "postgres";
-
-grant maintain, references, trigger, truncate on table "public"."profiles" to "service_role";
+grant delete, insert, maintain, references, select, trigger, truncate, update on table "public"."profiles" to "authenticated", "postgres", "service_role";

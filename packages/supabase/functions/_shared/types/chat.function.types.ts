@@ -44,10 +44,30 @@ type IncomingMessage = z.infer<typeof IncomingMessageSchema>;
 type ChatRequestBody = z.infer<typeof ChatRequestBodySchema>;
 type Attachment = z.infer<typeof AttachmentSchema>;
 
+// Shape of one row returned by the match_document_chunks RPC.
+type RetrievedChunk = {
+  content: string;
+  metadata?: {
+    source?: string;
+    page?: number;
+    sheet?: string;
+    chunkIndex?: number;
+  } | null;
+  similarity: number;
+  document_name: string;
+  document_id: string;
+};
+
 export {
   AllowedRolesSchema,
   IncomingMessageSchema,
   AttachmentSchema,
   ChatRequestBodySchema,
 };
-export type { IncomingMessage, AllowedRoles, ChatRequestBody, Attachment };
+export type {
+  IncomingMessage,
+  AllowedRoles,
+  ChatRequestBody,
+  Attachment,
+  RetrievedChunk,
+};

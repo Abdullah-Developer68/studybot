@@ -29,17 +29,9 @@ import { useRouter } from "next/navigation";
 
 const SUPPORTED_FILE_TYPES = getSupportedExtensions();
 
-// Derives a thread title from the first user message.
-// Caps at 50 characters and appends "..." if truncated.
-const deriveTitle = (text: string): string => {
-  // Strip newlines and extra whitespace for a cleaner title
-  const cleaned = text.replace(/\s+/g, " ").trim();
-  return cleaned.length > 50 ? cleaned.slice(0, 50) + "..." : cleaned;
-};
-
 const Input = () => {
 
-  const { sendMessage, status, stop, prepareForNewThread } = useChatContext();
+  const { sendMessage, status, stop } = useChatContext();
   const selectedModelId = useModelSelectionStore(
     (state) => state.selectedModelId,
   );
@@ -134,23 +126,11 @@ const Input = () => {
     let targetThreadId: string | null = activeThreadId;
 
     // If no active thread, create one lazily from the first user message.
-    // The thread title is derived from the message content so the sidebar
-    // list shows a descriptive name instead of the generic "New Chat".
+    // The thread starts as "New Chat" — the chat edge function generates a
+    // proper title from the message and the sidebar picks it up with a
+    // blur + spinner placeholder until it lands.
     if (!targetThreadId && user?.id) {
-      const title =
-        attachedFiles.length > 0
-          ? prompt.trim()
-            ? deriveTitle(prompt.trim())
-            : `Files: ${attachedFiles.map((f) => f.name).join(", ")}`
-          : deriveTitle(userPrompt);
-
-      // Tell ChatProvider to skip the load-messages effect when threadId
-      // changes from null → newId. This preserves the AI SDK's internal
-      // message state (which will contain the just-sent user message)
-      // instead of clearing it and re-fetching an empty thread from DB.
-      prepareForNewThread();
-
-      const newThread = await createChatThread(user.id, title);
+      const newThread = await createChatThread(user.id, "New Chat");
 
       if (!newThread) {
         setUploadError("Failed to create chat session. Please try again.");

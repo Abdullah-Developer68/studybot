@@ -41,8 +41,4 @@ create policy "assignments_update_own" on "public"."assignments"
   using ((profile_id = auth.uid()))
   with check ((profile_id = auth.uid()));
 
-grant maintain, references, trigger, truncate on table "public"."assignments" to "anon";
-
-grant delete, insert, maintain, references, select, trigger, truncate, update on table "public"."assignments" to "authenticated", "postgres";
-
-grant maintain, references, trigger, truncate on table "public"."assignments" to "service_role";
+grant delete, insert, maintain, references, select, trigger, truncate, update on table "public"."assignments" to "authenticated", "postgres", "service_role";

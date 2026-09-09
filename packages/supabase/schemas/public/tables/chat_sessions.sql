@@ -2,7 +2,7 @@ create table "public"."chat_sessions" (
   "session_id"  uuid                     not null default gen_random_uuid(),
   "profile_id"  uuid                     not null,
   "title"       text                     not null default 'New Chat'::text,
-  "model"       text                     default 'gemini-2.0-flash'::text,
+  "model"       text                     default 'cohere/north-mini-code:free'::text,
   "is_archived" boolean                  default false,
   "created_at"  timestamp with time zone not null default now(),
   "updated_at"  timestamp with time zone not null default now(),
@@ -38,8 +38,4 @@ create policy "chat_sessions_update_own" on "public"."chat_sessions"
   using ((profile_id = auth.uid()))
   with check ((profile_id = auth.uid()));
 
-grant maintain, references, trigger, truncate on table "public"."chat_sessions" to "anon";
-
-grant delete, insert, maintain, references, select, trigger, truncate, update on table "public"."chat_sessions" to "authenticated", "postgres";
-
-grant maintain, references, trigger, truncate on table "public"."chat_sessions" to "service_role";
+grant delete, insert, maintain, references, select, trigger, truncate, update on table "public"."chat_sessions" to "authenticated", "postgres", "service_role";

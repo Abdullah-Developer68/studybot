@@ -4,6 +4,7 @@ import {
   type AllowedRoles,
   type Attachment,
   type IncomingMessage,
+  type RetrievedChunk,
 } from "@/types/chat.function.types.ts";
 import { smoothStream, streamText } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
@@ -153,9 +154,33 @@ const storeMessage = async (
   }
 };
 
-// Reads one branch of the teed UI message stream, extracts text deltas,
-// and persists the assistant's final reply. Runs in the background so it
-// never blocks or locks the response stream returned to the client.
+// Supabase's edge runtime cancels pending work once a request's response has
+// finished unless the promise is registered through EdgeRuntime.waitUntil.
+// All fire-and-forget persistence tasks must go through this helper so they
+// survive until they settle. Falls back to a plain catch when the global is
+// unavailable (local Deno/Node tooling outside the edge runtime).
+const runInBackground = (task: Promise<unknown>) => {
+  const runtime = (
+    globalThis as {
+      EdgeRuntime?: { waitUntil?: (promise: Promise<unknown>) => void };
+    }
+  ).EdgeRuntime;
+  if (typeof runtime?.waitUntil === "function") {
+    runtime.waitUntil(task);
+  } else {
+    task.catch(() => {});
+  }
+};
+
+// Reads one branch of the teed UI message stream and persists the
+// assistant's final reply. Runs in the background so it never blocks
+// or locks the response stream returned to the client.
+//
+// Wire format (AI SDK v6 toUIMessageStreamResponse): SSE events where each
+// "data:" line carries one JSON object. Assistant text arrives as
+// {"type":"text-delta","id":"…","delta":"…"} chunks — every other part type
+// is ignored. The legacy v4 data-stream protocol ("0:\"…\"") is still
+// tolerated for older clients.
 const persistAssistantReply = async (
   stream: ReadableStream<Uint8Array>,
   supabase: SupabaseClient,
@@ -166,9 +191,40 @@ const persistAssistantReply = async (
   let assistantContent = "";
   let buffer = "";
 
-  // The AI SDK UI Message Stream wire format is line-based: each line is
-  // `<type>:<json-value>`. Type "0" is a text-delta whose value is a
-  // JSON-encoded string chunk. Other types (finish, data, etc.) are ignored.
+  // Extracts text from one wire line. Both protocols are line-based and
+  // self-contained, so processing per newline is sufficient.
+  const handleLine = (line: string) => {
+    const trimmed = line.trim();
+    let payload = "";
+    if (trimmed.startsWith("data:")) {
+      // SSE format: "data: <json>" (or "data: [DONE]" as terminator).
+      payload = trimmed.slice("data:".length).trim();
+    } else if (trimmed.startsWith("0:")) {
+      // Legacy data-stream protocol fallback.
+      payload = trimmed.slice(2);
+    } else {
+      return;
+    }
+    if (!payload || payload === "[DONE]") return;
+
+    try {
+      const chunk = JSON.parse(payload);
+      if (typeof chunk === "string") {
+        // Legacy protocol: text deltas were plain JSON strings.
+        assistantContent += chunk;
+      } else if (
+        chunk !== null &&
+        typeof chunk === "object" &&
+        chunk.type === "text-delta" &&
+        typeof chunk.delta === "string"
+      ) {
+        assistantContent += chunk.delta;
+      }
+    } catch {
+      // Skip malformed lines — the stream may emit non-text events.
+    }
+  };
+
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -178,27 +234,11 @@ const persistAssistantReply = async (
     // Keep the last (possibly incomplete) chunk in the buffer for next read.
     buffer = lines.pop() ?? "";
 
-    for (const line of lines) {
-      if (line.startsWith("0:")) {
-        try {
-          const chunk = JSON.parse(line.slice(2));
-          if (typeof chunk === "string") assistantContent += chunk;
-        } catch {
-          // Skip malformed lines — the stream may emit non-text parts.
-        }
-      }
-    }
+    for (const line of lines) handleLine(line);
   }
 
   // Flush any trailing line left in the buffer after the stream ends.
-  if (buffer.startsWith("0:")) {
-    try {
-      const chunk = JSON.parse(buffer.slice(2));
-      if (typeof chunk === "string") assistantContent += chunk;
-    } catch {
-      // Ignore parse errors on the final fragment.
-    }
-  }
+  if (buffer) handleLine(buffer);
 
   if (assistantContent.trim()) {
     await storeMessage(
@@ -216,15 +256,6 @@ const EMBED_MODEL = "gemini-embedding-001";
 const EMBED_DIMENSIONS = 768; // must match the vector(768) column / ingest function
 const MATCH_COUNT = 8;
 const MAX_CONTEXT_CHUNKS = 8;
-
-// Shape of one row returned by the match_document_chunks RPC.
-type RetrievedChunk = {
-  content: string;
-  metadata?: { source?: string; page?: number; sheet?: string; chunkIndex?: number } | null;
-  similarity: number;
-  document_name: string;
-  document_id: string;
-};
 
 // Google requires manual L2 normalization below 3072 dims. Normalizing the query
 // puts it in the same normalized space as the stored document vectors, so the
@@ -331,7 +362,51 @@ const buildContextMessage = (chunks: RetrievedChunk[], queryText: string) => {
   };
 };
 
-// withSupabase verifies the caller's session JWT (auth: "user") against the
+// Generates a short conversation title from the thread's first user message
+// and persists it on the chat_sessions row. Only runs on the first exchange
+// (exactly one user message, no assistant reply yet). Called fire-and-forget
+// so title generation never delays the streamed chat response.
+const generateThreadTitle = async (
+  openrouter: ReturnType<typeof createOpenRouter>,
+  supabase: SupabaseClient,
+  threadId: string,
+  messages: ModelMessage[],
+) => {
+  const userMessages = messages.filter((m) => m.role === "user");
+  const assistantMessages = messages.filter((m) => m.role === "assistant");
+  if (userMessages.length !== 1 || assistantMessages.length > 0) return;
+
+  // Cap the input so a very long first message doesn't blow up the title prompt.
+  const firstUserText = String(userMessages[0].content).slice(0, 500);
+
+  const result = streamText({
+    model: openrouter(DEFAULT_MODEL),
+    system:
+      "Generate a concise title of 3-6 words summarizing the user's message. " +
+      "Reply with the title only — no quotes, no trailing punctuation.",
+    prompt: firstUserText,
+  });
+
+  const rawTitle = await result.text;
+  const title = rawTitle
+    .trim()
+    .replace(/^["'`]+|["'`]+$/g, "")
+    .replace(/\s+/g, " ")
+    .slice(0, 60);
+
+  if (!title) return;
+
+  const { error } = await supabase
+    .from("chat_sessions")
+    .update({ title })
+    .eq("session_id", threadId);
+
+  if (error) {
+    console.error("Failed to save generated thread title:", error.message);
+  } else {
+    console.log("Generated thread title:", title);
+  }
+};
 
 // withSupabase verifies the caller's session JWT (auth: "user") against the
 // project's JWKS before the handler runs, answers OPTIONS preflights before
@@ -417,19 +492,22 @@ export default {
       if (lastMessage.role === "user") {
         lastUserText = String(lastMessage.content);
         console.log("Type of LastMessage.content:", typeof lastUserText);
-        // Removed the usage of await so TTFT can be improved.
-        storeMessage(
-          supabase,
-          threadId,
-          "user",
-          lastUserText,
-          body.attachments,
-        ).catch((error) => {
-          console.error(
-            "Failed to store user message, but continuing with AI response:",
-            error,
-          );
-        });
+        // Fire-and-forget via runInBackground so TTFT is not affected and
+        // the insert still survives after the response finishes.
+        runInBackground(
+          storeMessage(
+            supabase,
+            threadId,
+            "user",
+            lastUserText,
+            body.attachments,
+          ).catch((error) => {
+            console.error(
+              "Failed to store user message, but continuing with AI response:",
+              error,
+            );
+          }),
+        );
       }
 
       // RAG: link any freshly-attached documents to this thread (owned rows
@@ -448,6 +526,14 @@ export default {
         apiKey: openRouterApiKey,
       });
 
+      // Fire-and-forget: auto-title the thread after its first user message.
+      runInBackground(
+        generateThreadTitle(openrouter, supabase, threadId, transformedMessages)
+          .catch((error) => {
+            console.error("Failed to generate thread title:", error);
+          }),
+      );
+
       // streamText returns an AI SDK stream response that can be forwarded to the client.
       // This is what gives you token-by-token streaming instead of waiting for a full response.
       const result = streamText({
@@ -456,42 +542,98 @@ export default {
         experimental_transform: smoothStream(),
       });
 
-      const streamResponse = result.toUIMessageStreamResponse();
+      // Fan-out instead of tee(): the generation stream is read exactly once
+      // by a background pump that writes every chunk into two independent
+      // channels — one streamed to the client, one consumed for persistence.
+      // With tee(), a client disconnect cancels the client branch and can
+      // tear down the shared source, truncating the stored reply. With this
+      // pump, a failed client write merely stops feeding the socket while
+      // generation runs to completion, so switching threads or closing the
+      // tab mid-answer never loses the assistant message.
+      const generationStream = result.toUIMessageStream();
 
-      // Rebuild headers so the streaming response still includes CORS metadata.
-      // Without this, the browser could block the streamed response even though the server succeeded.
-      const headers = new Headers(streamResponse.headers);
+      const clientChannel = new TransformStream<Uint8Array, Uint8Array>();
+      const persistChannel = new TransformStream<Uint8Array, Uint8Array>();
 
-      Object.entries(corsHeaders).forEach(([key, value]) => {
-        headers.set(key, value);
-      });
+      const clientWriter = clientChannel.writable.getWriter();
+      const persistWriter = persistChannel.writable.getWriter();
 
-      // Tee the response body so the client gets one branch (streamed live)
-      // and the other branch is consumed in the background to persist the
-      // assistant's reply. tee() locks streamResponse.body but returns two
-      // independent branches, so we return bodyForClient — not the locked
-      // original — and never await the storage work before responding.
-      // The previous implementation accessed result.text, which shares the
-      // same underlying stream as toUIMessageStreamResponse() and locks it,
-      // causing a "ReadableStream is locked or disturbed" TypeError on every
-      // request. Teeing the already-created response body avoids that entirely.
-      const streamBody = streamResponse.body;
-      if (!streamBody) {
-        return jsonResponse({ error: "Failed to create stream" }, 500);
-      }
+      // The UI message stream yields structured chunk objects; both channels
+      // carry the SSE wire encoding ("data: <json>\n\n") so the persistence
+      // parser and the browser transport read the same format.
+      const sseEncoder = new TextEncoder();
+      const encodeChunk = (chunk: unknown): Uint8Array =>
+        sseEncoder.encode(`data: ${JSON.stringify(chunk)}\n\n`);
 
-      const [bodyForClient, bodyForStorage] = streamBody.tee();
+      let clientAlive = true;
 
-      // Fire-and-forget: persist the assistant reply after the stream finishes.
-      persistAssistantReply(bodyForStorage, supabase, threadId).catch(
-        (error) => {
-          console.error("Failed to persist assistant message:", error);
-        },
+      runInBackground(
+        (async () => {
+          const reader = generationStream.getReader();
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              if (!value) continue;
+
+              if (clientAlive) {
+                try {
+                  await clientWriter.write(encodeChunk(value));
+                } catch {
+                  // Client went away mid-stream — stop writing to it but
+                  // keep draining the model output for persistence below.
+                  clientAlive = false;
+                  clientWriter.releaseLock();
+                }
+              }
+
+              await persistWriter.write(encodeChunk(value));
+            }
+
+            if (clientAlive) {
+              // SSE terminator expected by the browser transport.
+              await clientWriter
+                .write(sseEncoder.encode("data: [DONE]\n\n"))
+                .catch(() => {});
+              await clientWriter.close().catch(() => {});
+            }
+          } catch (error) {
+            // Generation itself errored — propagate to the client if it is
+            // still connected, otherwise just log; persistence gets closed
+            // in finally with whatever completed.
+            if (clientAlive) {
+              await clientWriter.abort(error).catch(() => {});
+            }
+            throw error;
+          } finally {
+            await persistWriter.close().catch(() => {});
+          }
+        })().catch((error) => {
+          console.error("Chat stream pump failed:", error);
+        }),
       );
 
-      return new Response(bodyForClient, {
-        status: streamResponse.status,
-        statusText: streamResponse.statusText,
+      // Fire-and-forget: persist the assistant reply as the stream finishes.
+      // runInBackground keeps the task alive once the response body completes.
+      runInBackground(
+        persistAssistantReply(persistChannel.readable, supabase, threadId)
+          .catch((error) => {
+            console.error("Failed to persist assistant message:", error);
+          }),
+      );
+
+      // Rebuild the UI message stream response manually so CORS metadata is
+      // present and the headers match what the AI SDK's browser transport
+      // expects (SSE + v1 protocol marker).
+      const headers = new Headers({ ...corsHeaders });
+      headers.set("Content-Type", "text/event-stream");
+      headers.set("Cache-Control", "no-cache");
+      headers.set("Connection", "keep-alive");
+      headers.set("x-vercel-ai-ui-message-stream", "v1");
+      headers.set("x-accel-buffering", "no");
+
+      return new Response(clientChannel.readable, {
+        status: 200,
         headers,
       });
     } catch (error: unknown) {

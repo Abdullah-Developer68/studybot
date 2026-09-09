@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import useAuth from "@/hooks/auth/useAuth";
+import { releaseChat } from "@/lib/chat/chatRegistry";
 import { useChatStoreActions, useChatStoreStates } from "@/stores/chatStore";
 import {
   createChatThread,
@@ -17,11 +18,11 @@ import {
 const useChatSessions = () => {
   const router = useRouter();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
-  const { threads, activeThreadId, isLoading, error } = useChatStoreStates();
+  const { threads, activeThreadId, status, error } = useChatStoreStates();
   const {
     setThreads,
     setActiveThread,
-    setLoading,
+    setStatus,
     setError,
     addThread,
     removeThread,
@@ -47,7 +48,7 @@ const useChatSessions = () => {
         return;
       }
 
-      setLoading(true);
+      setStatus("loading");
       try {
         const userThreads = await fetchUserThreads(user.id);
 
@@ -61,8 +62,6 @@ const useChatSessions = () => {
             ? loadError.message
             : "Failed to load chat sessions",
         );
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -73,7 +72,7 @@ const useChatSessions = () => {
     isAuthenticated,
     reset,
     setError,
-    setLoading,
+    setStatus,
     setThreads,
     user?.id,
   ]);
@@ -84,7 +83,7 @@ const useChatSessions = () => {
   const createThread = async (title?: string) => {
     if (!user?.id) return null;
 
-    setLoading(true);
+    setStatus("loading");
     try {
       // When creating from the sidebar, derive a title from the user's
       // message if provided, otherwise fall back to a generic title.
@@ -106,8 +105,6 @@ const useChatSessions = () => {
           : "Failed to create chat thread",
       );
       return null;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -147,6 +144,10 @@ const useChatSessions = () => {
       const success = await deleteThread(threadId);
       if (!success) return false;
 
+      // Drop the in-memory conversation so a future thread with a reused
+      // id (or a revisit after deletion elsewhere) starts clean.
+      releaseChat(threadId);
+
       removeThread(threadId);
 
       // If the deleted thread was active, navigate back to /chat.
@@ -168,7 +169,7 @@ const useChatSessions = () => {
   return {
     threads,
     activeThreadId,
-    isLoading,
+    status,
     error,
     createThread,
     switchThread,

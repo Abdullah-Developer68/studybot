@@ -38,8 +38,4 @@ create policy "chat_messages_read_own" on "public"."chat_messages"
    from public.chat_sessions
   where (chat_sessions.profile_id = auth.uid()))));
 
-grant maintain, references, trigger, truncate on table "public"."chat_messages" to "anon";
-
-grant delete, insert, maintain, references, select, trigger, truncate, update on table "public"."chat_messages" to "authenticated", "postgres";
-
-grant maintain, references, trigger, truncate on table "public"."chat_messages" to "service_role";
+grant delete, insert, maintain, references, select, trigger, truncate, update on table "public"."chat_messages" to "authenticated", "postgres", "service_role";

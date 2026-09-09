@@ -11,7 +11,7 @@ returns table (
   document_id uuid
 )
 language plpgsql
-security definer
+security invoker
 set search_path = public, extensions
 as $$
 begin
@@ -31,3 +31,6 @@ begin
   limit p_match_count;
 end;
 $$;
+
+revoke execute on function public.match_document_chunks(uuid, extensions.vector, integer) from public, anon;
+grant execute on function public.match_document_chunks(uuid, extensions.vector, integer) to authenticated, service_role;

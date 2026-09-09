@@ -1,22 +1,20 @@
 import { create } from "zustand";
-import type {
-  ChatStoreStates,
-  ChatStoreActions,
-} from "@/types/chatStore.types";
+import type { ChatStore } from "@/types/chatStore.types";
 import { useShallow } from "zustand/react/shallow";
 
-const useChatStore = create<ChatStoreStates & ChatStoreActions>((set) => ({
+const useChatStore = create<ChatStore>((set) => ({
   threads: [],
   activeThreadId: null,
-  messages: [],
-  isLoading: false,
+  status: "idle",
   error: null,
+  titleGeneratingThreadId: null,
   actions: {
-    setThreads: (threads) => set({ threads }),
+    setThreads: (threads) => set({ threads, status: "idle", error: null }),
     addThread: (thread) =>
       set((state) => ({
         threads: [thread, ...state.threads],
         activeThreadId: thread.session_id,
+        status: "idle",
       })),
 
     removeThread: (threadId) =>
@@ -34,17 +32,23 @@ const useChatStore = create<ChatStoreStates & ChatStoreActions>((set) => ({
       })),
 
     setActiveThread: (activeThreadId) => set({ activeThreadId }),
-    setMessages: (messages) => set({ messages }),
-    setLoading: (isLoading: boolean) => set({ isLoading }),
-    setError: (error) => set({ error }),
+    setStatus: (status) => set({ status }),
+    setError: (error) => set({ error, status: error ? "error" : "idle" }),
+    setTitleGeneratingThreadId: (threadIdOrUpdater) =>
+      set((state) => ({
+        titleGeneratingThreadId:
+          typeof threadIdOrUpdater === "function"
+            ? threadIdOrUpdater(state.titleGeneratingThreadId)
+            : threadIdOrUpdater,
+      })),
 
     reset: () =>
       set({
         threads: [],
         activeThreadId: null,
-        messages: [],
-        isLoading: false,
+        status: "idle",
         error: null,
+        titleGeneratingThreadId: null,
       }),
   },
 }));
@@ -55,13 +59,13 @@ const useChatStoreStates = () =>
       // States
       threads: state.threads,
       activeThreadId: state.activeThreadId,
-      messages: state.messages,
-      isLoading: state.isLoading,
+      status: state.status,
       error: state.error,
     })),
   );
 
-const useChatStoreActions = () =>
-  useChatStore((state) => state.actions);
+const useChatStoreActions = () => useChatStore((state) => state.actions);
 
-export { useChatStoreStates, useChatStoreActions };
+// Raw store hook for components that need a single field via a selector
+// (avoids subscribing to every piece of state).
+export { useChatStoreStates, useChatStoreActions, useChatStore };

@@ -1,138 +1,82 @@
-# StudyBot
+# @studybot/web
 
-A unified platform for content creation, AI analysis, and multi-model AI interactions. StudyBot eliminates the need to constantly switch between different apps and AI services by providing a single interface to work with multiple AI models, manage documents, and create custom templates.
+The primary web application for StudyBot built with Next.js App Router.
 
 ## Features
 
-### Multi-Model AI Support
-- Access multiple AI models (Gemini, GPT, etc.) in a single interface
-- Unified chat system for different model interactions
-- No need to switch between applications
+### Multi-Model Chat & RAG
+- Chat with various LLMs (Cohere, OpenAI, DeepSeek, Google Gemini) via OpenRouter.
+- Multi-session chat registry (`apps/web/lib/chat/chatRegistry.ts`) maintaining in-memory streaming across thread switches.
+- Automatic background title generation for new chat threads with animated placeholders in the sidebar.
+- RAG document ingestion for PDF, Word, Excel, PowerPoint, and plain text files.
 
-### Rich Text Editor
-- TipTap-based editor with advanced formatting
-- Support for images, code blocks, lists, and more
-- Real-time collaboration-ready architecture
+### Editor & Assignment Studio
+- TipTap-based rich text editor with Markdown and CodeMirror code block support.
+- AI Humanization analytics with granular AI vs Human percentage scores.
+- Export directly to customizable user templates.
 
-### Document Management
-- Upload and parse documents
-- Extract text and metadata
-- Organize by categories and tags
-- Integration with AI analysis
+### Template Management
+- Create, view, update, and manage private export templates.
 
-### Templates System
-- Create custom reusable templates
-- Private template management per user
-- Default templates provided to new users
-- Template content stored as TipTap JSON
+### Secure Client Architecture
+- Supabase Authentication (OAuth & Email).
+- Static `NEXT_PUBLIC_*` environment resolution.
+- Dynamic request-level JWT bearer injection for authenticated Edge Function requests.
 
-### AI Detection & Analysis
-- Text humanization detection
-- AI-generated content analysis
-- Sentence-level scoring and insights
-- Multiple provider support
-
-### Multi-Model Chat
-- Access different AI models in dedicated chat sessions
-- Upload documents to chat sessions
-- History tracking and session management
-- Model-specific configurations
-
-### Secure & Private
-- Supabase authentication (OAuth support)
-- Row-level security (RLS) for data privacy
-- User-specific data isolation
-- GDPR-compliant
+---
 
 ## Tech Stack
 
-### Frontend
-- **Web**: Next.js 14+, React, TypeScript
-- **Mobile**: React Native (Expo)
-- **UI**: Shadcn/ui components, TipTap
-- **Styling**: SCSS, Tailwind CSS
+- **Framework**: Next.js (App Router), React, TypeScript
+- **UI Components**: Shadcn UI, Radix UI primitives, Lucide Icons
+- **Styling**: Tailwind CSS
+- **Editor**: TipTap, CodeMirror, Shiki syntax highlighter
+- **State Management**: Zustand
+- **AI Integration**: `@ai-sdk/react`, `ai` (Vercel AI SDK)
+- **Shared Packages**: `@studybot/supabase`, `@studybot/types`, `@studybot/utils`, `@studybot/api-client`
 
-### Backend
-- **Database**: Supabase (PostgreSQL)
-- **Auth**: Supabase Auth
-- **Storage**: Supabase Storage
-- **Migrations**: Version-controlled SQL migrations
-
-### AI/APIs
-- **Models**: Gemini 2.0, GPT (configurable)
-- **Detection**: GPTZero, Originality AI, local models
-- **Document Processing**: PDF/text extraction
-
-### Packages
-- `@studybot/supabase` - Reusable SDK for auth, chat, storage, templates
-- `@studybot/api-client` - API client for server communication
-- `@studybot/utils` - Shared utilities
-
-## Project Structure
-
-```
-StudyBot/
-├── web/                          # Next.js web application
-├── mobile/                        # React Native mobile app
-├── packages/
-│   ├── supabase/                 # Supabase SDK & migrations
-│   │   ├── sdk/                  # Source of truth for DB code
-│   │   ├── migrations/           # Version-controlled schemas
-│   │   └── policies/             # RLS policy references
-│   ├── api-client/               # api-client request utilities
-│   └── utils/                    # Shared helper functions
-```
+---
 
 ## Getting Started
 
-### Prerequisites
-- Node.js 18+
-- pnpm or npm
-- Supabase account
-
-### Installation
-
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   pnpm install
-   ```
-
-3. Set up environment variables
-4. Configure Supabase project
-
 ### Development
 
-**Web:**
+Run the web app from the root of the monorepo:
+
 ```bash
-cd web
-pnpm run dev
+pnpm run dev:web
 ```
 
-**Mobile:**
+Or from within `apps/web`:
+
 ```bash
-cd mobile
-npx expo start
+pnpm dev
 ```
 
-### Database Migrations
+### Environment Variables
 
-Push migrations to Supabase:
-```bash
-npx supabase db push
+Configure `apps/web/.env.local`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=your-anon-or-publishable-key
 ```
 
-## Architecture Highlights
+---
 
-- **Package-first approach**: Reusable SDK logic in packages, consumed by apps
-- **Version-controlled database**: All schema changes in migrations
-- **RLS policies**: Secure data access at database level
-- **Multi-tenant ready**: User-isolated data with proper scoping
-- **Monorepo structure**: Shared code and dependencies
+## Directory Structure
 
-## Contributing
-
-- Follow existing code patterns
-- Add migrations for schema changes
-- Use version-controlled approach for all database modifications
-- Test locally before pushing to production
+```text
+apps/web/
+├── app/                        # Next.js App Router (pages, layouts, providers)
+│   ├── (auth)/                 # Auth routes (login, signup)
+│   ├── (dashboard)/            # Dashboard routes (chat, editor, templates)
+│   ├── context/                # React contexts (Auth, Chat)
+│   └── providers/              # Application providers (ChatProvider, ThemeProvider)
+├── components/                 # React UI components (chat, editor, global, ui)
+├── hooks/                      # Custom React hooks (chat, auth, templates)
+├── lib/                        # Client libraries & chat registry
+├── stores/                     # Zustand state stores
+├── types/                      # Web-specific TypeScript interfaces & types
+└── utils/                      # Helper and format utilities
+```
